@@ -15,7 +15,7 @@ public class PanelsTest extends LinearOpMode {
     private GraphManager graphManager;
     private TelemetryManager telemetryA;
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
         telemetryA = PanelsTelemetry.INSTANCE.getTelemetry();
         telemetryA.debug("Initialized Telemetry Managernafjsdjf");
         telemetryA.update();
@@ -28,10 +28,8 @@ public class PanelsTest extends LinearOpMode {
             double elapsed = getRuntime() - t0;
             double value = Math.sin(elapsed);
 
-            // Add point to graph
-
-
-            // Update Panels
+            telemetryA.debug(elapsed);
+            telemetryA.update();
 
 
             idle();
