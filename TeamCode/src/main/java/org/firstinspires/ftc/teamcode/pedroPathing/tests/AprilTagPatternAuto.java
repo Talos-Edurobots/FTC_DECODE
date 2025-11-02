@@ -16,7 +16,7 @@ designated function and call the function in whichever part of the pathbuilder i
 */
 
 
-package org.firstinspires.ftc.teamcode.pedroPathing;
+package org.firstinspires.ftc.teamcode.pedroPathing.tests;
 
 // FTC SDK
 
@@ -30,9 +30,10 @@ import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.PPConstants;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -117,7 +118,7 @@ public class AprilTagPatternAuto extends LinearOpMode {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         // Initialize Pedro Pathing follower
-        follower = Constants.createFollower(hardwareMap);
+        follower = PPConstants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
 
         boolean targetFound = false;    // Set to true when an AprilTag target is detected
