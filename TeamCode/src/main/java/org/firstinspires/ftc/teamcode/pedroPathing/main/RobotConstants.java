@@ -5,9 +5,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 public final class RobotConstants {
     private RobotConstants(){}
-    /*
-    * Robot Configuration
-    */
+
+    /* Robot Configuration Constants */
     // Drivetrain motors
     public static String LEFT_FRONT_NAME = "leftFront";
     public static  String RIGHT_FRONT_NAME = "rightFront";
@@ -27,5 +26,7 @@ public final class RobotConstants {
             )
     );
 
+    /* PID, Velocity Constants */
+    public static double DrivetrainMaxAcceleration = 1.5; // motor power / second
 
 }

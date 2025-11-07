@@ -24,18 +24,49 @@ public class DriveTrain {
         rb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    public void fieldCentricDrive(double x, double y, double rx, double botHeading){
+    public void fieldCentricDrive(double x, double y, double rx, double botHeading, double speed){
         double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
         double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
 
         rotX *= 1.1;  // Counteract imperfect strafing
 
-        double speed = .5;
         double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
         double frontLeftPower = speed*((rotY + rotX + rx) / denominator);
         double backLeftPower = speed*((rotY - rotX + rx) / denominator);
         double frontRightPower = speed*((rotY - rotX - rx) / denominator);
         double backRightPower = speed*(rotY + rotX - rx) / denominator;
+
+        lf.setPower(frontLeftPower);
+        lb.setPower(backLeftPower);
+        rf.setPower(frontRightPower);
+        rb.setPower(backRightPower);
+    }
+
+    private double rampPower(double current, double target, double dt) {
+        double maxPowerChange = RobotConstants.DrivetrainMaxAcceleration * dt;
+        double diff = target - current;
+        if (Math.abs(diff) > maxPowerChange) {
+            diff = Math.signum(diff) * maxPowerChange;
+        }
+        return current + diff;
+    }
+
+    public void FieldCentricAccelerationDrive(double x, double y, double rx, double botHeading, double speed, double dt){
+        double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+        double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+
+        rotX *= 1.1;  // Counteract imperfect strafing
+
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+        double targetFrontLeftPower = speed*((rotY + rotX + rx) / denominator);
+        double targetBackLeftPower = speed*((rotY - rotX + rx) / denominator);
+        double targetFrontRightPower = speed*((rotY - rotX - rx) / denominator);
+        double targetBackRightPower = speed*(rotY + rotX - rx) / denominator;
+
+        double frontLeftPower = rampPower(lf.getPower(), targetFrontLeftPower, dt);
+        double backLeftPower = rampPower(lb.getPower(), targetBackLeftPower, dt);
+        double frontRightPower = rampPower(rf.getPower(), targetFrontRightPower, dt);
+        double backRightPower = rampPower(rb.getPower(), targetBackRightPower, dt);
 
         lf.setPower(frontLeftPower);
         lb.setPower(backLeftPower);

@@ -23,7 +23,8 @@ public class Main extends LinearOpMode {
                     -gamepad1.left_stick_x,
                     -gamepad1.left_stick_y,
                     gamepad1.right_stick_x,
-                    imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS)
+                    imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS),
+                     1
             );
         }
     }
