@@ -4,13 +4,15 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 @TeleOp(name = "test intake with drivetrain", group = "testing")
 public class IntakeTestWithDriveTrain extends LinearOpMode {
-    DcMotor intake, leftFrontDrive, leftBackDrive, rightFrontDrive, rightBackDrive;
+    public DcMotor intake, leftFrontDrive, leftBackDrive, rightFrontDrive, rightBackDrive;
     IMU imu;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -38,6 +40,8 @@ public class IntakeTestWithDriveTrain extends LinearOpMode {
             intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             intake.setPower(gamepad1.right_trigger-gamepad1.left_trigger);
             telemetry.addData("intake power", intake.getPower());
+            telemetry.addData("right back power", rightBackDrive.getPower());
+            telemetry.addData("right back current", ((DcMotorEx)rightBackDrive).getCurrent(CurrentUnit.AMPS));
             telemetry.update();
 
             double y = -gamepad1.left_stick_y;
