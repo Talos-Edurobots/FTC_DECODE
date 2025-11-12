@@ -21,8 +21,8 @@ public final class RobotConstants {
 
     public static IMU.Parameters IMU_PARAMETERS = new IMU.Parameters(
             new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.LEFT
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP
             )
     );
 
