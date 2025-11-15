@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,6 +11,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.drivetrain.DriveTrain;
 
 
 @TeleOp(name = "Main TeleOp", group = "main")
+@Configurable
 public class Main extends LinearOpMode {
     DriveTrain driveTrain;
     IMU imu;
