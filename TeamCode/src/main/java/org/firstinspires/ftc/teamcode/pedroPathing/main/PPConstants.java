@@ -23,6 +23,7 @@ public class PPConstants {
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.009, 0, 0, 0.6, 0.01))
             .centripetalScaling(0.005)
             .mass(7.3);
+
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
             .rightFrontMotorName("right_front")
