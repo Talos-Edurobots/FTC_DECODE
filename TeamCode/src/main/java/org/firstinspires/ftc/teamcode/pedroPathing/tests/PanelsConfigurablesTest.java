@@ -2,18 +2,47 @@ package org.firstinspires.ftc.teamcode.pedroPathing.tests;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.GenericValue;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.util.List;
 import java.util.Map;
 
 @Configurable
-public class PanelsConfigurablesTest {
+@TeleOp(name = "PanelsConfigurablesTest", group = "testing")
+public class PanelsConfigurablesTest extends LinearOpMode {
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     public static int testInt = 1;
     public static long testLong = 1L;
     public static double testDouble = 1.0;
     public static float testFloat = 1.0f;
     public static String testString = "test!";
     public static boolean testBoolean = false;
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+        waitForStart();
+        while (opModeIsActive()){
+            telemetryM.addData("testInt", testInt);
+            telemetryM.addData("testLong", testLong);
+            telemetryM.addData("testDouble", testDouble);
+            telemetryM.addData("testFloat", testFloat);
+            telemetryM.addData("testString", testString);
+            telemetryM.addData("testBoolean", testBoolean);
+            telemetryM.addData("testEnum", testEnum);
+            telemetryM.addData("testArray", testArray);
+            telemetryM.addData("testList", testList);
+            telemetryM.addData("testMap", testMap);
+            telemetryM.addData("testCustomType", testCustomType);
+            telemetryM.addData("testNestedType", testNestedType);
+            telemetryM.addData("testUnknownType", testUnknownType);
+            telemetryM.addData("testRandomArray", testRandomArray);
+            telemetryM.addData("testTParamClass", testTParamClass);
+            telemetryM.update(telemetry);
+        }
+    }
 
     public enum TestEnum {
         TEST1,

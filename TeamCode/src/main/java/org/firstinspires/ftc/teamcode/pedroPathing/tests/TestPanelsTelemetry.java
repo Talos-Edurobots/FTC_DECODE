@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 //todo check if PanelsTelemetry is working on the driver station
 
 @TeleOp(name = "panelsTelemetry", group = "testing")
-public class TestBug extends LinearOpMode {
+public class TestPanelsTelemetry extends LinearOpMode {
     TelemetryManager pTel = PanelsTelemetry.INSTANCE.getTelemetry();
     @Override
     public void runOpMode() {

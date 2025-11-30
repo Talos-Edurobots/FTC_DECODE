@@ -3,12 +3,14 @@ package org.firstinspires.ftc.teamcode.pedroPathing.tests;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "Test Graph", group = "testing")
+@Disabled
 public class TestGraph extends LinearOpMode {
     private final TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
     private final ElapsedTime timer = new ElapsedTime();
@@ -58,7 +60,7 @@ public class TestGraph extends LinearOpMode {
 
 
 
-        panelsTelemetry.addLine("extra1:" + t + " extra2:" + (t * t) + " extra3:" + Math.sqrt(t));
+//        panelsTelemetry.addLine("extra1:" + t + " extra2:" + (t * t) + " extra3:" + Math.sqrt(t));
 
         panelsTelemetry.update(telemetry);
     }
