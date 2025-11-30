@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.tests;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @TeleOp(name = "test intake", group = "testing")
+//@Disabled
 public class IntakeTest extends LinearOpMode {
     DcMotor intake;
     @Override

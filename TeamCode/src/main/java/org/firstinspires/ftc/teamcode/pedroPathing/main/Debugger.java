@@ -1,11 +1,15 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.pedropathing.telemetry.SelectableOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 @TeleOp(name = "Debugger", group = "main")
 public class Debugger extends SelectableOpMode {
@@ -21,7 +25,8 @@ public class Debugger extends SelectableOpMode {
                 ne.add("Run Right Back Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_BACK_NAME));
             });
             s.folder("Velocity Control", vc -> {;
-
+                vc.add("Run Shooter Velocity", () -> new MotorVelocityTest(RobotConstants.SHOOTER_NAME));
+                vc.add("Run Intake Velocity", () -> new MotorVelocityTest(RobotConstants.INTAKE_NAME));
             });
         });
     }
@@ -66,12 +71,16 @@ class MotorPowerTest extends OpMode {
 
         telemetry.addData("Intake Power", power);
         telemetry.addData("Intake Velocity", currentVelocity);
+        telemetry.addData("current Direction", motor.getDirection().toString());
+        telemetry.addData("current", motor.getCurrent(CurrentUnit.AMPS));
         telemetry.addData("Max Velocity", maxVelocity);
         telemetry.update();
     }
 }
 
+@Configurable
 class MotorVelocityTest extends OpMode {
+    public double maxVelocity = 2700;
     public MotorVelocityTest(String motorName) {
         this.motorName = motorName;
     }
@@ -91,13 +100,14 @@ class MotorVelocityTest extends OpMode {
     @Override
     public void loop() {
         // Set velocity via triggers
-        double targetVelocity = 2400 * (gamepad1.right_trigger - gamepad1.left_trigger);
+        double targetVelocity = maxVelocity * (gamepad1.right_trigger - gamepad1.left_trigger);
         motor.setVelocity(targetVelocity);
 
         double currentVelocity = motor.getVelocity();
 
         telemetry.addData("Target Velocity", targetVelocity);
         telemetry.addData("Current Velocity", currentVelocity);
+        telemetry.addData("power", motor.getPower());
         telemetry.update();
     }
 }

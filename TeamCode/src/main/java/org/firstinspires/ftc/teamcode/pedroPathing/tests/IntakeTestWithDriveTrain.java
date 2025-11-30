@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.tests;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 @TeleOp(name = "test intake with drivetrain", group = "testing")
+@Disabled
 public class IntakeTestWithDriveTrain extends LinearOpMode {
     public DcMotor intake, leftFrontDrive, leftBackDrive, rightFrontDrive, rightBackDrive;
     IMU imu;

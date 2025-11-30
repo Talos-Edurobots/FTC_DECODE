@@ -8,16 +8,16 @@ public final class RobotConstants {
 
     /* Robot Configuration Constants */
     // Drivetrain motors
-    public static String LEFT_FRONT_NAME = "leftFront";
-    public static  String RIGHT_FRONT_NAME = "rightFront";
-    public static String RIGHT_BACK_NAME = "rightBack";
-    public static String LEFT_BACK_NAME = "leftBack";
+    public static String LEFT_FRONT_NAME  = "leftFront";
+    public static String RIGHT_FRONT_NAME = "rightFront";
+    public static String RIGHT_BACK_NAME  = "rightBack";
+    public static String LEFT_BACK_NAME   = "leftBack";
     // Intake
-    public static String INTAKE_NAME = "intake";
+    public static String INTAKE_NAME      = "intake";
     // Shooter
-    public static String SHOOTER_NAME = "shooter";
+    public static String SHOOTER_NAME     = "shooter";
     // Pinpoint
-    public static String PINPOINT_NAME = "pinpoint";
+    public static String PINPOINT_NAME    = "pinpoint";
 
     public static IMU.Parameters IMU_PARAMETERS = new IMU.Parameters(
             new RevHubOrientationOnRobot(
@@ -29,5 +29,7 @@ public final class RobotConstants {
     /* PID, Velocity Constants */
     public static double DrivetrainMaxAcceleration = 4; // motor power / second
 
-
+    public static double DrivetrainMotorTicksPerRevolution = DcMotorConstants.Motor312EncoderResolution;
+    public static double ShooterMotorTicksPerRevolution = DcMotorConstants.Motor6000EncoderResolution;
+    public static double IntakeMotorTicksPerRevolution = DcMotorConstants.Motor1150EncoderResolution;
 }
