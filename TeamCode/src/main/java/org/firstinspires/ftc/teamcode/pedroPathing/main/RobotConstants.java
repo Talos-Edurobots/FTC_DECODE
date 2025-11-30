@@ -21,13 +21,13 @@ public final class RobotConstants {
 
     public static IMU.Parameters IMU_PARAMETERS = new IMU.Parameters(
             new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP
+                RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
+                RevHubOrientationOnRobot.UsbFacingDirection.LEFT
             )
     );
 
     /* PID, Velocity Constants */
-    public static double DrivetrainMaxAcceleration = 4; // motor power / second
+    public static double DrivetrainMaxAcceleration = 8; // motor power / second
 
     public static double DrivetrainMotorTicksPerRevolution = DcMotorConstants.Motor312EncoderResolution;
     public static double ShooterMotorTicksPerRevolution = DcMotorConstants.Motor6000EncoderResolution;
