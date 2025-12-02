@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import android.util.Log;
 
 @TeleOp(name = "LogcatTest676767", group = "tests")
-public  class LogcatTestFTCDecode6767 extends LinearOpMode {
+public  class LogcatTestFTCDecode extends LinearOpMode {
 
     // Unique logcat tag (filter on this!)
     private static final String TAG = "FTCLOG";
