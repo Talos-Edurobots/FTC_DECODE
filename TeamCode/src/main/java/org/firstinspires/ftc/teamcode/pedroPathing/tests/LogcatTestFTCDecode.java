@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.tests;
 
+import com.bylazar.field.FieldManager;
+import com.bylazar.field.PanelsField;
+import com.bylazar.field.Style;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -13,7 +16,10 @@ public  class LogcatTestFTCDecode extends LinearOpMode {
     // Unique logcat tag (filter on this!)
     private static final String TAG = "FTCLOG";
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-
+    private final FieldManager fieldManager = PanelsField.INSTANCE.getField();
+    private static final Style robotLook = new Style(
+            "", "#3F51B5", 0.75
+    );
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -46,8 +52,12 @@ public  class LogcatTestFTCDecode extends LinearOpMode {
             // Optional telemetry to DS (VERY slow)
             telemetryM.addData("Loop", loopMs);
             telemetryM.update(telemetry);
+            fieldManager.setStyle(robotLook);
+            fieldManager.moveCursor(x, y);
+            fieldManager.circle(6);
+            fieldManager.update();
 
-            sleep(50); // Adjust loop delay as needed
+            sleep(20); // Adjust loop delay as needed
         }
     }
 }
