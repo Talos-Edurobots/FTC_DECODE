@@ -26,7 +26,6 @@ public  class LogcatTestFTCDecode extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            sleep(500); // Adjust loop delay as needed
             // Example variables
             double x = Math.random() * 100;          // Replace with real odometry
             double y = Math.random() * 100;          // Replace with real odometry
@@ -39,15 +38,16 @@ public  class LogcatTestFTCDecode extends LinearOpMode {
             // 🔥 LOGCAT OUTPUT (this is what you filter on)
             Log.d(TAG,
                     "x=" + x +
-                            ", y=" + y +
-                            ", heading=" + heading +
-                            ", loopMs=" + loopMs
+                        ",y=" + y +
+                        ",heading=" + heading +
+                        ",loopMs=" + loopMs
             );
 
             // Optional telemetry to DS (VERY slow)
             telemetryM.addData("Loop", loopMs);
             telemetryM.update(telemetry);
 
+            sleep(50); // Adjust loop delay as needed
         }
     }
 }
