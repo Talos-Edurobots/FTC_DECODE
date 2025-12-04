@@ -26,24 +26,24 @@ public class PPConstants {
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
-            .rightFrontMotorName("right_front")
-            .rightRearMotorName("right_back")
-            .leftRearMotorName("left_back")
-            .leftFrontMotorName("left_front")
-            .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .rightFrontMotorName(RobotConstants.RIGHT_FRONT_NAME)
+            .rightRearMotorName(RobotConstants.RIGHT_BACK_NAME)
+            .leftRearMotorName(RobotConstants.LEFT_BACK_NAME)
+            .leftFrontMotorName(RobotConstants.LEFT_FRONT_NAME)
+            .leftFrontMotorDirection(RobotConstants.LEFT_FRONT_DIRECTION)
+            .leftRearMotorDirection(RobotConstants.LEFT_BACK_DIRECTION)
+            .rightFrontMotorDirection(RobotConstants.RIGHT_FRONT_DIRECTION)
+            .rightRearMotorDirection(RobotConstants.RIGHT_BACK_DIRECTION)
             .xVelocity(70.4635)
             .yVelocity(59.7103);
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(3.4) // check
             .strafePodX(4) // check
             .distanceUnit(DistanceUnit.INCH)
-            .hardwareMapName("pinpoint")
+            .hardwareMapName(RobotConstants.PINPOINT_NAME)
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
+            .forwardEncoderDirection(RobotConstants.PINPOINT_FORWARD_DIRECTION)
+            .strafeEncoderDirection(RobotConstants.PINPOINT_STRAFE_DIRECTION);
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 

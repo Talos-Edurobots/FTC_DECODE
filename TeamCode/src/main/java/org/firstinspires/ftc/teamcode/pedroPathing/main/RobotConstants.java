@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
 public final class RobotConstants {
@@ -9,15 +11,25 @@ public final class RobotConstants {
     /* Robot Configuration Constants */
     // Drivetrain motors
     public static String LEFT_FRONT_NAME  = "leftFront";
+    public static DcMotorSimple.Direction LEFT_FRONT_DIRECTION  = DcMotorSimple.Direction.REVERSE;
     public static String RIGHT_FRONT_NAME = "rightFront";
+    public static DcMotorSimple.Direction RIGHT_FRONT_DIRECTION = DcMotorSimple.Direction.FORWARD;
     public static String RIGHT_BACK_NAME  = "rightBack";
+    public static DcMotorSimple.Direction RIGHT_BACK_DIRECTION  = DcMotorSimple.Direction.FORWARD;
     public static String LEFT_BACK_NAME   = "leftBack";
+    public static DcMotorSimple.Direction LEFT_BACK_DIRECTION   = DcMotorSimple.Direction.REVERSE;
     // Intake
     public static String INTAKE_NAME      = "intake";
     // Shooter
+    public static DcMotorSimple.Direction INTAKE_DIRECTION      = DcMotorSimple.Direction.FORWARD;
     public static String SHOOTER_NAME     = "shooter";
     // Pinpoint
+    public static DcMotorSimple.Direction SHOOTER_DIRECTION     = DcMotorSimple.Direction.REVERSE;
     public static String PINPOINT_NAME    = "pinpoint";
+    public static GoBildaPinpointDriver.EncoderDirection PINPOINT_FORWARD_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+    public static GoBildaPinpointDriver.EncoderDirection PINPOINT_STRAFE_DIRECTION  = GoBildaPinpointDriver.EncoderDirection.REVERSED;
+    public static double PINPOINT_FORWARD_POD_Y = 3.4; // in inches
+    public static double PINPOINT_STRAFE_POD_X = 4; // in inches
 
     public static IMU.Parameters IMU_PARAMETERS = new IMU.Parameters(
             new RevHubOrientationOnRobot(
@@ -32,4 +44,6 @@ public final class RobotConstants {
     public static double DrivetrainMotorTicksPerRevolution = DcMotorConstants.Motor312EncoderResolution;
     public static double ShooterMotorTicksPerRevolution = DcMotorConstants.Motor6000EncoderResolution;
     public static double IntakeMotorTicksPerRevolution = DcMotorConstants.Motor1150EncoderResolution;
+
+    public static double INTAKE_MAX_VELOCITY = 1500; // ticks per second
 }

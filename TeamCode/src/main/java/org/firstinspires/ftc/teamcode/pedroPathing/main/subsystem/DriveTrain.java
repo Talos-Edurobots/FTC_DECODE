@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main.drivetrain;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
