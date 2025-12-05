@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.gamepad.PanelsGamepad;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
@@ -28,7 +29,7 @@ public class Main extends LinearOpMode {
     IMU imu;
     Pinpoint pinpoint;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    Pose2D robotPos;
+    Pose robotPos;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -55,7 +56,7 @@ public class Main extends LinearOpMode {
 
             pinpoint.update();
             robotPos = pinpoint.getPosition();
-            Drawing.drawRobot(new Pose(robotPos.getX( DistanceUnit.INCH), robotPos.getY(DistanceUnit.INCH), robotPos.getHeading(AngleUnit.RADIANS)));
+            Drawing.drawRobot(robotPos);
 
             if (gamepad1.options) {
                 imu.resetYaw();
@@ -74,7 +75,7 @@ public class Main extends LinearOpMode {
             double forward = -gamepad1.left_stick_y;
             double strafe = gamepad1.left_stick_x;
             double rotate = gamepad1.right_stick_x;
-            double heading = robotPos.getHeading(AngleUnit.RADIANS);
+            double heading = robotPos.getHeading();
 
             double speed = 1;
             driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
