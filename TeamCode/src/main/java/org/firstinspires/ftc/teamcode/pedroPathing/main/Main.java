@@ -10,11 +10,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Draw;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
@@ -30,10 +32,16 @@ public class Main extends LinearOpMode {
     Pinpoint pinpoint;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Pose robotPos;
+    DcMotorEx shooter;
+    Servo servo;
 
     @Override
     public void runOpMode() throws InterruptedException {
         double oldTime = 0, newTime, dt;
+
+        shooter = hardwareMap.get(DcMotorEx.class, RobotConstants.SHOOTER_NAME);
+        servo = hardwareMap.servo.get(RobotConstants.LEFT_SERVO_NAME);
+        servo.setPosition(0);
 
         pinpoint = new Pinpoint(hardwareMap);
         pinpoint.init();
@@ -54,12 +62,29 @@ public class Main extends LinearOpMode {
             dt = newTime - oldTime;
             oldTime = newTime;
 
+            if (gamepad1.dpadUpWasPressed()) {
+                shooter.setVelocity(2500);
+            }
+            else if (gamepad1.dpadDownWasPressed()) {
+                shooter.setVelocity(0);
+            }
+
+            if (gamepad1.dpadLeftWasPressed()) {
+                servo.setPosition(servo.getPosition() - .1);
+            }
+            else if (gamepad1.dpadRightWasPressed()) {
+                servo.setPosition(servo.getPosition() + .1);
+            }
+
             pinpoint.update();
             robotPos = pinpoint.getPosition();
-            Drawing.drawRobot(robotPos);
+            Draw.drawRobot(robotPos, RobotConstants.ROBOT_DRAW_STYLE);
+            Draw.update();
+
 
             if (gamepad1.options) {
                 imu.resetYaw();
+                pinpoint.getPinpoint().setHeading(0, AngleUnit.DEGREES);
             }
 
             if (gamepad1.aWasPressed()) {
@@ -71,6 +96,7 @@ public class Main extends LinearOpMode {
             else if (gamepad1.yWasPressed()) {
                 intake.setCurrentState(Intake.IntakeState.OUTTAKE);
             }
+            intake.update();
 
             double forward = -gamepad1.left_stick_y;
             double strafe = gamepad1.left_stick_x;
@@ -80,6 +106,8 @@ public class Main extends LinearOpMode {
             double speed = 1;
             driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
 
+            telemetryM.addData("shooter vel", shooter.getVelocity());
+            telemetryM.addData("shooter current", shooter.getCurrent(CurrentUnit.AMPS));
             telemetryM.addData("Heading", heading);
             telemetryM.addData("dx", dt);
             telemetryM.addData("intake velocity", intake.getIntakeMotor().getVelocity());

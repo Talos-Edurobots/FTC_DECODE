@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+import com.bylazar.field.Style;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -25,6 +26,8 @@ public final class RobotConstants {
     public static String SHOOTER_NAME     = "shooter";
     // Pinpoint
     public static DcMotorSimple.Direction SHOOTER_DIRECTION     = DcMotorSimple.Direction.REVERSE;
+    public static String RIGHT_SERVO_NAME = "rightServo";
+    public static String LEFT_SERVO_NAME = "leftServo";
     public static String PINPOINT_NAME    = "pinpoint";
     public static GoBildaPinpointDriver.EncoderDirection PINPOINT_FORWARD_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD;
     public static GoBildaPinpointDriver.EncoderDirection PINPOINT_STRAFE_DIRECTION  = GoBildaPinpointDriver.EncoderDirection.REVERSED;
@@ -45,5 +48,9 @@ public final class RobotConstants {
     public static double ShooterMotorTicksPerRevolution = DcMotorConstants.Motor6000EncoderResolution;
     public static double IntakeMotorTicksPerRevolution = DcMotorConstants.Motor1150EncoderResolution;
 
-    public static double INTAKE_MAX_VELOCITY = 1500; // ticks per second
+    public static double INTAKE_MAX_VELOCITY = 2700; // ticks per second
+
+    public static Style ROBOT_DRAW_STYLE = new Style(
+            "", "#3F51B5", .75
+    );
 }

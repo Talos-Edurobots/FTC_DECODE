@@ -3,17 +3,18 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.pedropathing.telemetry.SelectableOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 @TeleOp(name = "Debugger", group = "main")
 public class Debugger extends SelectableOpMode {
-
     public Debugger() {
         super("Select a Tuning OpMode", s -> {
             s.folder("Without encoder", ne -> {
@@ -27,6 +28,10 @@ public class Debugger extends SelectableOpMode {
             s.folder("Velocity Control", vc -> {;
                 vc.add("Run Shooter Velocity", () -> new MotorVelocityTest(RobotConstants.SHOOTER_NAME));
                 vc.add("Run Intake Velocity", () -> new MotorVelocityTest(RobotConstants.INTAKE_NAME));
+            });
+            s.folder("servo control", sc -> {
+                sc.add("right servo", () -> new ServoContol(RobotConstants.RIGHT_SERVO_NAME));
+                sc.add("left servo", () -> new ServoContol(RobotConstants.LEFT_SERVO_NAME));
             });
         });
     }
@@ -111,3 +116,33 @@ class MotorVelocityTest extends OpMode {
         telemetry.update();
     }
 }
+
+    class ServoContol extends OpMode{
+        String servoName;
+        Servo servo;
+        public ServoContol(String servoName) {
+            this.servoName = servoName;
+        }
+
+        @Override
+        public void init() {
+            servo = hardwareMap.servo.get(servoName);
+            telemetry.addLine("init");
+            telemetry.update();
+        }
+
+        @Override
+        public void loop() {
+            if (gamepad1.yWasPressed()) {
+                servo.setDirection(
+                        servo.getDirection() == Servo.Direction.FORWARD ?
+                                Servo.Direction.REVERSE :
+                                Servo.Direction.FORWARD
+                );
+            } // direction reverser
+            servo.setPosition(gamepad1.right_trigger - gamepad1.left_trigger);
+            telemetry.addData("servo direction", servo.getDirection());
+            telemetry.addData("servo pos", servo.getPosition());
+            telemetry.update();
+        }
+    }
