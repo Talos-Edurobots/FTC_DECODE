@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
-import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -9,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -61,13 +61,17 @@ class MotorPowerTest extends OpMode {
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motor.setDirection(DcMotor.Direction.FORWARD);
 
+
+    }
+    @Override
+    public void init_loop() {
         telemetry.addLine("Init Complete");
         telemetry.update();
     }
 
     @Override
     public void loop() {
-        if (gamepad1.optionsWasPressed()) {
+        if (gamepad1.yWasPressed()) {
             motor.setDirection(motor.getDirection() == DcMotor.Direction.FORWARD ? DcMotor.Direction.REVERSE : DcMotor.Direction.FORWARD);
         }
         // Set power via triggers
@@ -77,6 +81,9 @@ class MotorPowerTest extends OpMode {
         double currentVelocity = motor.getVelocity();
         maxVelocity = Math.max(maxVelocity, currentVelocity);
 
+        telemetry.addLine("run motor using the triggers");
+        telemetry.addLine("press Y to reverse direction");
+        telemetry.addLine("-----------------------------");
         telemetry.addData("Intake Power", power);
         telemetry.addData("Intake Velocity", currentVelocity);
         telemetry.addData("current Direction", motor.getDirection().toString());
@@ -96,19 +103,25 @@ class MotorVelocityTest extends OpMode {
     private DcMotorEx motor;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     public static double targetVelocity = 0, k_p = 0, k_i = 0, k_d = 0, k_s = 0, k_u = 0;
-    double errorSum = 0;
+    public static DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD;`
+    double integralSum = 0;
     double lastError = 0;
     ElapsedTime timer = new ElapsedTime();
 
     @Override
     public void init() {
-        motor = hardwareMap.get(DcMotorEx.class, motorName);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor.setDirection(DcMotor.Direction.REVERSE);
+//        motor = hardwareMap.get(DcMotorEx.class, motorName);
+//        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        motor.setDirection(DcMotor.Direction.REVERSE);
 
         telemetryM.addLine("Init Complete");
         telemetryM.update(telemetry);
         timer.startTime();
+    }
+    @Override
+    public void init_loop() {
+        telemetryM.addLine("Init Complete");
+        telemetryM.update(telemetry);
     }
 
     @Override
@@ -119,15 +132,17 @@ class MotorVelocityTest extends OpMode {
         double currentVelocity = motor.getVelocity();
         double error = targetVelocity - currentVelocity;
         double derivative = (error - lastError) / timer.seconds();
-        errorSum += error;
+        integralSum += error * timer.seconds();
         motor.setPower(
                 k_p * error +
-                k_i * errorSum + (error * timer.seconds()) +
+                k_i * integralSum +
                 k_d * derivative+
-                k_s /** Math.signum(targetVelocity)*/ +
+                k_s * Math.signum(targetVelocity) +
                 k_u * targetVelocity
         );
-        telemetryM.addData("s", k_s);
+
+        telemetryM.addLine("run motor in panels");
+        telemetryM.addLine("---------------");
         telemetryM.addData("Current Velocity", currentVelocity);
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("current", motor.getCurrent(CurrentUnit.AMPS));
