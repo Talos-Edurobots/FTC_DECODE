@@ -33,6 +33,8 @@ public class Debugger extends SelectableOpMode {
             s.folder("servo control", sc -> {
                 sc.add("right servo", () -> new ServoControl(RobotConstants.RIGHT_SERVO_NAME));
                 sc.add("left servo", () -> new ServoControl(RobotConstants.LEFT_SERVO_NAME));
+                sc.add("right flicker", () -> new ServoControl(RobotConstants.RIGHT_FLICKER_NAME));
+                sc.add("left flicker", () -> new ServoControl(RobotConstants.LEFT_FLICKER_NAME));
             });
         });
     }
@@ -100,9 +102,9 @@ class MotorVelocityTest extends OpMode {
 
     @Override
     public void init() {
-//        motor = hardwareMap.get(DcMotorEx.class, motorName);
-//        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        motor.setDirection(DcMotor.Direction.REVERSE);
+        motor = hardwareMap.get(DcMotorEx.class, motorName);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setDirection(DcMotor.Direction.REVERSE);
 
         telemetryM.addLine("Init Complete");
         telemetryM.update(telemetry);
@@ -122,10 +124,10 @@ class MotorVelocityTest extends OpMode {
                 k_p * error +
                 k_i * errorSum + (error * timer.seconds()) +
                 k_d * derivative+
-                k_s * Math.signum(targetVelocity) +
+                k_s /** Math.signum(targetVelocity)*/ +
                 k_u * targetVelocity
         );
-
+        telemetryM.addData("s", k_s);
         telemetryM.addData("Current Velocity", currentVelocity);
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("current", motor.getCurrent(CurrentUnit.AMPS));

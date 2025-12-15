@@ -1,21 +1,17 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.gamepad.PanelsGamepad;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Draw;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
@@ -33,15 +29,20 @@ public class Main extends LinearOpMode {
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Pose robotPos;
     DcMotorEx shooter;
-    Servo servo;
+    Servo hoodServo, leftFlicker, rightFlicker;
 
     @Override
     public void runOpMode() throws InterruptedException {
         double oldTime = 0, newTime, dt;
 
         shooter = hardwareMap.get(DcMotorEx.class, RobotConstants.SHOOTER_NAME);
-        servo = hardwareMap.servo.get(RobotConstants.LEFT_SERVO_NAME);
-        servo.setPosition(0);
+        hoodServo = hardwareMap.servo.get(RobotConstants.LEFT_SERVO_NAME);
+        hoodServo.setPosition(0);
+        leftFlicker = hardwareMap.servo.get(RobotConstants.LEFT_FLICKER_NAME);
+        leftFlicker.setDirection(Servo.Direction.REVERSE);
+        leftFlicker.setPosition(0);
+        rightFlicker = hardwareMap.servo.get(RobotConstants.RIGHT_FLICKER_NAME);
+        rightFlicker.setPosition(0);
 
         pinpoint = new Pinpoint(hardwareMap);
         pinpoint.init();
@@ -70,10 +71,23 @@ public class Main extends LinearOpMode {
             }
 
             if (gamepad1.dpadLeftWasPressed()) {
-                servo.setPosition(servo.getPosition() - .1);
+                hoodServo.setPosition(hoodServo.getPosition() - .1);
             }
             else if (gamepad1.dpadRightWasPressed()) {
-                servo.setPosition(servo.getPosition() + .1);
+                hoodServo.setPosition(hoodServo.getPosition() + .1);
+            }
+
+            if (gamepad1.left_bumper) {
+                leftFlicker.setPosition(1);
+            }
+            else {
+                leftFlicker.setPosition(0);
+            }
+            if (gamepad1.right_bumper) {
+                rightFlicker.setPosition(1);
+            }
+            else {
+                rightFlicker.setPosition(0);
             }
 
             pinpoint.update();

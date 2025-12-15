@@ -28,6 +28,8 @@ public final class RobotConstants {
     public static DcMotorSimple.Direction SHOOTER_DIRECTION     = DcMotorSimple.Direction.REVERSE;
     public static String RIGHT_SERVO_NAME = "rightServo";
     public static String LEFT_SERVO_NAME = "leftServo";
+    public static String LEFT_FLICKER_NAME = "leftFlicker";
+    public static String RIGHT_FLICKER_NAME = "rightFlicker";
     public static String PINPOINT_NAME    = "pinpoint";
     public static GoBildaPinpointDriver.EncoderDirection PINPOINT_FORWARD_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD;
     public static GoBildaPinpointDriver.EncoderDirection PINPOINT_STRAFE_DIRECTION  = GoBildaPinpointDriver.EncoderDirection.REVERSED;
