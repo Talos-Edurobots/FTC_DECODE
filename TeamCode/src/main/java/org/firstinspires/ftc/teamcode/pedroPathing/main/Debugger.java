@@ -103,7 +103,7 @@ class MotorVelocityTest extends OpMode {
     private DcMotorEx motor;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     public static double targetVelocity = 0, k_p = 0, k_i = 0, k_d = 0, k_s = 0, k_u = 0;
-    public static DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD;`
+    public static DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD;
     double integralSum = 0;
     double lastError = 0;
     ElapsedTime timer = new ElapsedTime();
