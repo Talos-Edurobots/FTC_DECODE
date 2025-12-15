@@ -1,15 +1,16 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.configurables.annotations.IgnoreConfigurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.telemetry.SelectableOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
@@ -30,8 +31,8 @@ public class Debugger extends SelectableOpMode {
                 vc.add("Run Intake Velocity", () -> new MotorVelocityTest(RobotConstants.INTAKE_NAME));
             });
             s.folder("servo control", sc -> {
-                sc.add("right servo", () -> new ServoContol(RobotConstants.RIGHT_SERVO_NAME));
-                sc.add("left servo", () -> new ServoContol(RobotConstants.LEFT_SERVO_NAME));
+                sc.add("right servo", () -> new ServoControl(RobotConstants.RIGHT_SERVO_NAME));
+                sc.add("left servo", () -> new ServoControl(RobotConstants.LEFT_SERVO_NAME));
             });
         });
     }
@@ -91,36 +92,53 @@ class MotorVelocityTest extends OpMode {
     }
     private final String motorName;
     private DcMotorEx motor;
+    private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    public static double targetVelocity = 0, k_p = 0, k_i = 0, k_d = 0, k_s = 0, k_u = 0;
+    double errorSum = 0;
+    double lastError = 0;
+    ElapsedTime timer = new ElapsedTime();
 
     @Override
     public void init() {
-        motor = hardwareMap.get(DcMotorEx.class, motorName);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor.setDirection(DcMotor.Direction.REVERSE);
+//        motor = hardwareMap.get(DcMotorEx.class, motorName);
+//        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        motor.setDirection(DcMotor.Direction.REVERSE);
 
-        telemetry.addLine("Init Complete");
-        telemetry.update();
+        telemetryM.addLine("Init Complete");
+        telemetryM.update(telemetry);
+        timer.startTime();
     }
 
     @Override
     public void loop() {
+
+        timer.reset();
         // Set velocity via triggers
-        double targetVelocity = maxVelocity * (gamepad1.right_trigger - gamepad1.left_trigger);
-        motor.setVelocity(targetVelocity);
-
         double currentVelocity = motor.getVelocity();
+        double error = targetVelocity - currentVelocity;
+        double derivative = (error - lastError) / timer.seconds();
+        errorSum += error;
+        motor.setPower(
+                k_p * error +
+                k_i * errorSum + (error * timer.seconds()) +
+                k_d * derivative+
+                k_s * Math.signum(targetVelocity) +
+                k_u * targetVelocity
+        );
 
-        telemetry.addData("Target Velocity", targetVelocity);
-        telemetry.addData("Current Velocity", currentVelocity);
-        telemetry.addData("power", motor.getPower());
-        telemetry.update();
+        telemetryM.addData("Current Velocity", currentVelocity);
+        telemetryM.addData("power", motor.getPower());
+        telemetryM.addData("current", motor.getCurrent(CurrentUnit.AMPS));
+//        PanelsConfigurables.INSTANCE.refreshClass(this);
+        telemetryM.update(telemetry);
+        lastError = error;
     }
 }
 
-    class ServoContol extends OpMode{
+    class ServoControl extends OpMode{
         String servoName;
         Servo servo;
-        public ServoContol(String servoName) {
+        public ServoControl(String servoName) {
             this.servoName = servoName;
         }
 
