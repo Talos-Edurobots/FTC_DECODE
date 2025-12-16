@@ -15,7 +15,7 @@ public class TestPanelsGamepad extends LinearOpMode {
     GamepadManager gamepad = PanelsGamepad.INSTANCE.getFirstManager();
     @Override
     public void runOpMode() throws InterruptedException {
-        gamepad.asCombinedFTCGamepad(gamepad1);
+
         waitForStart();
         while (opModeIsActive()) {
             panelsTelemetry.addData("gamepad dpad left from panels", gamepad.getDpadLeft());

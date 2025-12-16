@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
+
 @TeleOp(name = "Debugger", group = "main")
 public class Debugger extends SelectableOpMode {
     public Debugger() {
@@ -47,6 +48,7 @@ public class Debugger extends SelectableOpMode {
 // MOTOR POWER TEST
 // ===================================================
 class MotorPowerTest extends OpMode {
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     public MotorPowerTest(String motorName) {
         this.motorName = motorName;
     }
@@ -65,8 +67,8 @@ class MotorPowerTest extends OpMode {
     }
     @Override
     public void init_loop() {
-        telemetry.addLine("Init Complete");
-        telemetry.update();
+        telemetryM.addLine("Init Complete");
+        telemetryM.update(telemetry);
     }
 
     @Override
@@ -81,15 +83,15 @@ class MotorPowerTest extends OpMode {
         double currentVelocity = motor.getVelocity();
         maxVelocity = Math.max(maxVelocity, currentVelocity);
 
-        telemetry.addLine("run motor using the triggers");
-        telemetry.addLine("press Y to reverse direction");
-        telemetry.addLine("-----------------------------");
-        telemetry.addData("Intake Power", power);
-        telemetry.addData("Intake Velocity", currentVelocity);
-        telemetry.addData("current Direction", motor.getDirection().toString());
-        telemetry.addData("current", motor.getCurrent(CurrentUnit.AMPS));
-        telemetry.addData("Max Velocity", maxVelocity);
-        telemetry.update();
+        telemetryM.addLine("run motor using the triggers");
+        telemetryM.addLine("press Y to reverse direction");
+        telemetryM.addLine("-----------------------------");
+        telemetryM.addData("Intake Power", power);
+        telemetryM.addData("Intake Velocity", currentVelocity);
+        telemetryM.addData("current Direction", motor.getDirection().toString());
+        telemetryM.addData("current", motor.getCurrent(CurrentUnit.AMPS));
+        telemetryM.addData("Max Velocity", maxVelocity);
+        telemetryM.update(telemetry);
     }
 }
 
@@ -152,32 +154,67 @@ class MotorVelocityTest extends OpMode {
     }
 }
 
-    class ServoControl extends OpMode{
-        String servoName;
-        Servo servo;
-        public ServoControl(String servoName) {
-            this.servoName = servoName;
-        }
-
-        @Override
-        public void init() {
-            servo = hardwareMap.servo.get(servoName);
-            telemetry.addLine("init");
-            telemetry.update();
-        }
-
-        @Override
-        public void loop() {
-            if (gamepad1.yWasPressed()) {
-                servo.setDirection(
-                        servo.getDirection() == Servo.Direction.FORWARD ?
-                                Servo.Direction.REVERSE :
-                                Servo.Direction.FORWARD
-                );
-            } // direction reverser
-            servo.setPosition(gamepad1.right_trigger - gamepad1.left_trigger);
-            telemetry.addData("servo direction", servo.getDirection());
-            telemetry.addData("servo pos", servo.getPosition());
-            telemetry.update();
-        }
+class ServoControl extends OpMode{
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    String servoName;
+    Servo servo;
+    public ServoControl(String servoName) {
+        this.servoName = servoName;
     }
+
+    @Override
+    public void init() {
+        servo = hardwareMap.servo.get(servoName);
+        telemetryM.addLine("init");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+        if (gamepad1.yWasPressed()) {
+            servo.setDirection(
+                    servo.getDirection() == Servo.Direction.FORWARD ?
+                            Servo.Direction.REVERSE :
+                            Servo.Direction.FORWARD
+            );
+        } // direction reverser
+        servo.setPosition(gamepad1.right_trigger - gamepad1.left_trigger);
+        telemetryM.addData("servo direction", servo.getDirection());
+        telemetryM.addData("servo pos", servo.getPosition());
+        telemetryM.update(telemetry);
+    }
+}
+
+@Configurable
+class MotorKeCalculator extends OpMode {
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    String motorName;
+    DcMotorEx motor;
+    ElapsedTime timer = new ElapsedTime();
+    double lastVelocity = 0;
+    static int samples = 20;
+    static double threshold = 0.1;
+
+    public MotorKeCalculator(String motorName) {
+        this.motorName = motorName;
+    }
+
+    @Override
+    public void init() {
+        motor = hardwareMap.get(DcMotorEx.class, motorName);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        telemetryM.addLine("init complete");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void init_loop() {
+
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+
+    }
+}
