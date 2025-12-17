@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+import android.util.Log;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -10,6 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -110,6 +113,7 @@ class MotorVelocityTest extends OpMode {
     double lastError = 0;
     ElapsedTime timer = new ElapsedTime();
 
+
     @Override
     public void init() {
 //        motor = hardwareMap.get(DcMotorEx.class, motorName);
@@ -185,36 +189,111 @@ class ServoControl extends OpMode{
     }
 }
 
-@Configurable
-class MotorKeCalculator extends OpMode {
-    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    String motorName;
-    DcMotorEx motor;
-    ElapsedTime timer = new ElapsedTime();
-    double lastVelocity = 0;
-    static int samples = 20;
-    static double threshold = 0.1;
 
-    public MotorKeCalculator(String motorName) {
-        this.motorName = motorName;
+
+@Configurable
+class KeCharacterizationOpMode extends OpMode {
+
+    DcMotorEx motor;
+
+    static int SAMPLES = 5;
+    double[] powerLevels = new double[SAMPLES];
+    {
+        for (int i = 0; i < SAMPLES; i++) {
+            powerLevels[i] = i * (1.0 / (SAMPLES /*- 1*/) );
+        }
     }
+    int index = 0;
+
+    double accelEpsilon = 5.0; // ticks/s^2 threshold
+    long settleTimeMs = 500;
+
+    double lastVelocity = 0.0;
+    long stableStartTime = 0;
+    boolean steady = false;
+    String TAG = "KeCharacterization";
 
     @Override
     public void init() {
-        motor = hardwareMap.get(DcMotorEx.class, motorName);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        telemetryM.addLine("init complete");
-        telemetryM.update(telemetry);
+        motor = hardwareMap.get(DcMotorEx.class, "motor");
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+    }
+    @Override
+    public void init_loop() {
+        telemetry.addLine("Ke Characterization Ready");
+        telemetry.update();
     }
 
     @Override
-    public void init_loop() {
-
-        telemetryM.update(telemetry);
+    public void start() {
+        index = 0;
+        applyPower();
+        lastVelocity = motor.getVelocity();
+        stableStartTime = System.currentTimeMillis();
     }
 
     @Override
     public void loop() {
+        if (index >= powerLevels.length) {
+            motor.setPower(0);
+            telemetry.addLine("Done");
+            telemetry.addData("LogCat tag", TAG);
+            return;
+        }
 
+        double currentVelocity = motor.getVelocity();
+        double accel = (currentVelocity - lastVelocity) / 0.02; // ~20ms loop
+
+        if (Math.abs(accel) < accelEpsilon) {
+            if (!steady) {
+                steady = true;
+                stableStartTime = System.currentTimeMillis();
+            } else if (System.currentTimeMillis() - stableStartTime > settleTimeMs) {
+                logPoint();
+                index++;
+                applyPower();
+                steady = false;
+            }
+        } else {
+            steady = false;
+        }
+
+        lastVelocity = currentVelocity;
+
+        telemetry.addData("Index", index);
+        telemetry.addData("Velocity (ticks/s)", currentVelocity);
+        telemetry.addData("Accel (ticks/s^2)", accel);
+
+        telemetry.update();
+    }
+
+    private void applyPower() {
+        if (index < powerLevels.length) {
+            motor.setPower(powerLevels[index]);
+        }
+    }
+
+    private void logPoint() {
+        double velocity = motor.getVelocity();
+        double batteryVoltage = getBatteryVoltage();
+        double appliedVoltage = powerLevels[index] * batteryVoltage;
+
+        telemetry.addLine("=== DATA POINT ===");
+        telemetry.addData("Power", powerLevels[index]);
+        telemetry.addData("Velocity (ticks/s)", velocity);
+        telemetry.addData("Battery Voltage (V)", batteryVoltage);
+        telemetry.addData("Applied Voltage (V)", appliedVoltage);
+        Log.d(TAG, String.format("DATA_POINT,%.3f,%.3f,%.3f,%.3f",
+                powerLevels[index], velocity, batteryVoltage, appliedVoltage));
+    }
+
+    private double getBatteryVoltage() {
+        double minVoltage = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            double v = sensor.getVoltage();
+            if (v > 0) minVoltage = Math.min(minVoltage, v);
+        }
+        return minVoltage;
     }
 }
