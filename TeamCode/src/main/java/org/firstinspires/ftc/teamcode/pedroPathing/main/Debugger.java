@@ -40,6 +40,12 @@ public class Debugger extends SelectableOpMode {
                 sc.add("right flicker", () -> new ServoControl(RobotConstants.RIGHT_FLICKER_NAME));
                 sc.add("left flicker", () -> new ServoControl(RobotConstants.LEFT_FLICKER_NAME));
             });
+            s.folder("high level", hlt -> {
+                hlt.add("shooter with servo", () -> new Shooter(
+                        new MotorVelocityTest(RobotConstants.SHOOTER_NAME),
+                        new ServoControl(RobotConstants.LEFT_SERVO_NAME)
+                ));
+            });
         });
     }
 
@@ -295,5 +301,36 @@ class KeCharacterizationOpMode extends OpMode {
             if (v > 0) minVoltage = Math.min(minVoltage, v);
         }
         return minVoltage;
+    }
+}
+
+class Shooter extends OpMode{
+    OpMode motor, servo;
+    public Shooter(OpMode motor, OpMode servo) {
+        this.motor = motor;
+        this.servo = servo;
+    }
+    @Override
+    public void init() {
+        motor.hardwareMap = hardwareMap;
+        servo.hardwareMap = hardwareMap;
+        motor.telemetry = telemetry;
+        servo.telemetry = telemetry;
+        motor.gamepad1 = gamepad1;
+        servo.gamepad1 = gamepad1;
+        motor.init();
+        servo.init();
+    }
+
+    @Override
+    public void init_loop() {
+        motor.init_loop();
+        servo.init_loop();
+    }
+
+    @Override
+    public void loop() {
+        motor.loop();
+        servo.loop();
     }
 }
