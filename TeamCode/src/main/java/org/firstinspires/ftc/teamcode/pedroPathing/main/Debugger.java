@@ -45,6 +45,7 @@ public class Debugger extends SelectableOpMode {
                         new MotorVelocityTest(RobotConstants.SHOOTER_NAME),
                         new ServoControl(RobotConstants.LEFT_SERVO_NAME)
                 ));
+                hlt.add("shooter ke", () -> new KeCharacterizationOpMode());
             });
         });
     }
@@ -68,11 +69,9 @@ class MotorPowerTest extends OpMode {
 
     @Override
     public void init() {
-        motor = hardwareMap.get(DcMotorEx.class, motorName);
+        motor = (DcMotorEx) hardwareMap.get(DcMotor.class, motorName);
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motor.setDirection(DcMotor.Direction.FORWARD);
-
-
     }
     @Override
     public void init_loop() {
@@ -113,7 +112,7 @@ class MotorVelocityTest extends OpMode {
     private final String motorName;
     private DcMotorEx motor;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    public static double targetVelocity = 0, k_p = 0, k_i = 0, k_d = 0, k_s = 0, k_u = 0;
+    public static double targetVelocity = 2400, k_p = 0.01, k_i = 0, k_d = 0, k_s = 0.02, k_u = 0.0004;
     public static DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD;
     double integralSum = 0;
     double lastError = 0;
@@ -122,10 +121,9 @@ class MotorVelocityTest extends OpMode {
 
     @Override
     public void init() {
-//        motor = hardwareMap.get(DcMotorEx.class, motorName);
-//        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        motor.setDirection(DcMotor.Direction.REVERSE);
-
+        motor = hardwareMap.get(DcMotorEx.class, motorName);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setDirection(DcMotor.Direction.REVERSE);
         telemetryM.addLine("Init Complete");
         telemetryM.update(telemetry);
         timer.startTime();
@@ -158,6 +156,7 @@ class MotorVelocityTest extends OpMode {
         telemetryM.addData("Current Velocity", currentVelocity);
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("current", motor.getCurrent(CurrentUnit.AMPS));
+        telemetryM.addData("target vel", targetVelocity);
 //        PanelsConfigurables.INSTANCE.refreshClass(this);
         telemetryM.update(telemetry);
         lastError = error;
@@ -188,7 +187,13 @@ class ServoControl extends OpMode{
                             Servo.Direction.FORWARD
             );
         } // direction reverser
-        servo.setPosition(gamepad1.right_trigger - gamepad1.left_trigger);
+//        servo.setPosition(gamepad1.right_trigger - gamepad1.left_trigger);
+        if (gamepad1.dpadLeftWasPressed()) {
+            servo.setPosition(servo.getPosition() - .1);
+        }
+        else if (gamepad1.dpadRightWasPressed()) {
+            servo.setPosition(servo.getPosition() + .1);
+        }
         telemetryM.addData("servo direction", servo.getDirection());
         telemetryM.addData("servo pos", servo.getPosition());
         telemetryM.update(telemetry);
@@ -211,7 +216,7 @@ class KeCharacterizationOpMode extends OpMode {
     }
     int index = 0;
 
-    double accelEpsilon = 5.0; // ticks/s^2 threshold
+    double accelEpsilon = 40; // ticks/s^2 threshold
     long settleTimeMs = 500;
 
     double lastVelocity = 0.0;
@@ -221,7 +226,7 @@ class KeCharacterizationOpMode extends OpMode {
 
     @Override
     public void init() {
-        motor = hardwareMap.get(DcMotorEx.class, "motor");
+        motor = hardwareMap.get(DcMotorEx.class, "shooter");
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
