@@ -7,6 +7,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -36,6 +37,7 @@ public class Main extends LinearOpMode {
         double oldTime = 0, newTime, dt;
 
         shooter = hardwareMap.get(DcMotorEx.class, RobotConstants.SHOOTER_NAME);
+        shooter.setDirection(DcMotorSimple.Direction.REVERSE);
         hoodServo = hardwareMap.servo.get(RobotConstants.LEFT_SERVO_NAME);
         hoodServo.setPosition(0);
         leftFlicker = hardwareMap.servo.get(RobotConstants.LEFT_FLICKER_NAME);
@@ -127,6 +129,7 @@ public class Main extends LinearOpMode {
             telemetryM.addData("intake velocity", intake.getIntakeMotor().getVelocity());
             telemetryM.addData("intake current", intake.getIntakeMotor().getCurrent(CurrentUnit.AMPS));
             telemetryM.addData("pinpoint pos", robotPos);
+            telemetryM.addData("left flicker pos", leftFlicker.getPosition());
             telemetryM.update(telemetry);
 
             sleep(20);
