@@ -106,6 +106,7 @@ class MotorPowerTest extends OpMode {
 @Configurable
 class MotorVelocityTest extends OpMode {
     public double maxVelocity = 2700;
+    boolean runMotor = true;
     public MotorVelocityTest(String motorName) {
         this.motorName = motorName;
     }
@@ -122,6 +123,7 @@ class MotorVelocityTest extends OpMode {
     @Override
     public void init() {
         motor = hardwareMap.get(DcMotorEx.class, motorName);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor.setDirection(DcMotor.Direction.REVERSE);
         telemetryM.addLine("Init Complete");
@@ -143,13 +145,21 @@ class MotorVelocityTest extends OpMode {
         double error = targetVelocity - currentVelocity;
         double derivative = (error - lastError) / timer.seconds();
         integralSum += error * timer.seconds();
-        motor.setPower(
-                k_p * error +
-                k_i * integralSum +
-                k_d * derivative+
-                k_s * Math.signum(targetVelocity) +
-                k_u * targetVelocity
-        );
+        if (gamepad1.bWasPressed()) {
+            runMotor ^= true;
+        }
+        if (runMotor) {
+            motor.setPower(
+                    k_p * error +
+                            k_i * integralSum +
+                            k_d * derivative +
+                            k_s * Math.signum(targetVelocity) +
+                            k_u * targetVelocity
+            );
+        }
+        else {
+            motor.setPower(0);
+        }
 
         telemetryM.addLine("run motor in panels");
         telemetryM.addLine("---------------");
@@ -165,6 +175,7 @@ class MotorVelocityTest extends OpMode {
 
 class ServoControl extends OpMode{
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    double servoTargetPos = 0;
     String servoName;
     Servo servo;
     public ServoControl(String servoName) {
@@ -187,13 +198,15 @@ class ServoControl extends OpMode{
                             Servo.Direction.FORWARD
             );
         } // direction reverser
-        servo.setPosition(gamepad1.right_trigger - gamepad1.left_trigger);
-//        if (gamepad1.dpadLeftWasPressed()) {
-//            servo.setPosition(servo.getPosition() - .1);
-//        }
-//        else if (gamepad1.dpadRightWasPressed()) {
-//            servo.setPosition(servo.getPosition() + .1);
-//        }
+//        servo.setPosition(gamepad1.right_trigger - gamepad1.left_trigger);
+        if (gamepad1.dpadLeftWasPressed()) {
+            servoTargetPos = servo.getPosition() - .1;
+        }
+        else if (gamepad1.dpadRightWasPressed()) {
+            servoTargetPos = servo.getPosition() + .1;
+        }
+        servoTargetPos = Math.min(1.0, Math.max(0.0, servoTargetPos));
+        servoTargetPos += gamepad1.right_trigger - gamepad1.left_trigger;
         telemetryM.addData("servo direction", servo.getDirection());
         telemetryM.addData("servo pos", servo.getPosition());
         telemetryM.update(telemetry);
