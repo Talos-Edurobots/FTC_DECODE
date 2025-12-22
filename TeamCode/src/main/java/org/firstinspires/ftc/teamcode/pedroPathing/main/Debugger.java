@@ -187,13 +187,13 @@ class ServoControl extends OpMode{
                             Servo.Direction.FORWARD
             );
         } // direction reverser
-//        servo.setPosition(gamepad1.right_trigger - gamepad1.left_trigger);
-        if (gamepad1.dpadLeftWasPressed()) {
-            servo.setPosition(servo.getPosition() - .1);
-        }
-        else if (gamepad1.dpadRightWasPressed()) {
-            servo.setPosition(servo.getPosition() + .1);
-        }
+        servo.setPosition(gamepad1.right_trigger - gamepad1.left_trigger);
+//        if (gamepad1.dpadLeftWasPressed()) {
+//            servo.setPosition(servo.getPosition() - .1);
+//        }
+//        else if (gamepad1.dpadRightWasPressed()) {
+//            servo.setPosition(servo.getPosition() + .1);
+//        }
         telemetryM.addData("servo direction", servo.getDirection());
         telemetryM.addData("servo pos", servo.getPosition());
         telemetryM.update(telemetry);
