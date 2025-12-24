@@ -207,6 +207,7 @@ class ServoControl extends OpMode{
         }
 //        servoTargetPos = Math.min(1.0, Math.max(0.0, servoTargetPos));
         servoTargetPos += gamepad1.right_trigger - gamepad1.left_trigger;
+        servo.setPosition(servoTargetPos);
         telemetryM.addData("servo direction", servo.getDirection());
         telemetryM.addData("servo pos", servo.getPosition());
         telemetryM.update(telemetry);
