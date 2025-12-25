@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 
 
 @TeleOp(name = "Debugger", group = "main")
@@ -45,7 +46,7 @@ public class Debugger extends SelectableOpMode {
                         new MotorVelocityTest(RobotConstants.SHOOTER_NAME),
                         new ServoControl(RobotConstants.LEFT_SERVO_NAME)
                 ));
-                hlt.add("shooter ke", () -> new KeCharacterizationOpMode());
+//                hlt.add("shooter ke", KeCharacterizationOpMode::new);
             });
         });
     }
@@ -214,6 +215,22 @@ class ServoControl extends OpMode{
     }
 }
 
+class FlickerAnalogControl extends OpMode{
+    Flickers flickers = new Flickers(hardwareMap);
+    @Override
+    public void init() {
+        flickers.init();
+    }
+
+    @Override
+    public void loop() {
+        flickers.setLeftFlickerPos(gamepad1.left_trigger);
+        flickers.setRightFlickerPos(gamepad1.right_trigger);
+        telemetry.addData("left flicker pos", gamepad1.left_trigger);
+        telemetry.addData("right flicker pos", gamepad1.right_trigger);
+        telemetry.update();
+    }
+}
 
 
 @Configurable

@@ -25,6 +25,9 @@ public class PanelsConfigurablesTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         waitForStart();
         while (opModeIsActive()){
+            if (gamepad1.aWasPressed()) {
+                testBoolean ^= true;
+            }
             telemetryM.addData("testInt", testInt);
             telemetryM.addData("testLong", testLong);
             telemetryM.addData("testDouble", testDouble);

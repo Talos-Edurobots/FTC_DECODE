@@ -28,6 +28,8 @@ public final class RobotConstants {
     // Shooter
     public static DcMotorSimple.Direction INTAKE_DIRECTION      = DcMotorSimple.Direction.FORWARD;
     public static String SHOOTER_NAME     = "shooter";
+    public static String SHOOTER_LED_RED  = "shooterRed";
+    public static String SHOOTER_LED_GREEN= "shooterGreen";
     // Pinpoint
     public static DcMotorSimple.Direction SHOOTER_DIRECTION     = DcMotorSimple.Direction.REVERSE;
     public static String RIGHT_SERVO_NAME = "rightServo";

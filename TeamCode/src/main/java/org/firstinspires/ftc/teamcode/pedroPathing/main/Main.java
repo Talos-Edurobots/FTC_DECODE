@@ -7,6 +7,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -31,6 +32,7 @@ public class Main extends LinearOpMode {
     Pinpoint pinpoint;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Pose robotPos;
+    LED led;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -55,6 +57,7 @@ public class Main extends LinearOpMode {
         imu.initialize(RobotConstants.IMU_PARAMETERS);
         imu.resetYaw();
 
+
         waitForStart();
         while (opModeIsActive()){
             newTime = getRuntime();
@@ -73,6 +76,7 @@ public class Main extends LinearOpMode {
             if (gamepad1.dpadRightWasPressed()) {
                 shooter.setHoodAngle(shooter.getHoodAngle() + .1);
             }
+
             flickers.leftFlick(gamepad1.left_bumper);
             flickers.rightFlick(gamepad1.right_bumper);
 

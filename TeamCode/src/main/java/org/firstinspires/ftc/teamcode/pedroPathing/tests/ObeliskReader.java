@@ -31,6 +31,9 @@ public class ObeliskReader extends LinearOpMode {
             if (result != null && result.isValid()) {
                 telemetry.addData("motif", result.getFiducialResults().get(0).getFiducialId());
             }
+            else {
+                telemetry.addData("motif", "none");
+            }
             telemetry.update();
         }
     }

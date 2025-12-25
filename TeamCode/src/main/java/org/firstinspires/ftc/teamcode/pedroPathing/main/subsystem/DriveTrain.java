@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
+import com.pedropathing.follower.Follower;
+import com.pedropathing.follower.FollowerConstants;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -8,6 +10,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.RobotConstants;
 public class DriveTrain {
     HardwareMap hwMap;
     DcMotor lf, rf, lb, rb;
+    Follower follower = new Follower(FollowerConstants.class);
     public DriveTrain(HardwareMap hwMap) {
         this.hwMap = hwMap;
     }
