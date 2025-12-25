@@ -6,8 +6,6 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -15,8 +13,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Draw;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 
 
 //Im here
@@ -25,26 +25,22 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
 public class Main extends LinearOpMode {
     DriveTrain driveTrain;
     Intake intake;
+    Shooter shooter;
+    Flickers flickers;
     IMU imu;
     Pinpoint pinpoint;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Pose robotPos;
-    DcMotorEx shooter;
-    Servo hoodServo, leftFlicker, rightFlicker;
 
     @Override
     public void runOpMode() throws InterruptedException {
         double oldTime = 0, newTime, dt;
 
-        shooter = hardwareMap.get(DcMotorEx.class, RobotConstants.SHOOTER_NAME);
-        shooter.setDirection(DcMotorSimple.Direction.REVERSE);
-        hoodServo = hardwareMap.servo.get(RobotConstants.LEFT_SERVO_NAME);
-        hoodServo.setPosition(0);
-        leftFlicker = hardwareMap.servo.get(RobotConstants.LEFT_FLICKER_NAME);
-        leftFlicker.setDirection(Servo.Direction.REVERSE);
-        leftFlicker.setPosition(0);
-        rightFlicker = hardwareMap.servo.get(RobotConstants.RIGHT_FLICKER_NAME);
-        rightFlicker.setPosition(0);
+        shooter = new Shooter(hardwareMap);
+        shooter.init();
+
+        flickers = new Flickers(hardwareMap);
+        flickers.init();
 
         pinpoint = new Pinpoint(hardwareMap);
         pinpoint.init();
@@ -65,32 +61,20 @@ public class Main extends LinearOpMode {
             dt = newTime - oldTime;
             oldTime = newTime;
 
+            // Shooter control
             if (gamepad1.dpadUpWasPressed()) {
-                shooter.setVelocity(2500);
+                shooter.changeRun();
             }
-            else if (gamepad1.dpadDownWasPressed()) {
-                shooter.setVelocity(0);
-            }
+            shooter.update(2500, dt);
 
             if (gamepad1.dpadLeftWasPressed()) {
-                hoodServo.setPosition(hoodServo.getPosition() - .1);
+                shooter.setHoodAngle(shooter.getHoodAngle() - .1);
             }
-            else if (gamepad1.dpadRightWasPressed()) {
-                hoodServo.setPosition(hoodServo.getPosition() + .1);
+            if (gamepad1.dpadRightWasPressed()) {
+                shooter.setHoodAngle(shooter.getHoodAngle() + .1);
             }
-
-            if (gamepad1.left_bumper) {
-                leftFlicker.setPosition(1);
-            }
-            else {
-                leftFlicker.setPosition(0);
-            }
-            if (gamepad1.right_bumper) {
-                rightFlicker.setPosition(1);
-            }
-            else {
-                rightFlicker.setPosition(0);
-            }
+            flickers.leftFlick(gamepad1.left_bumper);
+            flickers.rightFlick(gamepad1.right_bumper);
 
             pinpoint.update();
             robotPos = pinpoint.getPosition();
@@ -123,13 +107,12 @@ public class Main extends LinearOpMode {
             driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
 
             telemetryM.addData("shooter vel", shooter.getVelocity());
-            telemetryM.addData("shooter current", shooter.getCurrent(CurrentUnit.AMPS));
+            telemetryM.addData("shooter current", shooter.getCurrent());
             telemetryM.addData("Heading", heading);
-            telemetryM.addData("dx", dt);
+            telemetryM.addData("dt", dt);
             telemetryM.addData("intake velocity", intake.getIntakeMotor().getVelocity());
             telemetryM.addData("intake current", intake.getIntakeMotor().getCurrent(CurrentUnit.AMPS));
             telemetryM.addData("pinpoint pos", robotPos);
-            telemetryM.addData("left flicker pos", leftFlicker.getPosition());
             telemetryM.update(telemetry);
 
             sleep(20);

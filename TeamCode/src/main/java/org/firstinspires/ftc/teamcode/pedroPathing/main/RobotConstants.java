@@ -5,6 +5,10 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+
+import java.util.HashMap;
 
 public final class RobotConstants {
     private RobotConstants(){}
@@ -55,4 +59,9 @@ public final class RobotConstants {
     public static Style ROBOT_DRAW_STYLE = new Style(
             "", "#3F51B5", .75
     );
+    public static double SHOOTER_K_P = 0.01;
+    public static double SHOOTER_K_I = 0;
+    public static double SHOOTER_K_D = 0;
+    public static double SHOOTER_K_S = 0.02;
+    public static double SHOOTER_K_V = 0.0004;
 }

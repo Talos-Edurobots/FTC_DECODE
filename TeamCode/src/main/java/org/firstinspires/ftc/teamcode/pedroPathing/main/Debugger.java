@@ -41,7 +41,7 @@ public class Debugger extends SelectableOpMode {
                 sc.add("left flicker", () -> new ServoControl(RobotConstants.LEFT_FLICKER_NAME));
             });
             s.folder("high level", hlt -> {
-                hlt.add("shooter with servo", () -> new Shooter(
+                hlt.add("shooter with servo", () -> new ShooterOpMode(
                         new MotorVelocityTest(RobotConstants.SHOOTER_NAME),
                         new ServoControl(RobotConstants.LEFT_SERVO_NAME)
                 ));
@@ -323,9 +323,9 @@ class KeCharacterizationOpMode extends OpMode {
     }
 }
 
-class Shooter extends OpMode{
+class ShooterOpMode extends OpMode{
     OpMode motor, servo;
-    public Shooter(OpMode motor, OpMode servo) {
+    public ShooterOpMode(OpMode motor, OpMode servo) {
         this.motor = motor;
         this.servo = servo;
     }
