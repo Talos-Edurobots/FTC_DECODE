@@ -17,14 +17,14 @@ public class Flickers {
         leftFlicker.setPosition(0);
         rightFlicker = hwmap.servo.get(RobotConstants.RIGHT_FLICKER_NAME);
         rightFlicker.setDirection(Servo.Direction.FORWARD);
-        rightFlicker.setPosition(0);
+        rightFlicker.setPosition(0.4);
     }
 
     public void leftFlick(boolean flick){
-        leftFlicker.setPosition(flick ? 1 : 0);
+        leftFlicker.setPosition(flick ? 1 : 0.4);
     }
     public void rightFlick(boolean flick){
-        rightFlicker.setPosition(flick ? 1 : 0);
+        rightFlicker.setPosition(flick ? 1 : 0.4);
     }
     public void setLeftFlickerPos(double pwm) {
         leftFlicker.setPosition(pwm);

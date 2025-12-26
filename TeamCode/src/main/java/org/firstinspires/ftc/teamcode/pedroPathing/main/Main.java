@@ -68,7 +68,7 @@ public class Main extends LinearOpMode {
             if (gamepad1.dpadUpWasPressed()) {
                 shooter.changeRun();
             }
-            shooter.update(2500, dt);
+            shooter.update(dt);
 
             if (gamepad1.dpadLeftWasPressed()) {
                 shooter.setHoodAngle(shooter.getHoodAngle() - .1);
@@ -112,6 +112,7 @@ public class Main extends LinearOpMode {
 
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());
+            telemetryM.addData("shooter target", shooter.getTargetVelocity());
             telemetryM.addData("Heading", heading);
             telemetryM.addData("dt", dt);
             telemetryM.addData("intake velocity", intake.getIntakeMotor().getVelocity());

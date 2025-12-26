@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -9,6 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.RobotConstants;
 
+@Configurable
 public class Shooter {
     private HardwareMap hwmap;
     private DcMotorEx motor;
@@ -19,7 +21,12 @@ public class Shooter {
     private double lastError = 0;
     private double dt = 0;
     private boolean runMotor = true;
-    private double targetVelocity = 0;
+
+    public double getTargetVelocity() {
+        return targetVelocity;
+    }
+
+    public static double targetVelocity = 0;
     public Shooter(HardwareMap hwmap) {
         this.hwmap = hwmap;
     }
@@ -37,8 +44,7 @@ public class Shooter {
         redLED = hwmap.get(LED.class, RobotConstants.SHOOTER_LED_RED);
     }
 
-    public void update(double targetVelocity, double dt) {
-        this.targetVelocity = targetVelocity;
+    public void update(double dt) {
         this.dt = dt;
         if (runMotor) {
             setVelocity();

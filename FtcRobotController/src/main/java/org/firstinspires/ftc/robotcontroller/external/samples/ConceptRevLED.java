@@ -58,8 +58,8 @@ public class ConceptRevLED extends OpMode {
 
     @Override
     public void init() {
-        frontLED_green = hardwareMap.get(LED.class, "front_led_green");
-        frontLED_red = hardwareMap.get(LED.class, "front_led_red");
+        frontLED_green = hardwareMap.get(LED.class, "shooterRed");
+        frontLED_red = hardwareMap.get(LED.class, "shooterGreen");
     }
 
     @Override

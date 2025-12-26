@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.RobotConstants;
 public class DriveTrain {
     HardwareMap hwMap;
     DcMotor lf, rf, lb, rb;
-    Follower follower = new Follower(FollowerConstants.class);
+//    Follower follower = new Follower(FollowerConstants.class);
     public DriveTrain(HardwareMap hwMap) {
         this.hwMap = hwMap;
     }
