@@ -26,7 +26,7 @@ public class Shooter {
         return targetVelocity;
     }
 
-    public static double targetVelocity = 0;
+    public static double targetVelocity = 2400;
     public Shooter(HardwareMap hwmap) {
         this.hwmap = hwmap;
     }
