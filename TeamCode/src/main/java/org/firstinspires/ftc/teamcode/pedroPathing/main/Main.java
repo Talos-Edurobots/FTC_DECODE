@@ -7,12 +7,9 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.LED;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Draw;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
@@ -32,7 +29,6 @@ public class Main extends LinearOpMode {
     Pinpoint pinpoint;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Pose robotPos;
-    LED led;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -52,11 +48,6 @@ public class Main extends LinearOpMode {
 
         intake = new Intake(hardwareMap);
         intake.init();
-
-        imu = hardwareMap.get(IMU.class, "imu");
-        imu.initialize(RobotConstants.IMU_PARAMETERS);
-        imu.resetYaw();
-
 
         waitForStart();
         while (opModeIsActive()){
@@ -82,12 +73,11 @@ public class Main extends LinearOpMode {
 
             pinpoint.update();
             robotPos = pinpoint.getPosition();
-            Draw.drawRobot(robotPos, RobotConstants.ROBOT_DRAW_STYLE);
-            Draw.update();
+            Drawing.drawRobot(robotPos);
+            Drawing.sendPacket();
 
 
             if (gamepad1.options) {
-                imu.resetYaw();
                 pinpoint.getPinpoint().setHeading(0, AngleUnit.DEGREES);
             }
 
@@ -108,7 +98,7 @@ public class Main extends LinearOpMode {
             double heading = robotPos.getHeading();
 
             double speed = 1;
-            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
+//            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
 
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());
@@ -120,7 +110,7 @@ public class Main extends LinearOpMode {
             telemetryM.addData("pinpoint pos", robotPos);
             telemetryM.update(telemetry);
 
-            sleep(20);
+//            sleep(20);
 
         }
     }

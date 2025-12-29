@@ -47,6 +47,8 @@ public class Debugger extends SelectableOpMode {
                         new ServoControl(RobotConstants.LEFT_SERVO_NAME)
                 ));
 //                hlt.add("shooter ke", KeCharacterizationOpMode::new);
+                hlt.add("flicker analog control", FlickerAnalogControl::new);
+                hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
             });
         });
     }
@@ -376,3 +378,55 @@ class ShooterOpMode extends OpMode{
         servo.loop();
     }
 }
+
+
+class VoltageSensorReadoutOpMode extends OpMode {
+
+    private Iterable<VoltageSensor> voltageSensors;
+
+    @Override
+    public void init() {
+        // Get all voltage sensors from the hardware map
+        voltageSensors = hardwareMap.voltageSensor;
+
+        telemetry.addLine("Voltage sensors initialized");
+        telemetry.update();
+    }
+
+    public void init_loop() {
+        telemetry.addLine("init complete");
+    }
+
+    @Override
+    public void loop() {
+
+        int index = 0;
+        double minVoltage = Double.POSITIVE_INFINITY;
+
+        for (VoltageSensor sensor : voltageSensors) {
+            double voltage = sensor.getVoltage();
+
+            telemetry.addLine("VoltageSensor[" + index + "]");
+            telemetry.addData("  Device Name", sensor.getDeviceName());
+            telemetry.addData("  Connection", sensor.getConnectionInfo());
+            telemetry.addData("  Voltage (V)", "%.2f", voltage);
+
+            if (voltage > 0) {
+                minVoltage = Math.min(minVoltage, voltage);
+            }
+
+            index++;
+        }
+
+        telemetry.addLine();
+
+        if (minVoltage < Double.POSITIVE_INFINITY) {
+            telemetry.addData("Robot Battery Voltage (V)", "%.2f", minVoltage);
+        } else {
+            telemetry.addLine("No valid voltage readings");
+        }
+
+        telemetry.update();
+    }
+}
+
