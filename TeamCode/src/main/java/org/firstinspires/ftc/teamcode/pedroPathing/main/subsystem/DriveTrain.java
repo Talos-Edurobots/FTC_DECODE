@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
-import com.pedropathing.follower.Follower;
-import com.pedropathing.follower.FollowerConstants;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 
 public class DriveTrain {
     HardwareMap hwMap;

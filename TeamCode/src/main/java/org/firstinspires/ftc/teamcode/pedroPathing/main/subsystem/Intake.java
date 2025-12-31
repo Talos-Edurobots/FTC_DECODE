@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 
 public class Intake {
     public enum IntakeState {

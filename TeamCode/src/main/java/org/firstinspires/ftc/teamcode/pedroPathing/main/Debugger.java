@@ -16,6 +16,8 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 
 
@@ -24,16 +26,16 @@ public class Debugger extends SelectableOpMode {
     public Debugger() {
         super("Select a Tuning OpMode", s -> {
             s.folder("Without encoder", ne -> {
-                ne.add("Run Intake", () -> new MotorPowerTest(RobotConstants.INTAKE_NAME));
-                ne.add("Run Shooter", () -> new MotorPowerTest(RobotConstants.SHOOTER_NAME));
-                ne.add("Run Left Front Drive", () -> new MotorPowerTest(RobotConstants.LEFT_FRONT_NAME));
-                ne.add("Run Right Front Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_FRONT_NAME));
-                ne.add("Run Left Back Drive", () -> new MotorPowerTest(RobotConstants.LEFT_BACK_NAME));
-                ne.add("Run Right Back Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_BACK_NAME));
+                ne.add("Run Intake", () -> new MotorPowerTest(RobotConstants.INTAKE_CONFIG));
+                ne.add("Run Shooter", () -> new MotorPowerTest(RobotConstants.SHOOTER_CONFIG));
+                ne.add("Run Left Front Drive", () -> new MotorPowerTest(RobotConstants.LEFT_FRONT_CONFIG));
+                ne.add("Run Right Front Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_FRONT_CONFIG));
+                ne.add("Run Left Back Drive", () -> new MotorPowerTest(RobotConstants.LEFT_BACK_CONFIG));
+                ne.add("Run Right Back Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_BACK_CONFIG));
             });
             s.folder("Velocity Control", vc -> {;
-                vc.add("Run Shooter Velocity", () -> new MotorVelocityTest(RobotConstants.SHOOTER_NAME));
-                vc.add("Run Intake Velocity", () -> new MotorVelocityTest(RobotConstants.INTAKE_NAME));
+//                vc.add("Run Shooter Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.SHOOTER_NAME));
+//                vc.add("Run Intake Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.INTAKE_NAME));
             });
             s.folder("servo control", sc -> {
                 sc.add("right servo", () -> new ServoControl(RobotConstants.RIGHT_SERVO_NAME));
@@ -42,13 +44,14 @@ public class Debugger extends SelectableOpMode {
                 sc.add("left flicker", () -> new ServoControl(RobotConstants.LEFT_FLICKER_NAME));
             });
             s.folder("high level", hlt -> {
-                hlt.add("shooter with servo", () -> new ShooterOpMode(
-                        new MotorVelocityTest(RobotConstants.SHOOTER_NAME),
-                        new ServoControl(RobotConstants.LEFT_SERVO_NAME)
-                ));
+//                hlt.add("shooter with servo", () -> new ShooterOpMode(
+//                        new MotorPIDFVelocityTest(RobotConstants.SHOOTER_NAME),
+//                        new ServoControl(RobotConstants.LEFT_SERVO_NAME)
+//                ));
 //                hlt.add("shooter ke", KeCharacterizationOpMode::new);
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
                 hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
+                hlt.add("motor position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
             });
         });
     }
@@ -62,19 +65,16 @@ public class Debugger extends SelectableOpMode {
 // ===================================================
 class MotorPowerTest extends OpMode {
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    public MotorPowerTest(String motorName) {
-        this.motorName = motorName;
+    public MotorPowerTest(MotorConfig motorName) {
+        this.motor = motorName;
     }
-    private final String motorName;
-    private DcMotorEx motor;
+    private MotorConfig motor;
 
     private double maxVelocity = 0;
 
     @Override
     public void init() {
-        motor = (DcMotorEx) hardwareMap.get(DcMotor.class, motorName);
-        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motor.setDirection(DcMotor.Direction.FORWARD);
+
     }
     @Override
     public void init_loop() {
@@ -92,25 +92,26 @@ class MotorPowerTest extends OpMode {
         motor.setPower(power);
 
         double currentVelocity = motor.getVelocity();
-        maxVelocity = Math.max(maxVelocity, currentVelocity);
+        maxVelocity = Math.max(maxVelocity, Math.abs(currentVelocity));
 
         telemetryM.addLine("run motor using the triggers");
         telemetryM.addLine("press Y to reverse direction");
         telemetryM.addLine("-----------------------------");
         telemetryM.addData("Power", power);
         telemetryM.addData("Velocity", currentVelocity);
+        telemetryM.addData("motor pos", motor.getVelocity());
         telemetryM.addData("current Direction", motor.getDirection().toString());
-        telemetryM.addData("current", motor.getCurrent(CurrentUnit.AMPS));
+        telemetryM.addData("current", motor.getCurrent());
         telemetryM.addData("Max Velocity", maxVelocity);
         telemetryM.update(telemetry);
     }
 }
 
 @Configurable
-class MotorVelocityTest extends OpMode {
+class MotorPIDFVelocityTest extends OpMode {
     public double maxVelocity = 2700;
     boolean runMotor = true;
-    public MotorVelocityTest(String motorName) {
+    public MotorPIDFVelocityTest(String motorName) {
         this.motorName = motorName;
     }
     private final String motorName;
@@ -136,6 +137,8 @@ class MotorVelocityTest extends OpMode {
     @Override
     public void init_loop() {
         telemetryM.addLine("Init Complete");
+        telemetryM.addLine("You can change the PIDF values and position in Panels on"
+                + MotorPIDFVelocityTest.class.getName());
         telemetryM.update(telemetry);
     }
 
@@ -182,8 +185,7 @@ class MotorPositionTest extends OpMode {
     public static double maxPower = 1.0;
     boolean runMotor = true;
 
-    private final String motorName;
-    private DcMotorEx motor;
+    private final MotorConfig motor;
 
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
@@ -202,14 +204,12 @@ class MotorPositionTest extends OpMode {
 
     private ElapsedTime timer = new ElapsedTime();
 
-    public MotorPositionTest(String motorName) {
-        this.motorName = motorName;
+    public MotorPositionTest(MotorConfig motor) {
+        this.motor = motor;
     }
 
     @Override
     public void init() {
-        motor = hardwareMap.get(DcMotorEx.class, motorName);
-
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -264,13 +264,169 @@ class MotorPositionTest extends OpMode {
         telemetryM.addData("Current Position", currentPosition);
         telemetryM.addData("Error", error);
         telemetryM.addData("Power", output);
-        telemetryM.addData("Current (A)", motor.getCurrent(CurrentUnit.AMPS));
+        telemetryM.addData("Current (A)", motor.getCurrent());
 
         telemetryM.update(telemetry);
 
         lastError = error;
     }
 }
+
+@Configurable
+class MotorPositionTestProfiled extends OpMode {
+
+    /* ---------------- Configuration ---------------- */
+
+    public static double maxPower = 1.0;
+
+    // Final goal (encoder ticks)
+    public static double targetPosition = 2000;
+
+    // Motion profile limits
+    public static double maxVelocity = 1500;      // ticks/s
+    public static double maxAcceleration = 3000;  // ticks/s^2
+
+    // PID (position error)
+    public static double kP = 0.005;
+    public static double kD = 0.0005;
+
+    // Feedforward (characterized)
+    public static double kV = 0.0008;  // V per (tick/s)
+    public static double kA = 0.0003;  // V per (tick/s^2)
+    public static double kS = 0.05;    // static friction (V)
+
+    public static DcMotorSimple.Direction direction =
+            DcMotorSimple.Direction.FORWARD;
+
+    /* ---------------- Hardware ---------------- */
+
+    private final String motorName;
+    private DcMotorEx motor;
+
+    private TelemetryManager telemetryM =
+            PanelsTelemetry.INSTANCE.getTelemetry();
+
+    /* ---------------- State ---------------- */
+
+    private double lastError = 0;
+    private double lastPosition = 0;
+    private double lastVelocityRef = 0;
+
+    private double profilePosition = 0;
+    private double profileVelocity = 0;
+
+    private ElapsedTime timer = new ElapsedTime();
+
+    public MotorPositionTestProfiled(String motorName) {
+        this.motorName = motorName;
+    }
+
+    @Override
+    public void init() {
+        motor = hardwareMap.get(DcMotorEx.class, motorName);
+
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setDirection(direction);
+
+        timer.reset();
+        lastPosition = 0;
+
+        telemetryM.addLine("Init Complete");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+
+        /* -------- Timing -------- */
+        double dt = timer.seconds();
+        timer.reset();
+        if (dt <= 0) return;
+
+        /* -------- Measured state -------- */
+        double currentPosition = motor.getCurrentPosition();
+        double currentVelocity =
+                (currentPosition - lastPosition) / dt;
+        lastPosition = currentPosition;
+
+        /* -------- Motion Profile -------- */
+        double errorToGoal = targetPosition - profilePosition;
+
+        // Desired acceleration
+        double desiredAccel =
+                Math.signum(errorToGoal) * maxAcceleration;
+
+        // Deceleration check
+        double stoppingDistance =
+                (profileVelocity * profileVelocity) /
+                        (2.0 * maxAcceleration);
+
+        if (Math.abs(errorToGoal) <= stoppingDistance) {
+            desiredAccel = -Math.signum(profileVelocity) * maxAcceleration;
+        }
+
+        // Integrate profile
+        profileVelocity += desiredAccel * dt;
+        profileVelocity =
+                clamp(profileVelocity, -maxVelocity, maxVelocity);
+
+        profilePosition += profileVelocity * dt;
+
+        double xRef = profilePosition;
+        double vRef = profileVelocity;
+        double aRef = (vRef - lastVelocityRef) / dt;
+        lastVelocityRef = vRef;
+
+        /* -------- PID (tracking error) -------- */
+        double positionError = xRef - currentPosition;
+        double velocityError = vRef - currentVelocity;
+
+        double pTerm = kP * positionError;
+        double dTerm = kD * velocityError;
+
+        /* -------- Feedforward -------- */
+        double ffVolts =
+                kV * vRef +
+                        kA * aRef +
+                        kS * Math.signum(vRef);
+
+        /* -------- Combine -------- */
+        double batteryVoltage =
+                hardwareMap.voltageSensor.iterator().next().getVoltage();
+
+        double outputVolts = pTerm + dTerm + ffVolts;
+        double outputPower = outputVolts / batteryVoltage;
+
+        outputPower = clamp(outputPower, -maxPower, maxPower);
+        motor.setPower(outputPower);
+
+        /* -------- Telemetry -------- */
+        telemetryM.addLine("Profiled PIDF Position Test");
+        telemetryM.addLine("----------------------------");
+        telemetryM.addData("Target", targetPosition);
+        telemetryM.addData("xRef", xRef);
+        telemetryM.addData("Current Pos", currentPosition);
+        telemetryM.addData("vRef", vRef);
+        telemetryM.addData("Current Vel", currentVelocity);
+        telemetryM.addData("Pos Error", positionError);
+        telemetryM.addData("Power", outputPower);
+        telemetryM.addData("Current (A)",
+                motor.getCurrent(CurrentUnit.AMPS));
+
+        telemetryM.update(telemetry);
+
+        lastError = positionError;
+    }
+
+    /* ---------------- Utilities ---------------- */
+
+    private double clamp(double val, double min, double max) {
+        return Math.max(min, Math.min(max, val));
+    }
+}
+
 
 class ServoControl extends OpMode{
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -339,19 +495,17 @@ class FlickerAnalogControl extends OpMode{
 
 @Configurable
 class KeCharacterizationOpMode extends OpMode {
-
     DcMotorEx motor;
 
     static int SAMPLES = 5;
     double[] powerLevels = new double[SAMPLES];
     {
         for (int i = 0; i < SAMPLES; i++) {
-            powerLevels[i] = i * (1.0 / (SAMPLES /*- 1*/) );
+            powerLevels[i] = i * (1.0 / (SAMPLES));
         }
     }
     int index = 0;
-
-    double accelEpsilon = 40; // ticks/s^2 threshold
+    double targetVelocityThreshold = 25;
     long settleTimeMs = 500;
 
     double lastVelocity = 0.0;
@@ -391,18 +545,10 @@ class KeCharacterizationOpMode extends OpMode {
         double currentVelocity = motor.getVelocity();
         double accel = (currentVelocity - lastVelocity) / 0.02; // ~20ms loop
 
-        if (Math.abs(accel) < accelEpsilon) {
-            if (!steady) {
-                steady = true;
-                stableStartTime = System.currentTimeMillis();
-            } else if (System.currentTimeMillis() - stableStartTime > settleTimeMs) {
-                logPoint();
-                index++;
-                applyPower();
-                steady = false;
-            }
-        } else {
-            steady = false;
+        if (gamepad1.yWasPressed()) {
+            logPoint();
+            index++;
+            applyPower();
         }
 
         lastVelocity = currentVelocity;
@@ -431,7 +577,8 @@ class KeCharacterizationOpMode extends OpMode {
         telemetry.addData("Battery Voltage (V)", batteryVoltage);
         telemetry.addData("Applied Voltage (V)", appliedVoltage);
         Log.d(TAG, String.format("DATA_POINT,%.3f,%.3f,%.3f,%.3f",
-                powerLevels[index], velocity, batteryVoltage, appliedVoltage));
+                    powerLevels[index], velocity, batteryVoltage, appliedVoltage)
+        );
     }
 
     private double getBatteryVoltage() {

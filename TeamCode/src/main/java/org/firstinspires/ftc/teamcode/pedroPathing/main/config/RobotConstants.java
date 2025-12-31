@@ -1,39 +1,58 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.config;
 
 import com.bylazar.field.Style;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-import java.util.HashMap;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.DcMotorConstants;
 
 public final class RobotConstants {
     private RobotConstants(){}
 
     /* Robot Configuration Constants */
     // Drivetrain motors
-    public static String LEFT_FRONT_NAME  = "leftFront";
-    public static DcMotorSimple.Direction LEFT_FRONT_DIRECTION  = DcMotorSimple.Direction.REVERSE;
-    public static String RIGHT_FRONT_NAME = "rightFront";
-    public static DcMotorSimple.Direction RIGHT_FRONT_DIRECTION = DcMotorSimple.Direction.FORWARD;
-    public static String RIGHT_BACK_NAME  = "rightBack";
-    public static DcMotorSimple.Direction RIGHT_BACK_DIRECTION  = DcMotorSimple.Direction.FORWARD;
-    public static String LEFT_BACK_NAME   = "leftBack";
-    public static DcMotorSimple.Direction LEFT_BACK_DIRECTION   = DcMotorSimple.Direction.REVERSE;
-    // Intake
-    public static String INTAKE_NAME      = "intake";
-    // Shooter
-    public static DcMotorSimple.Direction INTAKE_DIRECTION      = DcMotorSimple.Direction.FORWARD;
-    public static String SHOOTER_NAME     = "shooter";
+    public static MotorConfig LEFT_FRONT_CONFIG = new MotorConfig(
+            "leftFront",
+            GoBildaMotor.MOTOR_312_RPM,
+            DcMotorSimple.Direction.REVERSE
+    );
+    public static MotorConfig LEFT_BACK_CONFIG = new MotorConfig(
+            "leftBack",
+            GoBildaMotor.MOTOR_312_RPM,
+            DcMotorSimple.Direction.REVERSE
+    );
+    public static MotorConfig RIGHT_BACK_CONFIG = new MotorConfig(
+            "rightBack",
+            GoBildaMotor.MOTOR_312_RPM,
+            DcMotorSimple.Direction.FORWARD
+    );
+    public static MotorConfig RIGHT_FRONT_CONFIG = new MotorConfig(
+            "rightFront",
+            GoBildaMotor.MOTOR_312_RPM,
+            DcMotorSimple.Direction.FORWARD
+    );
+    public static MotorConfig INTAKE_CONFIG = new MotorConfig(
+            "intake",
+            GoBildaMotor.MOTOR_1150_RPM,
+            DcMotorSimple.Direction.FORWARD
+    );
+    public static MotorConfig SHOOTER_CONFIG = new MotorConfig(
+            "shooter",
+            GoBildaMotor.MOTOR_6000_RPM,
+            DcMotorSimple.Direction.REVERSE
+    );
+    public static MotorConfig TURRET_CONFIG = new MotorConfig(
+            "turret",
+            GoBildaMotor.MOTOR_1150_RPM,
+            DcMotorSimple.Direction.FORWARD
+    ).setExternalGearRatio((double) 130 /270)
+    .setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     public static String SHOOTER_LED_RED  = "shooterRed";
     public static String SHOOTER_LED_GREEN= "shooterGreen";
-    public static String TURRET_NAME      = "turret";
-    public static DcMotorSimple.Direction TURRET_DIRECTION      = DcMotorSimple.Direction.FORWARD;
     // Pinpoint
-    public static DcMotorSimple.Direction SHOOTER_DIRECTION     = DcMotorSimple.Direction.REVERSE;
     public static String RIGHT_SERVO_NAME = "rightServo";
     public static String LEFT_SERVO_NAME = "leftServo";
     public static String LEFT_FLICKER_NAME = "leftFlicker";

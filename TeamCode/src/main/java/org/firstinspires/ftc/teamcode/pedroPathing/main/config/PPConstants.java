@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.config;
 
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
@@ -9,7 +9,6 @@ import com.pedropathing.ftc.drivetrains.MecanumConstants;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -26,14 +25,14 @@ public class PPConstants {
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
-            .rightFrontMotorName(RobotConstants.RIGHT_FRONT_NAME)
-            .rightRearMotorName(RobotConstants.RIGHT_BACK_NAME)
-            .leftRearMotorName(RobotConstants.LEFT_BACK_NAME)
-            .leftFrontMotorName(RobotConstants.LEFT_FRONT_NAME)
-            .leftFrontMotorDirection(RobotConstants.LEFT_FRONT_DIRECTION)
-            .leftRearMotorDirection(RobotConstants.LEFT_BACK_DIRECTION)
-            .rightFrontMotorDirection(RobotConstants.RIGHT_FRONT_DIRECTION)
-            .rightRearMotorDirection(RobotConstants.RIGHT_BACK_DIRECTION)
+            .rightFrontMotorName(RobotConstants.RIGHT_FRONT_CONFIG.getHardwareName())
+            .rightRearMotorName(RobotConstants.RIGHT_BACK_CONFIG.getHardwareName())
+            .leftRearMotorName(RobotConstants.LEFT_BACK_CONFIG.getHardwareName())
+            .leftFrontMotorName(RobotConstants.LEFT_FRONT_CONFIG.getHardwareName())
+            .leftFrontMotorDirection(RobotConstants.LEFT_FRONT_CONFIG.getDirection())
+            .leftRearMotorDirection(RobotConstants.LEFT_BACK_CONFIG.getDirection())
+            .rightFrontMotorDirection(RobotConstants.RIGHT_FRONT_CONFIG.getDirection())
+            .rightRearMotorDirection(RobotConstants.RIGHT_BACK_CONFIG.getDirection())
             .xVelocity(70.4635)
             .yVelocity(59.7103);
     public static PinpointConstants localizerConstants = new PinpointConstants()
