@@ -97,8 +97,8 @@ class MotorPowerTest extends OpMode {
         telemetryM.addLine("run motor using the triggers");
         telemetryM.addLine("press Y to reverse direction");
         telemetryM.addLine("-----------------------------");
-        telemetryM.addData("Intake Power", power);
-        telemetryM.addData("Intake Velocity", currentVelocity);
+        telemetryM.addData("Power", power);
+        telemetryM.addData("Velocity", currentVelocity);
         telemetryM.addData("current Direction", motor.getDirection().toString());
         telemetryM.addData("current", motor.getCurrent(CurrentUnit.AMPS));
         telemetryM.addData("Max Velocity", maxVelocity);
@@ -172,6 +172,102 @@ class MotorVelocityTest extends OpMode {
         telemetryM.addData("target vel", targetVelocity);
 //        PanelsConfigurables.INSTANCE.refreshClass(this);
         telemetryM.update(telemetry);
+        lastError = error;
+    }
+}
+
+@Configurable
+class MotorPositionTest extends OpMode {
+
+    public static double maxPower = 1.0;
+    boolean runMotor = true;
+
+    private final String motorName;
+    private DcMotorEx motor;
+
+    private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+
+    // PID constants
+    public static double targetPosition = 0;   // encoder ticks
+    public static double k_p = 0.005;
+    public static double k_i = 0.0;
+    public static double k_d = 0.0005;
+    public static double k_s = 0.05;            // static friction compensation
+
+    public static DcMotorSimple.Direction direction =
+            DcMotorSimple.Direction.FORWARD;
+
+    private double integralSum = 0;
+    private double lastError = 0;
+
+    private ElapsedTime timer = new ElapsedTime();
+
+    public MotorPositionTest(String motorName) {
+        this.motorName = motorName;
+    }
+
+    @Override
+    public void init() {
+        motor = hardwareMap.get(DcMotorEx.class, motorName);
+
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setDirection(direction);
+
+        telemetryM.addLine("Init Complete");
+        telemetryM.update(telemetry);
+
+        timer.reset();
+    }
+
+    @Override
+    public void init_loop() {
+        telemetryM.addLine("Init Complete");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+
+        double dt = timer.seconds();
+        timer.reset();
+
+        int currentPosition = motor.getCurrentPosition();
+        double error = targetPosition - currentPosition;
+
+        integralSum += error * dt;
+        double derivative = (error - lastError) / dt;
+
+        if (gamepad1.bWasPressed()) {
+            runMotor ^= true;
+        }
+
+        double output = 0;
+
+        if (runMotor) {
+            output =
+                    k_p * error +
+                            k_i * integralSum +
+                            k_d * derivative +
+                            k_s * Math.signum(error);
+
+            output = Math.max(-maxPower, Math.min(maxPower, output));
+            motor.setPower(output);
+        } else {
+            motor.setPower(0);
+        }
+
+        telemetryM.addLine("Position PID Test");
+        telemetryM.addLine("----------------");
+        telemetryM.addData("Target Position", targetPosition);
+        telemetryM.addData("Current Position", currentPosition);
+        telemetryM.addData("Error", error);
+        telemetryM.addData("Power", output);
+        telemetryM.addData("Current (A)", motor.getCurrent(CurrentUnit.AMPS));
+
+        telemetryM.update(telemetry);
+
         lastError = error;
     }
 }
