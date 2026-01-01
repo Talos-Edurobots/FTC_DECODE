@@ -3,26 +3,25 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 
 public class DriveTrain {
     HardwareMap hwMap;
-    DcMotor lf, rf, lb, rb;
+    MotorConfig lf, rf, lb, rb;
 //    Follower follower = new Follower(FollowerConstants.class);
     public DriveTrain(HardwareMap hwMap) {
         this.hwMap = hwMap;
     }
     public void init(){
-        lf = hwMap.dcMotor.get(RobotConstants.LEFT_FRONT_NAME);
-        rf = hwMap.dcMotor.get(RobotConstants.RIGHT_FRONT_NAME);
-        lb = hwMap.dcMotor.get(RobotConstants.LEFT_BACK_NAME);
-        rb = hwMap.dcMotor.get(RobotConstants.RIGHT_BACK_NAME);
-        lf.setDirection(DcMotor.Direction.REVERSE);
-        lb.setDirection(DcMotor.Direction.REVERSE);
-        lf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rf.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lf = RobotConstants.LEFT_FRONT_CONFIG;
+        rf = RobotConstants.RIGHT_FRONT_CONFIG;
+        lb = RobotConstants.LEFT_BACK_CONFIG;
+        rb = RobotConstants.RIGHT_BACK_CONFIG;
+        lf.init(hwMap);
+        rf.init(hwMap);
+        lb.init(hwMap);
+        rb.init(hwMap);
     }
 
     public void fieldCentricDrive(double x, double y, double rx, double botHeading, double speed){

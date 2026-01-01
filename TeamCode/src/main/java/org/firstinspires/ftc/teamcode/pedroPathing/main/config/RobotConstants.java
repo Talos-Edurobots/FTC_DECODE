@@ -17,22 +17,26 @@ public final class RobotConstants {
     public static MotorConfig LEFT_FRONT_CONFIG = new MotorConfig(
             "leftFront",
             GoBildaMotor.MOTOR_312_RPM,
-            DcMotorSimple.Direction.REVERSE
+            DcMotorSimple.Direction.REVERSE,
+            DcMotor.ZeroPowerBehavior.BRAKE
     );
     public static MotorConfig LEFT_BACK_CONFIG = new MotorConfig(
             "leftBack",
             GoBildaMotor.MOTOR_312_RPM,
-            DcMotorSimple.Direction.REVERSE
+            DcMotorSimple.Direction.REVERSE,
+            DcMotor.ZeroPowerBehavior.BRAKE
     );
     public static MotorConfig RIGHT_BACK_CONFIG = new MotorConfig(
             "rightBack",
             GoBildaMotor.MOTOR_312_RPM,
-            DcMotorSimple.Direction.FORWARD
+            DcMotorSimple.Direction.FORWARD,
+            DcMotor.ZeroPowerBehavior.BRAKE
     );
     public static MotorConfig RIGHT_FRONT_CONFIG = new MotorConfig(
             "rightFront",
             GoBildaMotor.MOTOR_312_RPM,
-            DcMotorSimple.Direction.FORWARD
+            DcMotorSimple.Direction.FORWARD,
+            DcMotor.ZeroPowerBehavior.BRAKE
     );
     public static MotorConfig INTAKE_CONFIG = new MotorConfig(
             "intake",
@@ -47,9 +51,9 @@ public final class RobotConstants {
     public static MotorConfig TURRET_CONFIG = new MotorConfig(
             "turret",
             GoBildaMotor.MOTOR_1150_RPM,
-            DcMotorSimple.Direction.FORWARD
-    ).setExternalGearRatio((double) 130 /270)
-    .setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            DcMotorSimple.Direction.FORWARD,
+            DcMotor.ZeroPowerBehavior.BRAKE
+    ).setExternalGearRatio((double) 130 /270);
     public static String SHOOTER_LED_RED  = "shooterRed";
     public static String SHOOTER_LED_GREEN= "shooterGreen";
     // Pinpoint

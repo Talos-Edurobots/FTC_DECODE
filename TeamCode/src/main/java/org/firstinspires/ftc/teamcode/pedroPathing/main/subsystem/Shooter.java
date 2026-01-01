@@ -7,12 +7,13 @@ import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 
 @Configurable
 public class Shooter {
     private HardwareMap hwmap;
-    private DcMotorEx motor;
+    private MotorConfig motor;
     private LED greenLED;
     private LED redLED;
     private Servo hoodServo;
@@ -30,10 +31,8 @@ public class Shooter {
         this.hwmap = hwmap;
     }
     public void init(){
-        motor = hwmap.get(DcMotorEx.class, RobotConstants.SHOOTER_NAME);
-        motor.setDirection(RobotConstants.SHOOTER_DIRECTION);
-        motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        motor = RobotConstants.SHOOTER_CONFIG;
+        motor.init(hwmap);
 
         hoodServo = hwmap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
         hoodServo.setPosition(0);
@@ -104,7 +103,7 @@ public class Shooter {
     }
 
     public double getCurrent() {
-        return motor.getCurrent(CurrentUnit.AMPS);
+        return motor.getCurrent();
     }
     public void setLEDsOff() {
         greenLED.enable(false);

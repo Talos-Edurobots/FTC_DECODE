@@ -26,16 +26,17 @@ public class Debugger extends SelectableOpMode {
     public Debugger() {
         super("Select a Tuning OpMode", s -> {
             s.folder("Without encoder", ne -> {
-                ne.add("Run Intake", () -> new MotorPowerTest(RobotConstants.INTAKE_CONFIG));
+                ne.add("Run Intake",  () -> new MotorPowerTest(RobotConstants.INTAKE_CONFIG ));
                 ne.add("Run Shooter", () -> new MotorPowerTest(RobotConstants.SHOOTER_CONFIG));
-                ne.add("Run Left Front Drive", () -> new MotorPowerTest(RobotConstants.LEFT_FRONT_CONFIG));
+                ne.add("run turret",  () -> new MotorPowerTest(RobotConstants.TURRET_CONFIG ));
+                ne.add("Run Left Front Drive",  () -> new MotorPowerTest(RobotConstants.LEFT_FRONT_CONFIG ));
                 ne.add("Run Right Front Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_FRONT_CONFIG));
-                ne.add("Run Left Back Drive", () -> new MotorPowerTest(RobotConstants.LEFT_BACK_CONFIG));
-                ne.add("Run Right Back Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_BACK_CONFIG));
+                ne.add("Run Left Back Drive",   () -> new MotorPowerTest(RobotConstants.LEFT_BACK_CONFIG  ));
+                ne.add("Run Right Back Drive",  () -> new MotorPowerTest(RobotConstants.RIGHT_BACK_CONFIG ));
             });
             s.folder("Velocity Control", vc -> {;
-//                vc.add("Run Shooter Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.SHOOTER_NAME));
-//                vc.add("Run Intake Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.INTAKE_NAME));
+                vc.add("Run Shooter Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.SHOOTER_NAME));
+                vc.add("Run Intake Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.INTAKE_NAME));
             });
             s.folder("servo control", sc -> {
                 sc.add("right servo", () -> new ServoControl(RobotConstants.RIGHT_SERVO_NAME));
@@ -78,7 +79,7 @@ class MotorPowerTest extends OpMode {
     }
     @Override
     public void init_loop() {
-        telemetryM.addLine("Init Complete");
+        telemetryM.addLine("WARNING THIS MOTOR RUNS WITHOUT ENCODER FEEDBACK AND IT MAY DAMAGE MECHANICAL PARTS IF MISUSED");
         telemetryM.update(telemetry);
     }
 
@@ -109,13 +110,11 @@ class MotorPowerTest extends OpMode {
 
 @Configurable
 class MotorPIDFVelocityTest extends OpMode {
-    public double maxVelocity = 2700;
     boolean runMotor = true;
-    public MotorPIDFVelocityTest(String motorName) {
-        this.motorName = motorName;
+    public MotorPIDFVelocityTest(MotorConfig motor) {
+        this.motor = motor;
     }
-    private final String motorName;
-    private DcMotorEx motor;
+    private final MotorConfig motor;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     public static double targetVelocity = 2400, k_p = 0.01, k_i = 0, k_d = 0, k_s = 0.02, k_u = 0.0004;
     public static DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD;

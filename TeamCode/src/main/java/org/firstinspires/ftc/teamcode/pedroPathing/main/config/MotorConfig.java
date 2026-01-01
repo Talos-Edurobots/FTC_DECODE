@@ -12,8 +12,11 @@ public class MotorConfig {
     private final String hardwareName;
     private final GoBildaMotor motorType;
     private DcMotor.Direction direction;
+    private DcMotor.ZeroPowerBehavior zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT;
+    private DcMotor.RunMode runMode = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
     private double externalGearRatio = 1.0;
     private DcMotorEx motor;
+    private double kP, kI, kD, kS, kV, kA;
 
     public MotorConfig(
             String hardwareName,
@@ -24,6 +27,34 @@ public class MotorConfig {
         this.motorType = motorType;
         this.direction = direction;
     }
+    public MotorConfig(
+            String hardwareName,
+            GoBildaMotor motorType
+    ) {
+        this(hardwareName, motorType, DcMotor.Direction.FORWARD);
+    }
+    public MotorConfig(
+            String hardwareName,
+            GoBildaMotor motorType,
+            DcMotor.Direction direction,
+            DcMotor.ZeroPowerBehavior zeroPowerBehavior
+    ) {
+        this(hardwareName, motorType, direction);
+        this.zeroPowerBehavior = zeroPowerBehavior;
+    }
+    public MotorConfig(
+            String hardwareName,
+            GoBildaMotor motorType,
+            DcMotorSimple.Direction direction,
+            DcMotor.ZeroPowerBehavior zeroPowerBehavior,
+            DcMotor.RunMode runMode
+    ) {
+        this(hardwareName, motorType, direction);
+        this.zeroPowerBehavior = zeroPowerBehavior;
+        this.runMode = runMode;
+    }
+
+
 
     public String getHardwareName() {
         return hardwareName;
@@ -40,7 +71,10 @@ public class MotorConfig {
     /** Initializes and configures the motor from hardwareMap */
     public DcMotorEx init(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotorEx.class, hardwareName);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(runMode);
         motor.setDirection(direction);
+        motor.setZeroPowerBehavior(zeroPowerBehavior);
         return motor;
     }
     public MotorConfig setExternalGearRatio(double externalGearRatio) {
@@ -66,12 +100,21 @@ public class MotorConfig {
     public int getCurrentPosition() {
         return motor.getCurrentPosition();
     }
-    public MotorConfig setMode(DcMotor.RunMode runMode) {
+    public void setMode(DcMotor.RunMode runMode) {
         motor.setMode(runMode);
-        return this;
     }
-    public MotorConfig setZeroPowerBehavior(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
+
+    public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
         motor.setZeroPowerBehavior(zeroPowerBehavior);
+    }
+
+    public MotorConfig setPIDFCoefficients(double kP, double kI, double kD, double kS, double kV, double kA) {
+        this.kP = kP;
+        this.kI = kI;
+        this.kD = kD;
+        this.kS = kS;
+        this.kV = kV;
+        this.kA = kA;
         return this;
     }
 }
