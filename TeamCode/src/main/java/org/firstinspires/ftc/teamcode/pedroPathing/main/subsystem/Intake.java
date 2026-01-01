@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 
 public class Intake {
@@ -21,31 +21,31 @@ public class Intake {
         this.currentState = currentState;
     }
     HardwareMap hwMap;
-    public DcMotorEx getIntakeMotor() {
-        return intakeMotor;
-    }
-
-    private DcMotorEx intakeMotor;
+    MotorConfig motor = RobotConstants.INTAKE_CONFIG;
     public Intake(HardwareMap hwMap) {
         this.hwMap = hwMap;
     }
 
     public void init() {
-        intakeMotor = hwMap.get(DcMotorEx.class, RobotConstants.INTAKE_NAME);
-        intakeMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        intakeMotor.setDirection(RobotConstants.INTAKE_DIRECTION);
+        motor.init(hwMap);
     }
     public void update(){
         switch (currentState){
             case INTAKE:
-                intakeMotor.setVelocity(RobotConstants.INTAKE_MAX_VELOCITY * .9);
+                motor.setPower(RobotConstants.INTAKE_MAX_VELOCITY * .9);
                 break;
             case OUTTAKE:
-                intakeMotor.setPower(-1 * RobotConstants.INTAKE_MAX_VELOCITY * .9);
+                motor.setPower(-1 * RobotConstants.INTAKE_MAX_VELOCITY * .9);
                 break;
             case STOP:
-                intakeMotor.setPower(0);
+                motor.setPower(0);
                 break;
         }
+    }
+    public double getVelocity(){
+        return motor.getVelocity();
+    }
+    public double getCurrent(){
+        return motor.getCurrent();
     }
 }

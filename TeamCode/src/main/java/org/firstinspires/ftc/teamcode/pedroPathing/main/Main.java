@@ -3,14 +3,19 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.HeadingInterpolator;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
@@ -18,6 +23,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 
 //Im here
@@ -30,12 +36,22 @@ public class Main extends LinearOpMode {
     Flickers flickers;
     IMU imu;
     Pinpoint pinpoint;
+    Follower follower;
+    Supplier<PathChain> pathChain;
+    Pose startingPose = new Pose(45, 98);
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    Pose robotPos;
 
     @Override
     public void runOpMode() throws InterruptedException {
         double oldTime = 0, newTime, dt;
+
+        follower = PPConstants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+        follower.update();
+        pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
+                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
+                .build();
 
         shooter = new Shooter(hardwareMap);
         shooter.init();
@@ -62,6 +78,8 @@ public class Main extends LinearOpMode {
             dt = newTime - oldTime;
             oldTime = newTime;
 
+            follower.update();
+
             // Shooter control
             if (gamepad1.dpadUpWasPressed()) {
                 shooter.changeRun();
@@ -78,9 +96,9 @@ public class Main extends LinearOpMode {
             flickers.leftFlick(gamepad1.left_bumper);
             flickers.rightFlick(gamepad1.right_bumper);
 
-            pinpoint.update();
-            robotPos = pinpoint.getPosition();
-            Drawing.drawRobot(robotPos);
+//            pinpoint.update();
+//            robotPos = pinpoint.getPosition();
+            Drawing.drawRobot(follower.getPose());
             Drawing.sendPacket();
 
 
@@ -102,23 +120,20 @@ public class Main extends LinearOpMode {
             double forward = -gamepad1.left_stick_y;
             double strafe = gamepad1.left_stick_x;
             double rotate = gamepad1.right_stick_x;
-            double heading = robotPos.getHeading();
 
             double speed = 1;
+            follower.setTeleOpDrive(forward, strafe, rotate, false);
 //            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
 
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
-            telemetryM.addData("Heading", heading);
+            telemetryM.addData("Heading", follower.getHeading());
             telemetryM.addData("dt", dt);
-            telemetryM.addData("intake velocity", intake.getIntakeMotor().getVelocity());
-            telemetryM.addData("intake current", intake.getIntakeMotor().getCurrent(CurrentUnit.AMPS));
-            telemetryM.addData("pinpoint pos", robotPos);
+            telemetryM.addData("intake velocity", intake.getVelocity());
+            telemetryM.addData("intake current", intake.getCurrent());
+            telemetryM.addData("pinpoint pos", follower.getPose());
             telemetryM.update(telemetry);
-
-//            sleep(20);
-
         }
     }
 }
