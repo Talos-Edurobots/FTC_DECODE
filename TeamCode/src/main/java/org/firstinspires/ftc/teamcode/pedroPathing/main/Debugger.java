@@ -15,10 +15,9 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
-
-import java.util.Map;
 
 
 @TeleOp(name = "Debugger", group = "main")
@@ -34,7 +33,7 @@ public class Debugger extends SelectableOpMode {
                 ne.add("Run Left Back Drive",   () -> new MotorPowerTest(RobotConstants.LEFT_BACK_CONFIG  ));
                 ne.add("Run Right Back Drive",  () -> new MotorPowerTest(RobotConstants.RIGHT_BACK_CONFIG ));
             });
-            s.folder("Velocity Control", vc -> {;
+            s.folder("Velocity Control", vc -> {
                 vc.add("Run Shooter Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.SHOOTER_CONFIG));
                 vc.add("Run Intake Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.INTAKE_CONFIG));
             });
@@ -44,15 +43,18 @@ public class Debugger extends SelectableOpMode {
                 sc.add("right flicker", () -> new ServoControl(RobotConstants.RIGHT_FLICKER_NAME));
                 sc.add("left flicker", () -> new ServoControl(RobotConstants.LEFT_FLICKER_NAME));
             });
+            s.folder("position control", pc -> {
+                pc.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
+            });
+            s.folder("ke characterization", kect -> {
+                kect.add("shooter ke", () -> new KeCharacterizationOpMode(RobotConstants.SHOOTER_CONFIG));
+                kect.add("intake ke", () -> new KeCharacterizationOpMode(RobotConstants.INTAKE_CONFIG));
+                kect.add("turret ke", () -> new KeCharacterizationOpMode(RobotConstants.TURRET_CONFIG));
+            });
             s.folder("high level", hlt -> {
-//                hlt.add("shooter with servo", () -> new ShooterOpMode(
-//                        new MotorPIDFVelocityTest(RobotConstants.SHOOTER_NAME),
-//                        new ServoControl(RobotConstants.LEFT_SERVO_NAME)
-//                ));
-//                hlt.add("shooter ke", KeCharacterizationOpMode::new);
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
                 hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
-                hlt.add("motor position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
+//                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
             });
         });
     }
@@ -79,7 +81,16 @@ class MotorPowerTest extends OpMode {
     }
     @Override
     public void init_loop() {
-        telemetryM.addLine("WARNING THIS MOTOR RUNS WITHOUT ENCODER FEEDBACK AND IT MAY DAMAGE MECHANICAL PARTS IF MISUSED");
+        if (motor.getMotorUse() == MotorUse.DRIVETRAIN) {
+            telemetryM.addLine("WARNING THIS IS A DRIVETRAIN MOTOR");
+            telemetryM.addLine("RUN THIS ONLY IF THE ROBOT IS ELEVATED OFF THE GROUND, OR PLACED SIDEWAYS");
+        }
+        else if (motor.getMotorUse() == MotorUse.MECHANICAL_STOP) {
+            telemetryM.addLine("WARNING THIS MOTOR RUNS WITHOUT ENCODER FEEDBACK AND IT MAY DAMAGE MECHANICAL PARTS IF MISUSED");
+        }
+        else {
+            telemetryM.addLine("Init Complete");
+        }
         telemetryM.update(telemetry);
     }
 
@@ -125,8 +136,20 @@ class MotorPositionTest extends OpMode {
 
     @Override
     public void init_loop() {
+        if (motor.getMotorUse() == MotorUse.DRIVETRAIN) {
+            telemetryM.addLine("WARNING THIS IS A DRIVETRAIN MOTOR");
+            telemetryM.addLine("RUN THIS ONLY IF THE ROBOT IS ELEVATED OFF THE GROUND, OR PLACED SIDEWAYS (DRIVETRAIN MOTOR)");
+            telemetryM.addLine("THIS IS NOT USEFUL FOR DRIVETRAIN MOTORS");
+        }
+        else if (motor.getMotorUse() == MotorUse.FREE_SPIN) {
+            telemetryM.addLine("THIS MODE IS MADE FOR POSITION CONTROL AND IT IS NOT USEFUL FOR THIS MOTOR");
+        }
+        else {
+            telemetryM.addLine("You can change the PIDF values and position in Panels on"
+                    + MotorPositionTest.class.getName());
+        }
         telemetryM.addLine("Init Complete");
-        telemetryM.update();
+        telemetryM.update(telemetry);
     }
 
     @Override
@@ -158,9 +181,15 @@ class MotorPIDFVelocityTest extends OpMode {
     }
     @Override
     public void init_loop() {
-        telemetryM.addLine("Init Complete");
-        telemetryM.addLine("You can change the PIDF values and position in Panels on"
-                + MotorPIDFVelocityTest.class.getName());
+        if (motor.getMotorUse() == MotorUse.DRIVETRAIN) {
+            telemetryM.addLine("RUN THIS ONLY IF THE ROBOT IS ELEVATED OFF THE GROUND, OR PLACED SIDEWAYS (DRIVETRAIN MOTOR)");
+            telemetryM.addLine("THIS IS NOT USEFUL FOR DRIVETRAIN MOTORS");
+        } else if (motor.getMotorUse() == MotorUse.MECHANICAL_STOP) {
+            telemetryM.addLine("WARNING THIS MOTOR RUNS WITHOUT ENCODER FEEDBACK AND IT MAY DAMAGE MECHANICAL PARTS IF MISUSED");
+        } else {
+            telemetryM.addLine("You can change the PIDF values and position in Panels on"
+                    + MotorPIDFVelocityTest.class.getName());
+        }
         telemetryM.update(telemetry);
     }
 
@@ -185,7 +214,6 @@ class MotorPIDFVelocityTest extends OpMode {
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("current", motor.getCurrent());
         telemetryM.addData("target vel", targetVelocity);
-//        PanelsConfigurables.INSTANCE.refreshClass(this);
         telemetryM.update(telemetry);
     }
 }
@@ -258,8 +286,11 @@ class FlickerAnalogControl extends OpMode{
 
 @Configurable
 class KeCharacterizationOpMode extends OpMode {
-    DcMotorEx motor;
-
+    public KeCharacterizationOpMode(MotorConfig motor) {
+        this.motor = motor;
+    }
+    MotorConfig motor;
+    private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     static int SAMPLES = 5;
     double[] powerLevels = new double[SAMPLES];
     {
@@ -278,14 +309,14 @@ class KeCharacterizationOpMode extends OpMode {
 
     @Override
     public void init() {
-        motor = hardwareMap.get(DcMotorEx.class, "shooter");
-        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motor.init(hardwareMap);
     }
     @Override
     public void init_loop() {
-        telemetry.addLine("Ke Characterization Ready");
-        telemetry.update();
+        telemetryM.addLine("Ke Characterization Ready");
+        telemetryM.addLine((motor.getMotorUse() == MotorUse.DRIVETRAIN) ? "WARNING: RUN THIS ONLY IF THE ROBOT IS ELEVATED OFF THE GROUND, OR PLACED SIDEWAYS":"");
+        telemetryM.addLine((motor.getMotorUse() == MotorUse.MECHANICAL_STOP) ? "WARNING: THIS MOTOR RUNS WITHOUT ENCODER FEEDBACK AND IT MAY DAMAGE MECHANICAL PARTS IF MISUSED":"");
+        telemetryM.update(telemetry);
     }
 
     @Override
@@ -300,8 +331,8 @@ class KeCharacterizationOpMode extends OpMode {
     public void loop() {
         if (index >= powerLevels.length) {
             motor.setPower(0);
-            telemetry.addLine("Done");
-            telemetry.addData("LogCat tag", TAG);
+            telemetryM.addLine("Done");
+            telemetryM.addData("LogCat tag", TAG);
             return;
         }
 
@@ -316,11 +347,11 @@ class KeCharacterizationOpMode extends OpMode {
 
         lastVelocity = currentVelocity;
 
-        telemetry.addData("Index", index);
-        telemetry.addData("Velocity (ticks/s)", currentVelocity);
-        telemetry.addData("Accel (ticks/s^2)", accel);
+        telemetryM.addData("Index", index);
+        telemetryM.addData("Velocity (ticks/s)", currentVelocity);
+        telemetryM.addData("Accel (ticks/s^2)", accel);
 
-        telemetry.update();
+        telemetryM.update(telemetry);
     }
 
     private void applyPower() {
@@ -334,11 +365,11 @@ class KeCharacterizationOpMode extends OpMode {
         double batteryVoltage = getBatteryVoltage();
         double appliedVoltage = powerLevels[index] * batteryVoltage;
 
-        telemetry.addLine("=== DATA POINT ===");
-        telemetry.addData("Power", powerLevels[index]);
-        telemetry.addData("Velocity (ticks/s)", velocity);
-        telemetry.addData("Battery Voltage (V)", batteryVoltage);
-        telemetry.addData("Applied Voltage (V)", appliedVoltage);
+        telemetryM.addLine("=== DATA POINT ===");
+        telemetryM.addData("Power", powerLevels[index]);
+        telemetryM.addData("Velocity (ticks/s)", velocity);
+        telemetryM.addData("Battery Voltage (V)", batteryVoltage);
+        telemetryM.addData("Applied Voltage (V)", appliedVoltage);
         Log.d(TAG, String.format("DATA_POINT,%.3f,%.3f,%.3f,%.3f",
                     powerLevels[index], velocity, batteryVoltage, appliedVoltage)
         );
@@ -351,37 +382,6 @@ class KeCharacterizationOpMode extends OpMode {
             if (v > 0) minVoltage = Math.min(minVoltage, v);
         }
         return minVoltage;
-    }
-}
-
-class ShooterOpMode extends OpMode{
-    OpMode motor, servo;
-    public ShooterOpMode(OpMode motor, OpMode servo) {
-        this.motor = motor;
-        this.servo = servo;
-    }
-    @Override
-    public void init() {
-        motor.hardwareMap = hardwareMap;
-        servo.hardwareMap = hardwareMap;
-        motor.telemetry = telemetry;
-        servo.telemetry = telemetry;
-        motor.gamepad1 = gamepad1;
-        servo.gamepad1 = gamepad1;
-        motor.init();
-        servo.init();
-    }
-
-    @Override
-    public void init_loop() {
-        motor.init_loop();
-        servo.init_loop();
-    }
-
-    @Override
-    public void loop() {
-        motor.loop();
-        servo.loop();
     }
 }
 
@@ -424,7 +424,7 @@ class VoltageSensorReadoutOpMode extends OpMode {
             index++;
         }
 
-        telemetry.addLine();
+        telemetry.addLine("-------------------------");
 
         if (minVoltage < Double.POSITIVE_INFINITY) {
             telemetry.addData("Robot Battery Voltage (V)", "%.2f", minVoltage);
@@ -435,4 +435,3 @@ class VoltageSensorReadoutOpMode extends OpMode {
         telemetry.update();
     }
 }
-

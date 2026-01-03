@@ -19,7 +19,10 @@ public class MotorConfig {
     private DcMotorEx motor;
     private HardwareMap hwMap;
 
+    private MotorUse motorUse = MotorUse.FREE_SPIN;
+
     public double kP, kI, kD, kS, kU, kA;
+
     private double targetPositionTicks = 0;
     private double targetVelocityTicks = 0;
     private double lastPosition = 0;
@@ -32,7 +35,6 @@ public class MotorConfig {
     public static double maxVelocity = 1500;      // ticks/sec
     public static double maxAcceleration = 3000;  // ticks/sec^2
     public static double maxPower = 1.0;
-
     public MotorConfig(
             String hardwareName,
             GoBildaMotor motorType,
@@ -42,6 +44,7 @@ public class MotorConfig {
         this.motorType = motorType;
         this.direction = direction;
     }
+
     public MotorConfig(
             String hardwareName,
             GoBildaMotor motorType
@@ -69,6 +72,14 @@ public class MotorConfig {
         this.runMode = runMode;
     }
 
+    public MotorUse getMotorUse() {
+        return motorUse;
+    }
+
+    public MotorConfig setMotorUse(MotorUse motorUse) {
+        this.motorUse = motorUse;
+        return this;
+    }
 
     public String getHardwareName() {
         return hardwareName;
