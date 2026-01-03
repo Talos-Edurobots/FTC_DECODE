@@ -286,7 +286,6 @@ public class MotorConfig {
                         (kS * Math.signum(targetVelocityTicks) +
                         kU * targetVelocityTicks) / batteryVoltage
         );
-
     }
 }
 
