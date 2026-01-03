@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.DcMotorConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.DcMotorConstants;
 
 import java.util.ArrayList;
 import java.util.List;

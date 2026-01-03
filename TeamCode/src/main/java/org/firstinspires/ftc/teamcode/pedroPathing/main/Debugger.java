@@ -305,7 +305,8 @@ class KeCharacterizationOpMode extends OpMode {
     double lastVelocity = 0.0;
     long stableStartTime = 0;
     boolean steady = false;
-    String TAG = "KeCharacterization";
+    String TAG = "KeChar";
+    ElapsedTime timer = new ElapsedTime();
 
     @Override
     public void init() {
@@ -325,6 +326,7 @@ class KeCharacterizationOpMode extends OpMode {
         applyPower();
         lastVelocity = motor.getVelocity();
         stableStartTime = System.currentTimeMillis();
+        timer.reset();
     }
 
     @Override
@@ -337,7 +339,7 @@ class KeCharacterizationOpMode extends OpMode {
         }
 
         double currentVelocity = motor.getVelocity();
-        double accel = (currentVelocity - lastVelocity) / 0.02; // ~20ms loop
+        double accel = (currentVelocity - lastVelocity) / timer.seconds(); // ~20ms loop
 
         if (gamepad1.yWasPressed()) {
             logPoint();
@@ -352,6 +354,7 @@ class KeCharacterizationOpMode extends OpMode {
         telemetryM.addData("Accel (ticks/s^2)", accel);
 
         telemetryM.update(telemetry);
+        timer.reset();
     }
 
     private void applyPower() {
@@ -370,6 +373,7 @@ class KeCharacterizationOpMode extends OpMode {
         telemetryM.addData("Velocity (ticks/s)", velocity);
         telemetryM.addData("Battery Voltage (V)", batteryVoltage);
         telemetryM.addData("Applied Voltage (V)", appliedVoltage);
+        telemetryM.update();
         Log.d(TAG, String.format("DATA_POINT,%.3f,%.3f,%.3f,%.3f",
                     powerLevels[index], velocity, batteryVoltage, appliedVoltage)
         );

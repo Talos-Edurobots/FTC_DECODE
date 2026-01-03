@@ -4,10 +4,10 @@ public enum GoBildaMotor {
 
     // Yellow Jacket Planetary Motors (312 RPM series and below)
 
-    MOTOR_117_RPM  (117,  ((((1+((double) 46 /17))) * (1+((double) 46 /17))) * (1+((double) 46 /17)))),
-    MOTOR_312_RPM  (312,  ((((1+((double) 46 /17))) * (1+((double) 46 /11))) * 28)),
-    MOTOR_1150_RPM (1150, (1+((double) 46 /11))),
-    MOTOR_6000_RPM (6000, 1);
+    MOTOR_117_RPM  (117,  DcMotorConstants.Motor117GearRatio),
+    MOTOR_312_RPM  (312,  DcMotorConstants.Motor312GearRatio),
+    MOTOR_1150_RPM (1150, DcMotorConstants.Motor1150GearRatio),
+    MOTOR_6000_RPM (6000, DcMotorConstants.Motor6000GearRatio);
 
     /** Encoder counts per motor shaft revolution */
     public static final double ENCODER_TICKS_PER_MOTOR_REV = 28;

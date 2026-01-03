@@ -40,6 +40,7 @@ public class Main extends LinearOpMode {
     Supplier<PathChain> pathChain;
     Pose startingPose = new Pose(45, 98);
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    boolean automatedDrive = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -103,7 +104,17 @@ public class Main extends LinearOpMode {
 
 
             if (gamepad1.options) {
-                pinpoint.getPinpoint().setHeading(0, AngleUnit.DEGREES);
+                follower.activateAllPIDFs();
+            } else if (gamepad1.share) {
+                follower.deactivateAllPIDFs();
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                follower.followPath(pathChain.get());
+                automatedDrive = true;
+            }
+            if (automatedDrive && (gamepad1.xWasPressed() || !follower.isBusy())) {
+                follower.startTeleopDrive();
+                automatedDrive = false;
             }
 
             if (gamepad1.aWasPressed()) {
@@ -122,8 +133,11 @@ public class Main extends LinearOpMode {
             double rotate = gamepad1.right_stick_x;
 
             double speed = 1;
-            follower.setTeleOpDrive(forward, strafe, rotate, false);
 //            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
+            if (!automatedDrive) {
+                follower.setTeleOpDrive(forward, strafe, rotate, false);
+            }
+            follower.update();
 
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());

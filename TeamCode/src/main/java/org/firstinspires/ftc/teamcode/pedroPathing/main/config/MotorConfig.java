@@ -22,8 +22,7 @@ public class MotorConfig {
     private MotorUse motorUse = MotorUse.FREE_SPIN;
 
     public double kP, kI, kD, kS, kU, kA;
-
-    private double targetPositionTicks = 0;
+    private double targetPositionRadians = 0;
     private double targetVelocityTicks = 0;
     private double lastPosition = 0;
     private double lastVelocity = 0;
@@ -35,6 +34,23 @@ public class MotorConfig {
     public static double maxVelocity = 1500;      // ticks/sec
     public static double maxAcceleration = 3000;  // ticks/sec^2
     public static double maxPower = 1.0;
+    private static int position = 0;
+    private double minAngle = Double.NEGATIVE_INFINITY;
+    private double maxAngle = Double.POSITIVE_INFINITY;
+
+    public double getMinAngle() {
+        return minAngle;
+    }
+    public double getMaxAngle() {
+        return maxAngle;
+    }
+
+    public void setRadianLimit(double minAngle, double maxAngle) {
+        this.minAngle = minAngle;
+        this.maxAngle = maxAngle;
+    }
+
+
     public MotorConfig(
             String hardwareName,
             GoBildaMotor motorType,
@@ -109,6 +125,7 @@ public class MotorConfig {
         return this;
     }
     public void setDirection(DcMotorSimple.Direction direction) {
+        this.direction = direction;
         motor.setDirection(direction);
     }
     public void setPower(double power) {
@@ -125,7 +142,7 @@ public class MotorConfig {
         return motor.getCurrent(CurrentUnit.AMPS);
     }
     public int getCurrentPosition() {
-        return motor.getCurrentPosition();
+        return position;
     }
     public void setMode(DcMotor.RunMode runMode) {
         motor.setMode(runMode);
@@ -155,21 +172,55 @@ public class MotorConfig {
     }
 
     public void setPositionInTicks(double ticks) {
-        targetPositionTicks = ticks;
+        setPositionInRadians(ticks / motorType.getTicksPerRadian());
+    }
+    public void setPositionInDegrees(double degrees) {
+        double ticks = degrees / 360.0 * motorType.getTicksPerOutputRev() * externalGearRatio;
+        setPositionInTicks(ticks);
+    }
+    public void setPositionInRadians(double radians) {
+        double currentAngle = getCurrentPosition() / motorType.getTicksPerRadian();
+
+        double bestTarget = Double.NaN;
+        double minError = Double.POSITIVE_INFINITY;
+
+        double[] candidates = {
+                radians,
+                radians + 2 * Math.PI,
+                radians - 2 * Math.PI
+        };
+
+        for (double candidate : candidates) {
+            if (candidate < minAngle || candidate > maxAngle) continue;
+
+            double error = candidate - currentAngle;
+            double absError = Math.abs(error);
+
+            if (absError < minError) {
+                minError = absError;
+                bestTarget = candidate;
+            }
+        }
+
+        // If no valid candidate exists, clamp (failsafe)
+        if (Double.isNaN(bestTarget)) {
+            bestTarget = Range.clip(currentAngle, minAngle, maxAngle);
+        }
+        targetPositionRadians = bestTarget;
     }
     //    public static double getBatteryVoltage(HardwareMap hwMap) {
 //        return hwMap.voltageSensor.iterator().next().getVoltage();
 //    }
     public void updatePositionProfiledPIDF(double dt, double batteryVoltage) {
         if (dt <= 0) return;
-        double position = motor.getCurrentPosition();
+        position = motor.getCurrentPosition();
 
         double velocity = (position - lastPosition) / dt;
         lastPosition = position;
 
         /* -------- Trapezoidal motion profile -------- */
 
-        double remaining = targetPositionTicks - xRef;
+        double remaining = targetPositionRadians - xRef;
 
         // Compute stopping distance
         double stoppingDistance =
@@ -189,8 +240,8 @@ public class MotorConfig {
         xRef += vRef * dt;
 
         // Prevent overshoot
-        if (Math.signum(targetPositionTicks - xRef) != Math.signum(remaining)) {
-            xRef = targetPositionTicks;
+        if (Math.signum(targetPositionRadians - xRef) != Math.signum(remaining)) {
+            xRef = targetPositionRadians;
             vRef = 0;
             aRef = 0;
         }
@@ -227,7 +278,7 @@ public class MotorConfig {
         double error = targetVelocityTicks - currentVelocity;
         double derivative = (error - lastVelocity) / dt;
         integralVelocitySum += error * dt;
-
+        lastVelocity = currentVelocity;
         motor.setPower(
                 kP * error +
                         kI * integralVelocitySum +
