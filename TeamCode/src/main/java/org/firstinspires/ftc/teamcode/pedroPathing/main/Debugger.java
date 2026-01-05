@@ -77,7 +77,7 @@ class MotorPowerTest extends OpMode {
 
     @Override
     public void init() {
-
+        motor.init(hardwareMap);
     }
     @Override
     public void init_loop() {
@@ -158,6 +158,11 @@ class MotorPositionTest extends OpMode {
         motor.setPositionInTicks(targetPosition);
         motor.updateVelocityPIDF(timer.seconds(), 12);
         timer.reset();
+        telemetryM.addData("current pos", motor.getCurrentPosition());
+        telemetryM.addData("power", motor.getPower());
+        telemetryM.addData("kp", kp);
+        telemetryM.addData("target pos", targetPosition);
+        telemetryM.update(telemetry);
     }
 }
 @Configurable
@@ -168,7 +173,7 @@ class MotorPIDFVelocityTest extends OpMode {
     }
     private final MotorConfig motor;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    public static double targetVelocity = 2400;
+    public static double targetVelocity = 2400, kp, ki, kd, ks, kv, ka;
     ElapsedTime timer = new ElapsedTime();
 
 
@@ -195,8 +200,9 @@ class MotorPIDFVelocityTest extends OpMode {
 
     @Override
     public void loop() {
-
         timer.reset();
+        motor.setVelocityTicksPerSecond(targetVelocity);
+        motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
         // Set velocity via triggers
         if (gamepad1.bWasPressed()) {
             runMotor ^= true;
@@ -213,6 +219,10 @@ class MotorPIDFVelocityTest extends OpMode {
         telemetryM.addData("Current Velocity", motor.getVelocity());
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("current", motor.getCurrent());
+        telemetryM.addData("target vel", targetVelocity);
+        telemetryM.addData("dt", timer.seconds());
+        telemetryM.addData("kp", kp);
+        telemetryM.addData("motor kp", motor.kP);
         telemetryM.addData("target vel", targetVelocity);
         telemetryM.update(telemetry);
     }
@@ -294,7 +304,7 @@ class KeCharacterizationOpMode extends OpMode {
     static int SAMPLES = 5;
     double[] powerLevels = new double[SAMPLES];
     {
-        for (int i = 0; i < SAMPLES; i++) {
+        for (int i = 1; i <= SAMPLES; i++) {
             powerLevels[i] = i * (1.0 / (SAMPLES));
         }
     }
@@ -377,6 +387,7 @@ class KeCharacterizationOpMode extends OpMode {
         Log.d(TAG, String.format("DATA_POINT,%.3f,%.3f,%.3f,%.3f",
                     powerLevels[index], velocity, batteryVoltage, appliedVoltage)
         );
+
     }
 
     private double getBatteryVoltage() {

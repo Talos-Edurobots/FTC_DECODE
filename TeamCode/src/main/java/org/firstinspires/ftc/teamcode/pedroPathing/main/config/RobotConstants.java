@@ -55,7 +55,7 @@ public final class RobotConstants {
             "turret",
             GoBildaMotor.MOTOR_1150_RPM,
             DcMotorSimple.Direction.FORWARD,
-            DcMotor.ZeroPowerBehavior.BRAKE
+            DcMotor.ZeroPowerBehavior.FLOAT
     ).setExternalGearRatio((double) 130 /270)
             .setMotorUse(MotorUse.MECHANICAL_STOP);
 

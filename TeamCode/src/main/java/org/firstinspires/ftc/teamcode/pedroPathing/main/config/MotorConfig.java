@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.config;
 
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -9,7 +11,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 public class MotorConfig {
-
+    private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private final String hardwareName;
     private final GoBildaMotor motorType;
     private DcMotor.Direction direction;
@@ -269,6 +271,13 @@ public class MotorConfig {
 
         outputPower = Range.clip(outputPower, -maxPower, maxPower);
         motor.setPower(outputPower);
+        telemetryM.addData("power", outputPower);
+        telemetryM.addData("target pos", targetPositionRadians);
+        telemetryM.addData("position", position);
+        telemetryM.addData("position error", positionError);
+        telemetryM.addData("ff volts", ffVolts);
+        telemetryM.addData("v ref", vRef);
+        telemetryM.update();
     }
     public void setVelocityTicksPerSecond(double ticksPerSecond) {
         targetVelocityTicks = ticksPerSecond;
@@ -286,6 +295,8 @@ public class MotorConfig {
                         (kS * Math.signum(targetVelocityTicks) +
                         kU * targetVelocityTicks) / batteryVoltage
         );
+        telemetryM.addData("error", error);
+        telemetryM.addData("current vel", currentVelocity);
     }
 }
 
