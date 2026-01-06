@@ -309,9 +309,6 @@ class KeCharacterizationOpMode extends OpMode {
         }
     }
     int index = 0;
-    double targetVelocityThreshold = 25;
-    long settleTimeMs = 500;
-
     double lastVelocity = 0.0;
     long stableStartTime = 0;
     boolean steady = false;
@@ -321,6 +318,7 @@ class KeCharacterizationOpMode extends OpMode {
     @Override
     public void init() {
         motor.init(hardwareMap);
+        Log.d(TAG, ",Velocity,applied-voltage");
     }
     @Override
     public void init_loop() {
@@ -384,8 +382,8 @@ class KeCharacterizationOpMode extends OpMode {
         telemetryM.addData("Battery Voltage (V)", batteryVoltage);
         telemetryM.addData("Applied Voltage (V)", appliedVoltage);
         telemetryM.update();
-        Log.d(TAG, String.format("DATA_POINT,%.3f,%.3f,%.3f,%.3f",
-                    powerLevels[index], velocity, batteryVoltage, appliedVoltage)
+        Log.d(TAG, String.format(",%.3f,%.3f",
+                    velocity, appliedVoltage)
         );
 
     }

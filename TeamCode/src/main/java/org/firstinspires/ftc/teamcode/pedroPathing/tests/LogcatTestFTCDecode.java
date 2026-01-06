@@ -25,6 +25,7 @@ public  class LogcatTestFTCDecode extends LinearOpMode {
 
         telemetryM.addLine("Ready. Start Logcat and press PLAY67.");
         telemetryM.update();
+        Log.d(TAG, ",velocity,applied_voltage");
 
         waitForStart();
 
@@ -33,7 +34,7 @@ public  class LogcatTestFTCDecode extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Example variables
-            double x = Math.random() * 100;          // Replace with real odometry
+            double x = Math.random() * 200;          // Replace with real odometry
             double y = Math.random() * 100;          // Replace with real odometry
             double heading = Math.random() * 360;    // Replace with IMU or OTOS
 
@@ -42,11 +43,8 @@ public  class LogcatTestFTCDecode extends LinearOpMode {
             lastTime = now;
 
             // 🔥 LOGCAT OUTPUT (this is what you filter on)
-            Log.d(TAG,
-                    "x=" + x +
-                        ",y=" + y +
-                        ",heading=" + heading +
-                        ",loopMs=" + loopMs
+            Log.d(TAG, String.format(",%.3f,%.3f",
+                    x, y)
             );
 
             // Optional telemetry to DS (VERY slow)
@@ -57,7 +55,8 @@ public  class LogcatTestFTCDecode extends LinearOpMode {
             fieldManager.circle(6);
             fieldManager.update();
 
-            sleep(20); // Adjust loop delay as needed
+            sleep(1000); // Adjust loop delay as needed
+            idle();
         }
     }
 }
