@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -277,18 +278,20 @@ class ServoControl extends OpMode{
 }
 
 class FlickerAnalogControl extends OpMode{
-    Flickers flickers = new Flickers(hardwareMap);
+    Flickers flickers = new Flickers();
     @Override
     public void init() {
-        flickers.init();
+        flickers.init(hardwareMap);
     }
 
     @Override
     public void loop() {
-        flickers.setLeftFlickerPos(gamepad1.left_trigger);
-        flickers.setRightFlickerPos(gamepad1.right_trigger);
-        telemetry.addData("left flicker pos", gamepad1.left_trigger);
-        telemetry.addData("right flicker pos", gamepad1.right_trigger);
+        double leftFlickerPos = .5 + gamepad1.left_trigger * .5f;
+        double rightFlickerPos = .5 + gamepad1.right_trigger * .5f;
+        flickers.setLeftFlickerPos(leftFlickerPos);
+        flickers.setRightFlickerPos(rightFlickerPos);
+        telemetry.addData("left flicker pos", leftFlickerPos);
+        telemetry.addData("right flicker pos", rightFlickerPos);
         telemetry.update();
     }
 }

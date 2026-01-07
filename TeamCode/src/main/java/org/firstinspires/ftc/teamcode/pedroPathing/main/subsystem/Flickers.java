@@ -12,10 +12,8 @@ public class Flickers {
     private final double LEFT_FLICKER_REST_POS = 0.5;
     private final double RIGHT_FLICKER_FLICK_POS = 1;
     private final double RIGHT_FLICKER_REST_POS = 0.5;
-    public Flickers(HardwareMap hwmap) {
+    public void init(HardwareMap hwmap){
         this.hwmap = hwmap;
-    }
-    public void init(){
         leftFlicker = hwmap.servo.get(RobotConstants.LEFT_FLICKER_NAME);
         leftFlicker.setDirection(Servo.Direction.REVERSE);
         leftFlicker.setPosition(LEFT_FLICKER_REST_POS);

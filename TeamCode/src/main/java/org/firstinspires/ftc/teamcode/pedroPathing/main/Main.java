@@ -57,8 +57,8 @@ public class Main extends LinearOpMode {
         shooter = new Shooter(hardwareMap);
         shooter.init();
 
-        flickers = new Flickers(hardwareMap);
-        flickers.init();
+        flickers = new Flickers();
+        flickers.init(hardwareMap);
 
         pinpoint = new Pinpoint(hardwareMap);
         pinpoint.init();
