@@ -35,7 +35,7 @@ public class Shooter {
         motor.init(hwmap);
 
         hoodServo = hwmap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
-        hoodServo.setPosition(0.5);
+        hoodServo.setPosition(1);
         hoodServo.setDirection(Servo.Direction.FORWARD);
 
         greenLED = hwmap.get(LED.class, RobotConstants.SHOOTER_LED_GREEN);

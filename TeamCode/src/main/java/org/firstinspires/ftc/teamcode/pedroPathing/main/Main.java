@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.PPConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
@@ -46,16 +47,22 @@ public class Main extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         double oldTime = 0, newTime, dt;
 
-        follower = PPConstants.createFollower(hardwareMap);
-        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
-        follower.update();
-        pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
-                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
-                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
-                .build();
+//        follower = PPConstants.createFollower(hardwareMap);
+//        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+//        follower.update();
+//        pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
+//                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
+//                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
+//                .build();
 
         shooter = new Shooter(hardwareMap);
         shooter.init();
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        imu.initialize(RobotConstants.IMU_PARAMETERS);
+
+        driveTrain = new DriveTrain(hardwareMap);
+        driveTrain.init();
 
         flickers = new Flickers();
         flickers.init(hardwareMap);
@@ -79,7 +86,7 @@ public class Main extends LinearOpMode {
             dt = newTime - oldTime;
             oldTime = newTime;
 
-            follower.update();
+//            follower.update();
 
             // Shooter control
             if (gamepad1.dpadUpWasPressed()) {
@@ -99,23 +106,23 @@ public class Main extends LinearOpMode {
 
 //            pinpoint.update();
 //            robotPos = pinpoint.getPosition();
-            Drawing.drawRobot(follower.getPose());
-            Drawing.sendPacket();
+//            Drawing.drawRobot(follower.getPose());
+//            Drawing.sendPacket();
 
 
-            if (gamepad1.options) {
-                follower.activateAllPIDFs();
-            } else if (gamepad1.share) {
-                follower.deactivateAllPIDFs();
-            }
-            if (gamepad1.dpadDownWasPressed()) {
-                follower.followPath(pathChain.get());
-                automatedDrive = true;
-            }
-            if (automatedDrive && (gamepad1.xWasPressed() || !follower.isBusy())) {
-                follower.startTeleopDrive();
-                automatedDrive = false;
-            }
+//            if (gamepad1.options) {
+////                follower.activateAllPIDFs();
+//            } else if (gamepad1.share) {
+////                follower.deactivateAllPIDFs();
+//            }
+//            if (gamepad1.dpadDownWasPressed()) {
+////                follower.followPath(pathChain.get());
+//                automatedDrive = true;
+//            }
+//            if (automatedDrive && (gamepad1.xWasPressed() || !follower.isBusy())) {
+////                follower.startTeleopDrive();
+//                automatedDrive = false;
+//            }
 
             if (gamepad1.aWasPressed()) {
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
@@ -131,22 +138,23 @@ public class Main extends LinearOpMode {
             double forward = -gamepad1.left_stick_y;
             double strafe = gamepad1.left_stick_x;
             double rotate = gamepad1.right_stick_x;
+            double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             double speed = 1;
-//            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
+            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
             if (!automatedDrive) {
-                follower.setTeleOpDrive(forward, strafe, rotate, false);
+//                follower.setTeleOpDrive(forward, strafe, rotate, false);
             }
-            follower.update();
+//            follower.update();
 
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
-            telemetryM.addData("Heading", follower.getHeading());
+            telemetryM.addData("Heading", heading);
             telemetryM.addData("dt", dt);
             telemetryM.addData("intake velocity", intake.getVelocity());
             telemetryM.addData("intake current", intake.getCurrent());
-            telemetryM.addData("pinpoint pos", follower.getPose());
+//            telemetryM.addData("pinpoint pos", follower.getPose());
             telemetryM.update(telemetry);
         }
     }
