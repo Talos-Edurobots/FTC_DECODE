@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
@@ -31,6 +32,7 @@ import java.util.function.Supplier;
 @TeleOp(name = "Main TeleOp", group = "main")
 @Configurable
 public class Main extends LinearOpMode {
+    HardwareManager hardwareManager;
     DriveTrain driveTrain;
     Intake intake;
     Shooter shooter;
@@ -54,6 +56,7 @@ public class Main extends LinearOpMode {
 //                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
 //                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
 //                .build();
+        hardwareManager = new HardwareManager(hardwareMap);
 
         shooter = new Shooter(hardwareMap);
         shooter.init();
@@ -85,7 +88,7 @@ public class Main extends LinearOpMode {
             newTime = getRuntime();
             dt = newTime - oldTime;
             oldTime = newTime;
-
+            hardwareManager.bulkRead();
 //            follower.update();
 
             // Shooter control

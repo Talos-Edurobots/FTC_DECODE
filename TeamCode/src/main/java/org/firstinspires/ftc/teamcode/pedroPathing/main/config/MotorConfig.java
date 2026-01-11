@@ -33,13 +33,14 @@ public class MotorConfig {
     private double vRef;   // velocity reference
     private double aRef;   // acceleration reference
     // Motion constraints
-    public static double maxVelocity = 1500;      // ticks/sec
-    public static double maxAcceleration = 3000;  // ticks/sec^2
-    public static double maxPower = 1.0;
-    private static int position = 0;
+    public double maxVelocity = 1500;      // ticks/sec
+    public double maxAcceleration = 3000;  // ticks/sec^2
+    public double maxPower = 1.0;
+    private int position = 0;
     private double minAngle = Double.NEGATIVE_INFINITY;
     private double maxAngle = Double.POSITIVE_INFINITY;
-
+    private static double batteryVoltage;
+    private static double dt;
     public double getMinAngle() {
         return minAngle;
     }
@@ -47,11 +48,16 @@ public class MotorConfig {
         return maxAngle;
     }
 
+    public static void setBatteryVoltage(double voltage) {
+        MotorConfig.batteryVoltage = voltage;
+    }
+    public void setDt(double dt) {
+        MotorConfig.dt = dt;
+    }
     public void setRadianLimit(double minAngle, double maxAngle) {
         this.minAngle = minAngle;
         this.maxAngle = maxAngle;
     }
-
 
     public MotorConfig(
             String hardwareName,
@@ -167,9 +173,9 @@ public class MotorConfig {
     }
 
     public MotorConfig setMotionProfileCoefficients(double maxVelocity, double maxAcceleration, double maxPower) {
-        MotorConfig.maxVelocity = maxVelocity;
-        MotorConfig.maxAcceleration = maxAcceleration;
-        MotorConfig.maxPower = maxPower;
+        this.maxVelocity = maxVelocity;
+        this.maxAcceleration = maxAcceleration;
+        this.maxPower = maxPower;
         return this;
     }
 
