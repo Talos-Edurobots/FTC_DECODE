@@ -219,6 +219,13 @@ public class MotorConfig {
     //    public static double getBatteryVoltage(HardwareMap hwMap) {
 //        return hwMap.voltageSensor.iterator().next().getVoltage();
 //    }
+    public void simplePositionControl(int ticks) {
+        motor.setTargetPosition(ticks);
+    }
+    public void updateSimplePositionControl(double power) {
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motor.setPower(power);
+    }
     public void updatePositionProfiledPIDF(double dt, double batteryVoltage) {
         if (dt <= 0) return;
         position = motor.getCurrentPosition();

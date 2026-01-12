@@ -15,10 +15,12 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.DcMotorConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 
 
 @TeleOp(name = "Debugger", group = "main")
@@ -29,6 +31,7 @@ public class Debugger extends SelectableOpMode {
                 ne.add("Run Intake",  () -> new MotorPowerTest(RobotConstants.INTAKE_CONFIG ));
                 ne.add("Run Shooter", () -> new MotorPowerTest(RobotConstants.SHOOTER_CONFIG));
                 ne.add("run turret",  () -> new MotorPowerTest(RobotConstants.TURRET_CONFIG ));
+                ne.add("run hang", () -> new MotorPowerTest(RobotConstants.HANG_CONFIG));
                 ne.add("Run Left Front Drive",  () -> new MotorPowerTest(RobotConstants.LEFT_FRONT_CONFIG ));
                 ne.add("Run Right Front Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_FRONT_CONFIG));
                 ne.add("Run Left Back Drive",   () -> new MotorPowerTest(RobotConstants.LEFT_BACK_CONFIG  ));
@@ -56,6 +59,7 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
                 hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
 //                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
+                hlt.add("hang control", hangControl::new);
             });
         });
     }
@@ -296,6 +300,20 @@ class FlickerAnalogControl extends OpMode{
     }
 }
 
+class hangControl extends OpMode {
+    Hang hang = new Hang();
+    static double power = 1;
+    static double degrees = 90;
+    @Override
+    public void init() {
+        hang.init(hardwareMap);
+    }
+
+    @Override
+    public void loop() {
+        hang.update(power, (int) ((gamepad1.right_trigger - gamepad1.left_trigger) * degrees));
+    }
+}
 
 @Configurable
 class KeCharacterizationOpMode extends OpMode {
@@ -308,7 +326,7 @@ class KeCharacterizationOpMode extends OpMode {
     double[] powerLevels = new double[SAMPLES];
     {
         for (int i = 1; i <= SAMPLES; i++) {
-            powerLevels[i] = i * (1.0 / (SAMPLES));
+            powerLevels[i-1] = i * (1.0 / (SAMPLES));
         }
     }
     int index = 0;

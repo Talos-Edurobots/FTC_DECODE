@@ -58,6 +58,12 @@ public final class RobotConstants {
             DcMotor.ZeroPowerBehavior.FLOAT
     ).setExternalGearRatio((double) 130 /270)
             .setMotorUse(MotorUse.MECHANICAL_STOP);
+    public static MotorConfig HANG_CONFIG = new MotorConfig(
+            "hang",
+            GoBildaMotor.MOTOR_117_RPM,
+            DcMotorSimple.Direction.FORWARD,
+            DcMotor.ZeroPowerBehavior.BRAKE
+    ).setMotorUse(MotorUse.MECHANICAL_STOP);
 
     public static String SHOOTER_LED_RED  = "shooterRed";
     public static String SHOOTER_LED_GREEN= "shooterGreen";

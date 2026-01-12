@@ -91,6 +91,9 @@ public class Main extends LinearOpMode {
             hardwareManager.bulkRead();
 //            follower.update();
 
+            if (gamepad1.options) {
+                imu.resetYaw();
+            }
             // Shooter control
             if (gamepad1.dpadUpWasPressed()) {
                 shooter.changeRun();
@@ -150,6 +153,7 @@ public class Main extends LinearOpMode {
             }
 //            follower.update();
 
+            telemetryM.addData("fps", 1/ dt);
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
