@@ -11,68 +11,109 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 public class MotorConfig {
-    private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+
+    /* ---------------- Telemetry ---------------- */
+
+    private final TelemetryManager telemetry =
+            PanelsTelemetry.INSTANCE.getTelemetry();
+
+    /* ---------------- Hardware ---------------- */
+
     private final String hardwareName;
+
+    public String getHardwareName() {
+        return hardwareName;
+    }
     private final GoBildaMotor motorType;
+    /* --------------- Getters and Setters ------------*/
+    public MotorConfig setDirection(DcMotor.Direction direction) {
+        this.direction = direction;
+        return this;
+    }
+
+    public DcMotor.Direction getDirection() {
+        return direction;
+    }
+
     private DcMotor.Direction direction;
-    private DcMotor.ZeroPowerBehavior zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT;
-    private DcMotor.RunMode runMode = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
-    private double externalGearRatio = 1.0;
+    public MotorConfig setMotorUse(MotorUse motorUse) {
+        this.motorUse = motorUse;
+        return this;
+    }
+    private DcMotor.ZeroPowerBehavior zeroPowerBehavior =
+            DcMotor.ZeroPowerBehavior.FLOAT;
+
+    private DcMotor.RunMode runMode =
+            DcMotor.RunMode.RUN_WITHOUT_ENCODER;
+
     private DcMotorEx motor;
-    private HardwareMap hwMap;
+
+    public MotorUse getMotorUse() {
+        return motorUse;
+    }
+    public GoBildaMotor getMotorType() {
+        return motorType;
+    }
+    /* ---------------- Shared loop data ---------------- */
+
+    private static double batteryVoltage = 12.0;
+
+    private static double dt = 0.0;
+
+    public static void setBatteryVoltage(double voltage) {
+        batteryVoltage = voltage;
+    }
+
+    public static void setDt(double deltaTime) {
+        dt = deltaTime;
+    }
+
+    /* ---------------- Configuration ---------------- */
+
+    private double externalGearRatio = 1.0;
 
     private MotorUse motorUse = MotorUse.FREE_SPIN;
 
-    public double kP, kI, kD, kS, kU, kA;
-    private double targetPositionRadians = 0;
-    private double targetVelocityTicks = 0;
-    private double lastPosition = 0;
-    private double lastVelocity = 0;
-    private double integralVelocitySum = 0;
-    private double xRef;   // position reference
-    private double vRef;   // velocity reference
-    private double aRef;   // acceleration reference
-    // Motion constraints
-    public double maxVelocity = 1500;      // ticks/sec
-    public double maxAcceleration = 3000;  // ticks/sec^2
+    /* ---------------- Control gains ---------------- */
+
+    public double kP, kI, kD;
+    public double kS, kV, kA;
+
+    /* ---------------- Motion profile state (TICKS) ---------------- */
+
+    private double targetPositionTicks = 0.0;
+
+    private double xRef = 0.0;   // ticks
+    private double vRef = 0.0;   // ticks / sec
+    private double aRef = 0.0;   // ticks / sec^2
+
+    public double maxVelocity = 1500.0;      // ticks / sec
+    public double maxAcceleration = 3000.0;  // ticks / sec^2
     public double maxPower = 1.0;
-    private int position = 0;
+
+    /* ---------------- Velocity PID ---------------- */
+
+    private double targetVelocityTicks = 0.0;
+    private double lastVelocityError = 0.0;
+    private double velocityIntegral = 0.0;
+
+    /* ---------------- Angle limits (radians, API only) ---------------- */
+
     private double minAngle = Double.NEGATIVE_INFINITY;
     private double maxAngle = Double.POSITIVE_INFINITY;
-    private static double batteryVoltage;
-    private static double dt;
-    public double getMinAngle() {
-        return minAngle;
-    }
-    public double getMaxAngle() {
-        return maxAngle;
-    }
 
-    public static void setBatteryVoltage(double voltage) {
-        MotorConfig.batteryVoltage = voltage;
-    }
-    public void setDt(double dt) {
-        MotorConfig.dt = dt;
-    }
-    public void setRadianLimit(double minAngle, double maxAngle) {
-        this.minAngle = minAngle;
-        this.maxAngle = maxAngle;
-    }
+    /* ---------------- Constructors ---------------- */
 
-    public MotorConfig(
-            String hardwareName,
-            GoBildaMotor motorType,
-            DcMotor.Direction direction
-    ) {
+    public MotorConfig(String hardwareName,
+                       GoBildaMotor motorType,
+                       DcMotor.Direction direction) {
         this.hardwareName = hardwareName;
         this.motorType = motorType;
         this.direction = direction;
     }
 
-    public MotorConfig(
-            String hardwareName,
-            GoBildaMotor motorType
-    ) {
+    public MotorConfig(String hardwareName,
+                       GoBildaMotor motorType) {
         this(hardwareName, motorType, DcMotor.Direction.FORWARD);
     }
     public MotorConfig(
@@ -84,233 +125,183 @@ public class MotorConfig {
         this(hardwareName, motorType, direction);
         this.zeroPowerBehavior = zeroPowerBehavior;
     }
-    public MotorConfig(
-            String hardwareName,
-            GoBildaMotor motorType,
-            DcMotorSimple.Direction direction,
-            DcMotor.ZeroPowerBehavior zeroPowerBehavior,
-            DcMotor.RunMode runMode
-    ) {
+
+    public MotorConfig(String hardwareName,
+                       GoBildaMotor motorType,
+                       DcMotorSimple.Direction direction,
+                       DcMotor.ZeroPowerBehavior zeroPowerBehavior,
+                       DcMotor.RunMode runMode) {
         this(hardwareName, motorType, direction);
         this.zeroPowerBehavior = zeroPowerBehavior;
         this.runMode = runMode;
     }
 
-    public MotorUse getMotorUse() {
-        return motorUse;
-    }
+    /* ---------------- Initialization ---------------- */
 
-    public MotorConfig setMotorUse(MotorUse motorUse) {
-        this.motorUse = motorUse;
-        return this;
-    }
-
-    public String getHardwareName() {
-        return hardwareName;
-    }
-
-    public GoBildaMotor getMotorType() {
-        return motorType;
-    }
-
-    public DcMotor.Direction getDirection() {
-        return direction;
-    }
-
-    /** Initializes and configures the motor from hardwareMap */
     public DcMotorEx init(HardwareMap hardwareMap) {
-        this.hwMap = hardwareMap;
         motor = hardwareMap.get(DcMotorEx.class, hardwareName);
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(runMode);
         motor.setDirection(direction);
         motor.setZeroPowerBehavior(zeroPowerBehavior);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(runMode);
         return motor;
     }
 
-    public MotorConfig setExternalGearRatio(double externalGearRatio) {
-        this.externalGearRatio = externalGearRatio;
-        return this;
-    }
-    public void setDirection(DcMotorSimple.Direction direction) {
-        this.direction = direction;
-        motor.setDirection(direction);
-    }
+    /* ---------------- Basic accessors ---------------- */
+
     public void setPower(double power) {
-        motor.setPower(power);
+        motor.setPower(Range.clip(power, -maxPower, maxPower));
+    }
+
+    public double getPower() {
+        return motor.getPower();
     }
     public double getVelocity() {
         return motor.getVelocity();
     }
 
-    public double getVelocity(boolean useExternalGearRatio) {
-        return useExternalGearRatio ? getVelocity() * externalGearRatio : getVelocity();
+    public int getCurrentPosition() {
+        return motor.getCurrentPosition();
     }
+
     public double getCurrent() {
         return motor.getCurrent(CurrentUnit.AMPS);
     }
-    public int getCurrentPosition() {
-        return position;
-    }
-    public void setMode(DcMotor.RunMode runMode) {
-        motor.setMode(runMode);
-    }
-    public double getPower() {
-        return motor.getPower();
-    }
-    public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
-        motor.setZeroPowerBehavior(zeroPowerBehavior);
+
+    /* ---------------- Configuration setters ---------------- */
+
+    public MotorConfig setExternalGearRatio(double ratio) {
+        this.externalGearRatio = ratio;
+        return this;
     }
 
-    public MotorConfig setPIDFCoefficients(double kP, double kI, double kD, double kS, double kV, double kA) {
+    public MotorConfig setPIDFCoefficients(double kP, double kI, double kD,
+                                           double kS, double kV, double kA) {
         this.kP = kP;
         this.kI = kI;
         this.kD = kD;
         this.kS = kS;
-        this.kU = kV;
+        this.kV = kV;
         this.kA = kA;
         return this;
     }
 
-    public MotorConfig setMotionProfileCoefficients(double maxVelocity, double maxAcceleration, double maxPower) {
-        this.maxVelocity = maxVelocity;
-        this.maxAcceleration = maxAcceleration;
+    public MotorConfig setMotionProfileCoefficients(double maxVel,
+                                                    double maxAccel,
+                                                    double maxPower) {
+        this.maxVelocity = maxVel;
+        this.maxAcceleration = maxAccel;
         this.maxPower = maxPower;
         return this;
     }
 
-    public void setPositionInTicks(double ticks) {
-        setPositionInRadians(ticks / motorType.getTicksPerRadian());
+    /* ---------------- Position targets ---------------- */
+
+    public void setRadianLimit(double minAngle, double maxAngle) {
+        this.minAngle = minAngle;
+        this.maxAngle = maxAngle;
     }
-    public void setPositionInDegrees(double degrees) {
-        double ticks = degrees / 360.0 * motorType.getTicksPerOutputRev() * externalGearRatio;
-        setPositionInTicks(ticks);
-    }
+
     public void setPositionInRadians(double radians) {
-        double currentAngle = getCurrentPosition() / motorType.getTicksPerRadian();
+        double clamped =
+                Range.clip(radians, minAngle, maxAngle);
 
-        double bestTarget = Double.NaN;
-        double minError = Double.POSITIVE_INFINITY;
-
-        double[] candidates = {
-                radians,
-                radians + 2 * Math.PI,
-                radians - 2 * Math.PI
-        };
-
-        for (double candidate : candidates) {
-            if (candidate < minAngle || candidate > maxAngle) continue;
-
-            double error = candidate - currentAngle;
-            double absError = Math.abs(error);
-
-            if (absError < minError) {
-                minError = absError;
-                bestTarget = candidate;
-            }
-        }
-
-        // If no valid candidate exists, clamp (failsafe)
-        if (Double.isNaN(bestTarget)) {
-            bestTarget = Range.clip(currentAngle, minAngle, maxAngle);
-        }
-        targetPositionRadians = bestTarget;
+        targetPositionTicks =
+                clamped * motorType.getTicksPerRadian() * externalGearRatio;
     }
-    //    public static double getBatteryVoltage(HardwareMap hwMap) {
-//        return hwMap.voltageSensor.iterator().next().getVoltage();
-//    }
-    public void simplePositionControl(int ticks) {
-        motor.setTargetPosition(ticks);
+
+    public void setPositionInDegrees(double degrees) {
+        setPositionInRadians(Math.toRadians(degrees));
     }
-    public void updateSimplePositionControl(double power) {
-        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motor.setPower(power);
+
+    public void setPositionInTicks(double ticks) {
+        targetPositionTicks = ticks;
     }
-    public void updatePositionProfiledPIDF(double dt, double batteryVoltage) {
-        if (dt <= 0) return;
-        position = motor.getCurrentPosition();
 
-        double velocity = (position - lastPosition) / dt;
-        lastPosition = position;
+    /* ---------------- Profiled position PIDF ---------------- */
+    public void updateSimplePositionControl(int targetPositionTicks) {
+        motor.setTargetPosition(targetPositionTicks);
+        motor.setVelocity(2500); // 2500
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION); // we finally run the arm motor
+    }
 
-        /* -------- Trapezoidal motion profile -------- */
+    public void updatePositionProfiledPIDF() {
+        if (dt <= 0.0) return;
 
-        double remaining = targetPositionRadians - xRef;
+        double position = motor.getCurrentPosition();
+        double velocity = motor.getVelocity();
 
-        // Compute stopping distance
+        double remaining = targetPositionTicks - xRef;
+
         double stoppingDistance =
                 (vRef * vRef) / (2.0 * maxAcceleration);
 
-        // Decide acceleration direction
         if (Math.abs(remaining) <= stoppingDistance) {
             aRef = -Math.signum(vRef) * maxAcceleration;
         } else {
             aRef = Math.signum(remaining) * maxAcceleration;
         }
 
-        // Integrate profile
         vRef += aRef * dt;
         vRef = Range.clip(vRef, -maxVelocity, maxVelocity);
 
         xRef += vRef * dt;
 
-        // Prevent overshoot
-        if (Math.signum(targetPositionRadians - xRef) != Math.signum(remaining)) {
-            xRef = targetPositionRadians;
-            vRef = 0;
-            aRef = 0;
+        if (Math.signum(targetPositionTicks - xRef)
+                != Math.signum(remaining)) {
+            xRef = targetPositionTicks;
+            vRef = 0.0;
+            aRef = 0.0;
         }
-
-        /* -------- PID (tracking error) -------- */
 
         double positionError = xRef - position;
         double velocityError = vRef - velocity;
 
-        double pTerm = kP * positionError;
-        double dTerm = kD * velocityError;
-
-        /* -------- Feedforward (voltage) -------- */
+        double pid =
+                kP * positionError +
+                        kD * velocityError;
 
         double ffVolts =
                 kS * Math.signum(vRef) +
-                        kU * vRef +
+                        kV * vRef +
                         kA * aRef;
 
-        /* -------- Combine & normalize -------- */
+        double power =
+                (pid + ffVolts) / batteryVoltage;
 
-
-        double outputVolts = pTerm + dTerm + ffVolts;
-        double outputPower = outputVolts / batteryVoltage;
-
-        outputPower = Range.clip(outputPower, -maxPower, maxPower);
-        motor.setPower(outputPower);
-        telemetryM.addData("power", outputPower);
-        telemetryM.addData("target pos", targetPositionRadians);
-        telemetryM.addData("position", position);
-        telemetryM.addData("position error", positionError);
-        telemetryM.addData("ff volts", ffVolts);
-        telemetryM.addData("v ref", vRef);
-        telemetryM.update();
+        motor.setPower(
+                Range.clip(power, -maxPower, maxPower)
+        );
     }
+
+    /* ---------------- Velocity PIDF ---------------- */
+
     public void setVelocityTicksPerSecond(double ticksPerSecond) {
         targetVelocityTicks = ticksPerSecond;
     }
-    public void updateVelocityPIDF(double dt, double batteryVoltage) {
-        double currentVelocity = motor.getVelocity();
-        double error = targetVelocityTicks - currentVelocity;
-        double derivative = (error - lastVelocity) / dt;
-        integralVelocitySum += error * dt;
-        lastVelocity = currentVelocity;
-        motor.setPower(
+
+    public void updateVelocityPIDF() {
+        if (dt <= 0.0) return;
+
+        double velocity = motor.getVelocity();
+        double error = targetVelocityTicks - velocity;
+
+        velocityIntegral += error * dt;
+        double derivative =
+                (error - lastVelocityError) / dt;
+        lastVelocityError = error;
+
+        double output =
                 kP * error +
-                        kI * integralVelocitySum +
+                        kI * velocityIntegral +
                         kD * derivative +
-                        (kS * Math.signum(targetVelocityTicks) +
-                        kU * targetVelocityTicks) / batteryVoltage
+                        (kS * Math.signum(targetVelocityTicks)
+                                + kV * targetVelocityTicks)
+                                / batteryVoltage;
+
+        motor.setPower(
+                Range.clip(output, -maxPower, maxPower)
         );
-        telemetryM.addData("error", error);
-        telemetryM.addData("current vel", currentVelocity);
     }
 }
-
-

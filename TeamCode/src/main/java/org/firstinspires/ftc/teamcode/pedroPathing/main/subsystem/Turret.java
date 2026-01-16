@@ -34,6 +34,6 @@ public class Turret {
         faceForward();
     }
     public void loop(double dt, double batteryVoltage) {
-        turret.updatePositionProfiledPIDF(dt, batteryVoltage);
+        turret.updatePositionProfiledPIDF();
     }
 }

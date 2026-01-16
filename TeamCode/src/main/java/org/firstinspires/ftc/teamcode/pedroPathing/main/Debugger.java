@@ -136,7 +136,12 @@ class MotorPositionTest extends OpMode {
     @Override
     public void init() {
         motor.init(hardwareMap);
-        kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kU; ka = motor.kA;
+        kp = motor.kP;
+        ki = motor.kI;
+        kd = motor.kD;
+        ks = motor.kS;
+        kv = motor.kV;
+        ka = motor.kA;
     }
 
     @Override
@@ -159,10 +164,11 @@ class MotorPositionTest extends OpMode {
 
     @Override
     public void loop() {
-        motor.kP = kp; motor.kI = ki; motor.kD = kd; motor.kS = ks; motor.kU = kv; motor.kA = ka;
-        motor.setPositionInTicks(targetPosition);
-        motor.updateVelocityPIDF(timer.seconds(), 12);
+        MotorConfig.setDt(timer.seconds());
         timer.reset();
+        motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
+        motor.setPositionInTicks(targetPosition);
+        motor.updateVelocityPIDF();
         telemetryM.addData("current pos", motor.getCurrentPosition());
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("kp", kp);
@@ -205,6 +211,8 @@ class MotorPIDFVelocityTest extends OpMode {
 
     @Override
     public void loop() {
+        MotorConfig.setDt(timer.seconds());
+        MotorConfig.setBatteryVoltage(12);
         timer.reset();
         motor.setVelocityTicksPerSecond(targetVelocity);
         motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
@@ -213,7 +221,7 @@ class MotorPIDFVelocityTest extends OpMode {
             runMotor ^= true;
         }
         if (runMotor) {
-            motor.updateVelocityPIDF(timer.seconds(), 12);
+            motor.updateVelocityPIDF();
         }
         else {
             motor.setPower(0);

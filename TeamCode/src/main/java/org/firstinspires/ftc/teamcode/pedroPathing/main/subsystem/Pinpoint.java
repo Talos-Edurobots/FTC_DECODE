@@ -37,5 +37,4 @@ public class Pinpoint {
                 pinpoint.getHeading(AngleUnit.RADIANS)
         );
     }
-
 }
