@@ -45,7 +45,7 @@ public final class RobotConstants {
             "intake",
             GoBildaMotor.MOTOR_1150_RPM,
             DcMotorSimple.Direction.FORWARD
-    );
+    ).setMotorUse(MotorUse.FREE_SPIN);
     public static MotorConfig SHOOTER_CONFIG = new MotorConfig(
             "shooter",
             GoBildaMotor.MOTOR_6000_RPM,
