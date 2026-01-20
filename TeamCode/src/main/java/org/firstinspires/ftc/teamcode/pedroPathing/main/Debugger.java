@@ -477,3 +477,39 @@ class VoltageSensorReadoutOpMode extends OpMode {
         telemetry.update();
     }
 }
+
+@Configurable
+class RampPowerOpMode extends OpMode {
+    public RampPowerOpMode(MotorConfig motor) {
+        this.motor = motor;
+    }
+    static double acceleration = 1.0; // change in power per second
+    MotorConfig motor;
+    double lastTime = 0;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private double rampPower(double current, double target, double dt) {
+        double maxPowerChange = RobotConstants.DrivetrainMaxAcceleration * dt;
+        double diff = target - current;
+        if (Math.abs(diff) > maxPowerChange) {
+            diff = Math.signum(diff) * maxPowerChange;
+        }
+        return current + diff;
+    }
+    @Override
+    public void init() {
+        motor.init(hardwareMap);
+    }
+
+    @Override
+    public void loop() {
+        double currentTime = getRuntime();
+        double dt = currentTime - lastTime;
+        double targetPower = gamepad1.right_trigger - gamepad1.left_trigger;
+        double currentPower = motor.getPower();
+        double newPower = rampPower(currentPower, targetPower, dt);
+        motor.setPower(newPower);
+        telemetryM.addData("Target Power", targetPower);
+        telemetryM.update(telemetry);
+        lastTime = currentTime;
+    }
+}
