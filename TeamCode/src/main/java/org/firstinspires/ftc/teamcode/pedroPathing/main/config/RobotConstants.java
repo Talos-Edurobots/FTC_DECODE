@@ -7,11 +7,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.DcMotorConstants;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public final class RobotConstants {
     private RobotConstants(){}
 
@@ -45,25 +40,29 @@ public final class RobotConstants {
             "intake",
             GoBildaMotor.MOTOR_1150_RPM,
             DcMotorSimple.Direction.FORWARD
-    ).setMotorUse(MotorUse.FREE_SPIN);
+    ).setMotorUse(MotorUse.FREE_SPIN)
+            .setMotorMode(MotorMode.OPEN_LOOP);
     public static MotorConfig SHOOTER_CONFIG = new MotorConfig(
             "shooter",
             GoBildaMotor.MOTOR_6000_RPM,
             DcMotorSimple.Direction.REVERSE
-    ).setPIDFCoefficients(.01, 0, 0, .02, .0004, 0);
+    ).setPIDFCoefficients(.01, 0, 0, .02, .0004, 0)
+            .setMotorMode(MotorMode.VELOCITY_CONTROL);
     public static MotorConfig TURRET_CONFIG = new MotorConfig(
             "turret",
             GoBildaMotor.MOTOR_1150_RPM,
             DcMotorSimple.Direction.FORWARD,
             DcMotor.ZeroPowerBehavior.FLOAT
-    ).setExternalGearRatio((double) 130 /270)
-            .setMotorUse(MotorUse.MECHANICAL_STOP);
+    ).addExternalGearRatio((double) 130 /270)
+            .setMotorUse(MotorUse.MECHANICAL_STOP)
+            .setMotorMode(MotorMode.PROFILED_PIDF);
     public static MotorConfig HANG_CONFIG = new MotorConfig(
             "hang",
             GoBildaMotor.MOTOR_117_RPM,
             DcMotorSimple.Direction.FORWARD,
             DcMotor.ZeroPowerBehavior.BRAKE
-    ).setMotorUse(MotorUse.MECHANICAL_STOP);
+    ).setMotorUse(MotorUse.MECHANICAL_STOP)
+            .setMotorMode(MotorMode.SIMPLE_POSITION);
 
     public static String SHOOTER_LED_RED  = "shooterRed";
     public static String SHOOTER_LED_GREEN= "shooterGreen";

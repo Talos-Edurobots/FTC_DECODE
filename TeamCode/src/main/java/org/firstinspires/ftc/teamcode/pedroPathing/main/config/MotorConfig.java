@@ -25,6 +25,7 @@ public class MotorConfig {
         return hardwareName;
     }
     private final GoBildaMotor motorType;
+
     /* --------------- Getters and Setters ------------*/
     public MotorConfig setDirection(DcMotor.Direction direction) {
         this.direction = direction;
@@ -43,8 +44,7 @@ public class MotorConfig {
     private DcMotor.ZeroPowerBehavior zeroPowerBehavior =
             DcMotor.ZeroPowerBehavior.FLOAT;
 
-    private DcMotor.RunMode runMode =
-            DcMotor.RunMode.RUN_WITHOUT_ENCODER;
+    private MotorMode motorMode = MotorMode.OPEN_LOOP;
 
     private DcMotorEx motor;
 
@@ -54,6 +54,11 @@ public class MotorConfig {
     public GoBildaMotor getMotorType() {
         return motorType;
     }
+    public MotorConfig setMotorMode(MotorMode mode) {
+        this.motorMode = mode;
+        return this;
+    }
+
     /* ---------------- Shared loop data ---------------- */
 
     private static double batteryVoltage = 12.0;
@@ -126,15 +131,6 @@ public class MotorConfig {
         this.zeroPowerBehavior = zeroPowerBehavior;
     }
 
-    public MotorConfig(String hardwareName,
-                       GoBildaMotor motorType,
-                       DcMotorSimple.Direction direction,
-                       DcMotor.ZeroPowerBehavior zeroPowerBehavior,
-                       DcMotor.RunMode runMode) {
-        this(hardwareName, motorType, direction);
-        this.zeroPowerBehavior = zeroPowerBehavior;
-        this.runMode = runMode;
-    }
 
     /* ---------------- Initialization ---------------- */
 
@@ -142,8 +138,18 @@ public class MotorConfig {
         motor = hardwareMap.get(DcMotorEx.class, hardwareName);
         motor.setDirection(direction);
         motor.setZeroPowerBehavior(zeroPowerBehavior);
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(runMode);
+        if (motorMode == MotorMode.SIMPLE_POSITION) {
+            motor.setTargetPosition(0);
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        }
+        else if (motorMode == MotorMode.VELOCITY_CONTROL ||
+                motorMode == MotorMode.PROFILED_PIDF) {
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        else {
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
         return motor;
     }
 
@@ -170,8 +176,8 @@ public class MotorConfig {
 
     /* ---------------- Configuration setters ---------------- */
 
-    public MotorConfig setExternalGearRatio(double ratio) {
-        this.externalGearRatio = ratio;
+    public MotorConfig addExternalGearRatio(double ratio) {
+        this.externalGearRatio *= ratio;
         return this;
     }
 
@@ -210,19 +216,15 @@ public class MotorConfig {
                 clamped * motorType.getTicksPerRadian() * externalGearRatio;
     }
 
-    public void setPositionInDegrees(double degrees) {
-        setPositionInRadians(Math.toRadians(degrees));
-    }
 
     public void setPositionInTicks(double ticks) {
         targetPositionTicks = ticks;
     }
 
     /* ---------------- Profiled position PIDF ---------------- */
-    public void updateSimplePositionControl(int targetPositionTicks) {
-        motor.setTargetPosition(targetPositionTicks);
+    public void updateSimplePositionControl() {
+        motor.setTargetPosition((int) targetPositionTicks);
         motor.setVelocity(2500); // 2500
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION); // we finally run the arm motor
     }
 
@@ -303,5 +305,16 @@ public class MotorConfig {
         motor.setPower(
                 Range.clip(output, -maxPower, maxPower)
         );
+    }
+    public void update() {
+        if (motorMode == MotorMode.VELOCITY_CONTROL) {
+            updateVelocityPIDF();
+        } else if (motorMode == MotorMode.PROFILED_PIDF) {
+            updatePositionProfiledPIDF();
+        } else if (motorMode == MotorMode.SIMPLE_POSITION) {
+            updateSimplePositionControl();
+        } else if (motorMode == MotorMode.OPEN_LOOP) {
+
+        }
     }
 }
