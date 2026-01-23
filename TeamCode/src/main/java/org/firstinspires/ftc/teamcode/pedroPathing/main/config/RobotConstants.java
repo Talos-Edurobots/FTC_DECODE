@@ -46,11 +46,11 @@ public final class RobotConstants {
             "shooter",
             GoBildaMotor.MOTOR_6000_RPM,
             DcMotorSimple.Direction.REVERSE
-    ).setPIDFCoefficients(.01, 0, 0, .02, .0004, 0)
+    ).setPIDFCoefficients(.01, 0, 0, .02, .00052, 0)
             .setMotorMode(MotorMode.VELOCITY_CONTROL);
     public static MotorConfig TURRET_CONFIG = new MotorConfig(
             "turret",
-            GoBildaMotor.MOTOR_1150_RPM,
+            GoBildaMotor.MOTOR_312_RPM,
             DcMotorSimple.Direction.FORWARD,
             DcMotor.ZeroPowerBehavior.FLOAT
     ).addExternalGearRatio((double) 130 /270)

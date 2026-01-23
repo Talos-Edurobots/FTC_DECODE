@@ -168,7 +168,7 @@ class MotorPositionTest extends OpMode {
         timer.reset();
         motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
         motor.setPositionInTicks(targetPosition);
-        motor.updateVelocityPIDF();
+        motor.updateSimplePositionControl();
         telemetryM.addData("current pos", motor.getCurrentPosition());
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("kp", kp);
@@ -330,7 +330,7 @@ class KeCharacterizationOpMode extends OpMode {
     }
     MotorConfig motor;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    static int SAMPLES = 5;
+    static int SAMPLES = 10;
     double[] powerLevels = new double[SAMPLES];
     {
         for (int i = 1; i <= SAMPLES; i++) {
@@ -347,7 +347,7 @@ class KeCharacterizationOpMode extends OpMode {
     @Override
     public void init() {
         motor.init(hardwareMap);
-        Log.d(TAG, ",Velocity,applied-voltage");
+        Log.d(TAG, "velocity,applied-voltage");
     }
     @Override
     public void init_loop() {
@@ -411,7 +411,7 @@ class KeCharacterizationOpMode extends OpMode {
         telemetryM.addData("Battery Voltage (V)", batteryVoltage);
         telemetryM.addData("Applied Voltage (V)", appliedVoltage);
         telemetryM.update();
-        Log.d(TAG, String.format(",%.3f,%.3f",
+        Log.d(TAG, String.format("%.3f,%.3f",
                     velocity, appliedVoltage)
         );
 
