@@ -85,7 +85,7 @@ public final class RobotConstants {
     );
 
     /* PID, Velocity Constants */
-    public static double DrivetrainMaxAcceleration = 8; // motor power / second
+    public static double DrivetrainMaxAcceleration = 5; // motor power / second
 
     public static double DrivetrainMotorTicksPerRevolution = DcMotorConstants.Motor312EncoderResolution;
     public static double ShooterMotorTicksPerRevolution = DcMotorConstants.Motor6000EncoderResolution;

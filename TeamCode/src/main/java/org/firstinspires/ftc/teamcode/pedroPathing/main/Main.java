@@ -44,6 +44,7 @@ public class Main extends LinearOpMode {
     Pose startingPose = new Pose(45, 98);
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     boolean automatedDrive = false;
+    boolean far = true;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -90,6 +91,11 @@ public class Main extends LinearOpMode {
             oldTime = newTime;
             hardwareManager.bulkRead();
 //            follower.update();
+
+            if (gamepad1.xWasPressed()) {
+                far ^= true;
+            }
+            Shooter.targetVelocity = far ? 2400 : 1200;
 
             if (gamepad1.options) {
                 imu.resetYaw();
@@ -147,7 +153,7 @@ public class Main extends LinearOpMode {
             double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             double speed = 1;
-            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
+            driveTrain.fieldCentricDrive(strafe, forward, rotate, heading, speed);
             if (!automatedDrive) {
 //                follower.setTeleOpDrive(forward, strafe, rotate, false);
             }
