@@ -167,7 +167,7 @@ class MotorPositionTest extends OpMode {
         MotorConfig.setDt(timer.seconds());
         timer.reset();
         motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
-        motor.setPositionInTicks(targetPosition);
+        motor.setPositionInTicks(targetPosition * motor.getMotorType().getTicksPerDegree());
         motor.updateSimplePositionControl();
         telemetryM.addData("current pos", motor.getCurrentPosition());
         telemetryM.addData("power", motor.getPower());
@@ -194,6 +194,7 @@ class MotorPIDFVelocityTest extends OpMode {
         telemetryM.addLine("Init Complete");
         telemetryM.update(telemetry);
         timer.startTime();
+        kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
     }
     @Override
     public void init_loop() {

@@ -50,17 +50,18 @@ public class Main extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         double oldTime = 0, newTime, dt;
 
-//        follower = PPConstants.createFollower(hardwareMap);
-//        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
-//        follower.update();
-//        pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
-//                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
-//                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
-//                .build();
+        follower = PPConstants.createFollower(hardwareMap);
+        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+        follower.update();
+        pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
+                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
+                .build();
         hardwareManager = new HardwareManager(hardwareMap);
 
         shooter = new Shooter(hardwareMap);
         shooter.init();
+        shooter.run(false);
 
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(RobotConstants.IMU_PARAMETERS);
@@ -90,7 +91,7 @@ public class Main extends LinearOpMode {
             dt = newTime - oldTime;
             oldTime = newTime;
             hardwareManager.bulkRead();
-//            follower.update();
+            follower.update();
 
             if (gamepad1.xWasPressed()) {
                 far ^= true;
@@ -118,15 +119,15 @@ public class Main extends LinearOpMode {
 
 //            pinpoint.update();
 //            robotPos = pinpoint.getPosition();
-//            Drawing.drawRobot(follower.getPose());
-//            Drawing.sendPacket();
+            Drawing.drawRobot(follower.getPose());
+            Drawing.sendPacket();
 
 
-//            if (gamepad1.options) {
-////                follower.activateAllPIDFs();
-//            } else if (gamepad1.share) {
-////                follower.deactivateAllPIDFs();
-//            }
+            if (gamepad2.options) {
+                follower.activateAllPIDFs();
+            } else if (gamepad2.share) {
+                follower.deactivateAllPIDFs();
+            }
 //            if (gamepad1.dpadDownWasPressed()) {
 ////                follower.followPath(pathChain.get());
 //                automatedDrive = true;
@@ -150,7 +151,7 @@ public class Main extends LinearOpMode {
             double forward = -gamepad1.left_stick_y;
             double strafe = gamepad1.left_stick_x;
             double rotate = gamepad1.right_stick_x;
-            double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            double heading = follower.getHeading();
 
             double speed = 1;
             driveTrain.fieldCentricDrive(strafe, forward, rotate, heading, speed);

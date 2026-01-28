@@ -22,7 +22,6 @@ public class Fotaki extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         Servo led;
         led = hardwareMap.servo.get("led");
-        light.setLastLights((List<LightObject>) led);
         waitForStart();
         while (opModeIsActive()) {
             led.setPosition(color);
