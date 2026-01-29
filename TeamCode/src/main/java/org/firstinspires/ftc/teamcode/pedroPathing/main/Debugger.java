@@ -9,13 +9,10 @@ import com.pedropathing.telemetry.SelectableOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.DcMotorConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
@@ -59,7 +56,7 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
                 hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
 //                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
-                hlt.add("hang control", hangControl::new);
+                hlt.add("hang control", HangControl::new);
             });
         });
     }
@@ -309,7 +306,7 @@ class FlickerAnalogControl extends OpMode{
     }
 }
 
-class hangControl extends OpMode {
+class HangControl extends OpMode {
     Hang hang = new Hang();
     static double power = 1;
     static double degrees = 90;
@@ -348,7 +345,7 @@ class KeCharacterizationOpMode extends OpMode {
     @Override
     public void init() {
         motor.init(hardwareMap);
-        Log.d(TAG, "velocity,applied-voltage");
+        Log.d(TAG, "velocity,applied_voltage");
     }
     @Override
     public void init_loop() {
@@ -428,6 +425,33 @@ class KeCharacterizationOpMode extends OpMode {
     }
 }
 
+@Configurable
+class KaTestOpMode extends OpMode{
+    MotorConfig motor;
+    double degreesOffset = 30;
+    private double lastTime = 0.0;
+    private double timer = 0.0;
+    public KaTestOpMode(MotorConfig motor) {
+        this.motor = motor;
+    }
+
+    @Override
+    public void init() {
+        motor.init(hardwareMap);
+    }
+
+    @Override
+    public void loop() {
+        double now = getRuntime();
+        double dt = now - lastTime;
+        lastTime = now;
+
+        if (dt <= 0) return;
+
+        timer += dt;
+        MotorConfig.setDt(dt);
+    }
+}
 
 class VoltageSensorReadoutOpMode extends OpMode {
 

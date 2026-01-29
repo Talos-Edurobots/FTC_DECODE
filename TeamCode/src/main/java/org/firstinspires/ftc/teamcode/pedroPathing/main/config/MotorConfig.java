@@ -4,7 +4,6 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
@@ -220,6 +219,10 @@ public class MotorConfig {
     public void setPositionInTicks(double ticks) {
         targetPositionTicks = ticks;
     }
+    public void setPositionInDegrees(double degrees) {
+        double radians = Math.toRadians(degrees);
+        setPositionInRadians(radians);
+    }
 
     /* ---------------- Profiled position PIDF ---------------- */
     public void updateSimplePositionControl() {
@@ -237,10 +240,10 @@ public class MotorConfig {
         double remaining = targetPositionTicks - xRef;
 
         double stoppingDistance =
-                (vRef * vRef) / (2.0 * maxAcceleration);
+                (velocity * velocity) / (2.0 * maxAcceleration);
 
         if (Math.abs(remaining) <= stoppingDistance) {
-            aRef = -Math.signum(vRef) * maxAcceleration;
+            aRef = -Math.signum(velocity) * maxAcceleration;
         } else {
             aRef = Math.signum(remaining) * maxAcceleration;
         }
@@ -260,17 +263,17 @@ public class MotorConfig {
         double positionError = xRef - position;
         double velocityError = vRef - velocity;
 
-        double pid =
+        double pidVolts =
                 kP * positionError +
                         kD * velocityError;
 
         double ffVolts =
-                kS * Math.signum(vRef) +
+                kS * Math.signum(velocity) +
                         kV * vRef +
                         kA * aRef;
 
         double power =
-                (pid + ffVolts) / batteryVoltage;
+                (pidVolts + ffVolts) / batteryVoltage;
 
         motor.setPower(
                 Range.clip(power, -maxPower, maxPower)

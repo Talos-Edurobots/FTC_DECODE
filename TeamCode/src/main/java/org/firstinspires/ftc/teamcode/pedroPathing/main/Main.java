@@ -14,7 +14,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
@@ -90,7 +89,7 @@ public class Main extends LinearOpMode {
             newTime = getRuntime();
             dt = newTime - oldTime;
             oldTime = newTime;
-            hardwareManager.bulkRead();
+            hardwareManager.update();
             follower.update();
 
             if (gamepad1.xWasPressed()) {
