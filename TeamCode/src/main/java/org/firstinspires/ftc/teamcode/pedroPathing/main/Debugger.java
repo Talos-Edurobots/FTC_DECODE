@@ -430,7 +430,9 @@ class KaTestOpMode extends OpMode{
     MotorConfig motor;
     double degreesOffset = 30;
     private double lastTime = 0.0;
-    private double timer = 0.0;
+    private double timer;
+    private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
+    private int direction = 1;
     public KaTestOpMode(MotorConfig motor) {
         this.motor = motor;
     }
@@ -438,6 +440,9 @@ class KaTestOpMode extends OpMode{
     @Override
     public void init() {
         motor.init(hardwareMap);
+        kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
+        maxVel = motor.maxVelocity;
+        maxAcc = motor.maxAcceleration;
     }
 
     @Override
@@ -445,7 +450,14 @@ class KaTestOpMode extends OpMode{
         double now = getRuntime();
         double dt = now - lastTime;
         lastTime = now;
-
+        motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
+        motor.maxAcceleration = maxAcc;
+        motor.maxVelocity = maxVel;
+        if (timer >= 2) {
+            direction *= -1;
+        }
+        motor.setPositionInDegrees(degreesOffset * direction);
+        motor.updatePositionProfiledPIDF();
         if (dt <= 0) return;
 
         timer += dt;

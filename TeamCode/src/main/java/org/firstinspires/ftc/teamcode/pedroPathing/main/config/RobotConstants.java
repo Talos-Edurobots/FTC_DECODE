@@ -55,7 +55,8 @@ public final class RobotConstants {
             DcMotor.ZeroPowerBehavior.FLOAT
     ).addExternalGearRatio((double) 130 /270)
             .setMotorUse(MotorUse.MECHANICAL_STOP)
-            .setMotorMode(MotorMode.PROFILED_PIDF);
+            .setMotorMode(MotorMode.PROFILED_PIDF)
+            .setMotionProfileCoefficients(1000, 1000, .5);
     public static MotorConfig HANG_CONFIG = new MotorConfig(
             "hang",
             GoBildaMotor.MOTOR_117_RPM,
