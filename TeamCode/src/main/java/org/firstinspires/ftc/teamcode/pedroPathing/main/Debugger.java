@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
 import android.util.Log;
 
+import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -46,6 +47,7 @@ public class Debugger extends SelectableOpMode {
             });
             s.folder("position control", pc -> {
                 pc.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
+                pc.add("turret ka test", () -> new KaTestOpMode(RobotConstants.TURRET_CONFIG));
             });
             s.folder("ke characterization", kect -> {
                 kect.add("shooter ke", () -> new KeCharacterizationOpMode(RobotConstants.SHOOTER_CONFIG));
@@ -329,10 +331,11 @@ class KeCharacterizationOpMode extends OpMode {
     MotorConfig motor;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     static int SAMPLES = 10;
+    static double maxPower = .5;
     double[] powerLevels = new double[SAMPLES];
     {
         for (int i = 1; i <= SAMPLES; i++) {
-            powerLevels[i-1] = i * (1.0 / (SAMPLES));
+            powerLevels[i-1] = i * maxPower * (1.0 / (SAMPLES));
         }
     }
     int index = 0;
@@ -426,9 +429,10 @@ class KeCharacterizationOpMode extends OpMode {
 }
 
 @Configurable
-class KaTestOpMode extends OpMode{
+class KaTestOpMode extends OpMode {
     MotorConfig motor;
-    double degreesOffset = 30;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    static double degreesOffset = 30;
     private double lastTime = 0.0;
     private double timer;
     private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
@@ -444,6 +448,9 @@ class KaTestOpMode extends OpMode{
         maxVel = motor.maxVelocity;
         maxAcc = motor.maxAcceleration;
     }
+    @Override
+    public void init_loop() {
+    }
 
     @Override
     public void loop() {
@@ -455,6 +462,7 @@ class KaTestOpMode extends OpMode{
         motor.maxVelocity = maxVel;
         if (timer >= 2) {
             direction *= -1;
+            timer = 0;
         }
         motor.setPositionInDegrees(degreesOffset * direction);
         motor.updatePositionProfiledPIDF();
@@ -462,6 +470,19 @@ class KaTestOpMode extends OpMode{
 
         timer += dt;
         MotorConfig.setDt(dt);
+        telemetryM.addData("power", motor.getPower());
+        telemetryM.addData("velocity", motor.getVelocity());
+        telemetryM.addData("ref vel", motor.getvRef());
+        telemetryM.addData("position", motor.getCurrentPosition());
+        telemetryM.addData("ref pos", motor.getxRef());
+        telemetryM.addData("target pos", degreesOffset * direction);
+        telemetryM.addData("ref a", motor.getaRef());
+        telemetryM.addData("current", motor.getCurrent());
+        telemetryM.addData("dt", dt);
+        telemetryM.addData("timer", timer);
+        telemetryM.addData("ks", ks);
+        telemetryM.addData("ks motor", motor.kS);
+        telemetryM.update(telemetry);
     }
 }
 

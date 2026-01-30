@@ -13,7 +13,7 @@ public class MotorConfig {
 
     /* ---------------- Telemetry ---------------- */
 
-    private final TelemetryManager telemetry =
+    private final TelemetryManager telemetryM =
             PanelsTelemetry.INSTANCE.getTelemetry();
 
     /* ---------------- Hardware ---------------- */
@@ -87,6 +87,18 @@ public class MotorConfig {
 
     private double targetPositionTicks = 0.0;
 
+    public double getvRef() {
+        return vRef;
+    }
+
+    public double getxRef() {
+        return xRef;
+    }
+
+    public double getaRef() {
+        return aRef;
+    }
+
     private double xRef = 0.0;   // ticks
     private double vRef = 0.0;   // ticks / sec
     private double aRef = 0.0;   // ticks / sec^2
@@ -144,6 +156,8 @@ public class MotorConfig {
         }
         else if (motorMode == MotorMode.VELOCITY_CONTROL ||
                 motorMode == MotorMode.PROFILED_PIDF) {
+            motor.setTargetPosition(0);
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
         else {
@@ -240,7 +254,7 @@ public class MotorConfig {
         double remaining = targetPositionTicks - xRef;
 
         double stoppingDistance =
-                (velocity * velocity) / (2.0 * maxAcceleration);
+                (vRef * vRef) / (2.0 * maxAcceleration);
 
         if (Math.abs(remaining) <= stoppingDistance) {
             aRef = -Math.signum(velocity) * maxAcceleration;
@@ -268,7 +282,7 @@ public class MotorConfig {
                         kD * velocityError;
 
         double ffVolts =
-                kS * Math.signum(velocity) +
+                kS * Math.signum(vRef) +
                         kV * vRef +
                         kA * aRef;
 
@@ -278,6 +292,11 @@ public class MotorConfig {
         motor.setPower(
                 Range.clip(power, -maxPower, maxPower)
         );
+        telemetryM.addData("Ks", kS);
+        telemetryM.addData("battery", batteryVoltage);
+        telemetryM.addData("power", power);
+        telemetryM.addData("pid volts", pidVolts);
+        telemetryM.addData("ff volts", ffVolts);
     }
 
     /* ---------------- Velocity PIDF ---------------- */

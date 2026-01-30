@@ -56,7 +56,8 @@ public final class RobotConstants {
     ).addExternalGearRatio((double) 130 /270)
             .setMotorUse(MotorUse.MECHANICAL_STOP)
             .setMotorMode(MotorMode.PROFILED_PIDF)
-            .setMotionProfileCoefficients(1000, 1000, .5);
+            .setMotionProfileCoefficients(1000, 1000, .5)
+            .setPIDFCoefficients(.05, 0, 0, 0.4, 0.0053, 0);
     public static MotorConfig HANG_CONFIG = new MotorConfig(
             "hang",
             GoBildaMotor.MOTOR_117_RPM,
