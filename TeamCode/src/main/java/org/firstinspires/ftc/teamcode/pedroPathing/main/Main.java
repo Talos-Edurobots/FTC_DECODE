@@ -9,12 +9,14 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
@@ -23,6 +25,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -38,6 +41,7 @@ public class Main extends LinearOpMode {
     Shooter shooter;
     Flickers flickers;
     IMU imu;
+    Turret turret;
     Pinpoint pinpoint;
     Follower follower;
     private Limelight3A limelight;
@@ -46,6 +50,7 @@ public class Main extends LinearOpMode {
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     boolean automatedDrive = false;
     boolean far = true;
+    double turretError;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -62,6 +67,7 @@ public class Main extends LinearOpMode {
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         telemetry.setMsTransmissionInterval(11);
+        limelight.pipelineSwitch(0);
 
         shooter = new Shooter(hardwareMap);
         shooter.init();
@@ -97,10 +103,16 @@ public class Main extends LinearOpMode {
             hardwareManager.update();
             follower.update();
 
+            LLResult result = limelight.getLatestResult();
+            if (result != null) {
+                if (result.isValid()) {
+                    turretError = result.getTx();
+                }
+            }
             if (gamepad1.xWasPressed()) {
                 far ^= true;
+                Shooter.targetVelocity = far ? 2400 : 1200;
             }
-            Shooter.targetVelocity = far ? 2400 : 1200;
 
             if (gamepad1.options) {
                 imu.resetYaw();

@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
+import com.bylazar.configurables.PanelsConfigurables;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -9,6 +12,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 
 public class Turret {
     HardwareMap hwmap;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;
     final Pose RED_GOAL_POSE = new Pose(144, 144);
     final Pose BLUE_GOAL_POSE = new Pose(144, -144);
@@ -40,7 +44,8 @@ public class Turret {
         turret.manualPositionPIDF(ta);
         turret.setMotorMode(MotorMode.CUSTOM_ERROR_POSITION_PIDF);
     }
-    public void loop(double dt, double batteryVoltage) {
-        turret.updatePositionProfiledPIDF();
+    public void loop() {
+        turret.update();
+        telemetryM.addData("turret mode", turret.getMotorMode());
     }
 }

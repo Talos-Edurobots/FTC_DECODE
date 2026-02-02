@@ -43,6 +43,10 @@ public class MotorConfig {
     private DcMotor.ZeroPowerBehavior zeroPowerBehavior =
             DcMotor.ZeroPowerBehavior.FLOAT;
 
+    public MotorMode getMotorMode() {
+        return motorMode;
+    }
+
     private MotorMode motorMode = MotorMode.OPEN_LOOP;
 
     private DcMotorEx motor;
