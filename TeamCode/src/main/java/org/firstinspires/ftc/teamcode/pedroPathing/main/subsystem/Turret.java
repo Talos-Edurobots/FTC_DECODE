@@ -4,6 +4,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 
 public class Turret {
@@ -19,6 +20,7 @@ public class Turret {
     }
     public void setAngleRadians(double angleRadians) {
         turret.setPositionInRadians(angleRadians);
+        turret.setMotorMode(MotorMode.PROFILED_PIDF);
     }
     public void lookToGoal(Pose pose, boolean isRed) {
         double angleToGoal;
@@ -28,10 +30,15 @@ public class Turret {
            angleToGoal = Math.atan2(BLUE_GOAL_POSE.getX()-pose.getX(), BLUE_GOAL_POSE.getY()-pose.getY());
         }
         setAngleRadians(angleToGoal);
+        turret.setMotorMode(MotorMode.PROFILED_PIDF);
     }
     public void init() {
         turret.init(hwmap);
         faceForward();
+    }
+    public void limelightAim(double ta) {
+        turret.manualPositionPIDF(ta);
+        turret.setMotorMode(MotorMode.CUSTOM_ERROR_POSITION_PIDF);
     }
     public void loop(double dt, double batteryVoltage) {
         turret.updatePositionProfiledPIDF();

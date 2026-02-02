@@ -299,6 +299,23 @@ public class MotorConfig {
         telemetryM.addData("ff volts", ffVolts);
     }
 
+    public void manualPositionPIDF(double error) {
+        double derivative =
+                (error - lastVelocityError) / dt;
+        lastVelocityError = error;
+
+        double output =
+                kP * error +
+                        kD * derivative +
+                        (kS * Math.signum(targetVelocityTicks)
+                                + kV * targetVelocityTicks)
+                                / batteryVoltage;
+
+        motor.setPower(
+                Range.clip(output, -maxPower, maxPower)
+        );
+    }
+
     /* ---------------- Velocity PIDF ---------------- */
 
     public void setVelocityTicksPerSecond(double ticksPerSecond) {

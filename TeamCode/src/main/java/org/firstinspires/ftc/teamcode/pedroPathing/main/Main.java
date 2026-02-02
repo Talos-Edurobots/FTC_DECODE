@@ -9,6 +9,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -39,6 +40,7 @@ public class Main extends LinearOpMode {
     IMU imu;
     Pinpoint pinpoint;
     Follower follower;
+    private Limelight3A limelight;
     Supplier<PathChain> pathChain;
     Pose startingPose = new Pose(45, 98);
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -57,6 +59,9 @@ public class Main extends LinearOpMode {
                 .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
                 .build();
         hardwareManager = new HardwareManager(hardwareMap);
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        telemetry.setMsTransmissionInterval(11);
 
         shooter = new Shooter(hardwareMap);
         shooter.init();
