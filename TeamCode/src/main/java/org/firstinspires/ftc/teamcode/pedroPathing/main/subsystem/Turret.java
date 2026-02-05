@@ -40,8 +40,8 @@ public class Turret {
         turret.init(hwmap);
         faceForward();
     }
-    public void limelightAim(double ta) {
-        turret.manualPositionPIDF(ta);
+    public void limelightAim(double tx) {
+        turret.manualPositionPIDF(tx);
         turret.setMotorMode(MotorMode.CUSTOM_ERROR_POSITION_PIDF);
     }
     public void loop() {

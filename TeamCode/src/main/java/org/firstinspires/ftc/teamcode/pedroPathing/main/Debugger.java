@@ -7,6 +7,8 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.telemetry.SelectableOpMode;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -59,6 +61,7 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
 //                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
                 hlt.add("hang control", HangControl::new);
+                hlt.add("turret simple pidf with turret", LimelightTurretAlign::new);
             });
         });
     }
@@ -141,6 +144,7 @@ class MotorPositionTest extends OpMode {
         ks = motor.kS;
         kv = motor.kV;
         ka = motor.kA;
+        PanelsConfigurables.INSTANCE.refreshClass(MotorPositionTest.class);
     }
 
     @Override
@@ -175,6 +179,55 @@ class MotorPositionTest extends OpMode {
         telemetryM.update(telemetry);
     }
 }
+@Configurable
+class LimelightTurretAlign extends OpMode {
+    MotorConfig motor = RobotConstants.TURRET_CONFIG;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    Limelight3A limelight;
+    public static double maxPower = .2;
+    public static double targetPosition = 0, kp, ki, kd, ks;
+    @Override
+    public void init() {
+        motor.init(hardwareMap);
+        motor.kP = 0; motor.kD = 0;
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        telemetry.setMsTransmissionInterval(11);
+        limelight.pipelineSwitch(2);
+
+        kp = motor.kP;
+        ki = motor.kI;
+        kd = motor.kD;
+        ks = motor.kS;
+        PanelsConfigurables.INSTANCE.refreshClass(MotorPositionTest.class);
+    }
+    @Override
+    public void start() {
+        limelight.start();
+    }
+    @Override
+    public void loop() {
+        motor.maxPower = maxPower;
+        motor.kP = kp; motor.kD = kd;
+        LLResult result = limelight.getLatestResult();
+        if (result != null) {
+            if (result.isValid()) {
+                motor.manualPositionPIDF(result.getTx());
+            }
+        }
+        else if (result.getTx() == 0) {
+            motor.manualPositionPIDF(0);
+            telemetryM.addLine("I run");
+        }
+        telemetryM.addData("kp", motor.kP);
+        telemetryM.addData("kd", motor.kD);
+        telemetryM.addData("tx", result.getTx());
+        telemetryM.addData("max power", motor.maxPower);
+        telemetryM.addData("power", motor.getPower());
+        telemetryM.update(telemetry);
+    }
+}
+
+
 @Configurable
 class MotorPIDFVelocityTest extends OpMode {
     boolean runMotor = true;

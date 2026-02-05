@@ -304,17 +304,19 @@ public class MotorConfig {
     }
 
     public void manualPositionPIDF(double error) {
-        double derivative =
-                (error - lastVelocityError) / dt;
-        lastVelocityError = error;
+//        double derivative =
+//                (error - lastVelocityError) / dt;
+//        lastVelocityError = error;
 
         double output =
-                kP * error +
-                        kD * derivative +
-                        (kS * Math.signum(targetVelocityTicks)
-                                + kV * targetVelocityTicks)
-                                / batteryVoltage;
+                kP * error;
+//                        kD * derivative;
+//                        (kS * Math.signum(targetVelocityTicks)
+//                                + kV * targetVelocityTicks)
+//                                / batteryVoltage;
 
+        telemetryM.addData("output", output);
+        telemetryM.addData("error", error);
         motor.setPower(
                 Range.clip(output, -maxPower, maxPower)
         );
