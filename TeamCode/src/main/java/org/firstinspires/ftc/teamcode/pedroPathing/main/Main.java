@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.PPConstants;
@@ -23,6 +24,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
@@ -48,6 +50,7 @@ public class Main extends LinearOpMode {
     Supplier<PathChain> pathChain;
     Pose startingPose = new Pose(45, 98);
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    Leds leds;
     boolean automatedDrive = false;
     boolean far = true;
     double turretError;
@@ -69,6 +72,8 @@ public class Main extends LinearOpMode {
         telemetry.setMsTransmissionInterval(11);
         limelight.pipelineSwitch(0);
 
+        leds = new Leds();
+        leds.init(hardwareMap);
         shooter = new Shooter(hardwareMap);
         shooter.init();
         shooter.run(false);
@@ -95,8 +100,11 @@ public class Main extends LinearOpMode {
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
+        leds.setLeft(.72);
+        leds.setRight(.72);
         waitForStart();
         while (opModeIsActive()){
+
             newTime = getRuntime();
             dt = newTime - oldTime;
             oldTime = newTime;
@@ -167,10 +175,11 @@ public class Main extends LinearOpMode {
             double forward = -gamepad1.left_stick_y;
             double strafe = gamepad1.left_stick_x;
             double rotate = gamepad1.right_stick_x;
-            double heading = follower.getHeading();
+//            double heading = follower.getHeading();
+            double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             double speed = 1;
-            driveTrain.fieldCentricDrive(strafe, forward, rotate, heading, speed);
+            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
             if (!automatedDrive) {
 //                follower.setTeleOpDrive(forward, strafe, rotate, false);
             }

@@ -181,6 +181,7 @@ class MotorPositionTest extends OpMode {
 }
 @Configurable
 class LimelightTurretAlign extends OpMode {
+    ElapsedTime timer;
     MotorConfig motor = RobotConstants.TURRET_CONFIG;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Limelight3A limelight;
@@ -203,9 +204,12 @@ class LimelightTurretAlign extends OpMode {
     @Override
     public void start() {
         limelight.start();
+        timer.reset();
     }
     @Override
     public void loop() {
+        MotorConfig.setDt(timer.seconds());
+        timer.reset();
         motor.maxPower = maxPower;
         motor.kP = kp; motor.kD = kd;
         LLResult result = limelight.getLatestResult();
@@ -221,6 +225,13 @@ class LimelightTurretAlign extends OpMode {
                     telemetryM.addLine("running turret");
                 }
             }
+            else {
+                motor.manualPositionPIDF(0);
+                telemetryM.addLine("invalid result");
+            }
+        }
+        else {
+            telemetryM.addLine("null result");
         }
         telemetryM.addData("kp", motor.kP);
         telemetryM.addData("kd", motor.kD);
