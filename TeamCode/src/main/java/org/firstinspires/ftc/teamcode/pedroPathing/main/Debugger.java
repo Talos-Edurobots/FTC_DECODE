@@ -211,12 +211,16 @@ class LimelightTurretAlign extends OpMode {
         LLResult result = limelight.getLatestResult();
         if (result != null) {
             if (result.isValid()) {
-                motor.manualPositionPIDF(result.getTx());
+                telemetryM.addLine("valid result");
+                if (result.getTx() == 0) {
+                    motor.manualPositionPIDF(0);
+                    telemetryM.addLine("0 power");
+                }
+                else {
+                    motor.manualPositionPIDF(result.getTx());
+                    telemetryM.addLine("running turret");
+                }
             }
-        }
-        else if (result.getTx() == 0) {
-            motor.manualPositionPIDF(0);
-            telemetryM.addLine("I run");
         }
         telemetryM.addData("kp", motor.kP);
         telemetryM.addData("kd", motor.kD);
