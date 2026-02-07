@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main.config;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
 import com.bylazar.field.Style;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
@@ -6,6 +6,12 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.DcMotorConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.GoBildaMotor;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
 
 public final class RobotConstants {
     private RobotConstants(){}

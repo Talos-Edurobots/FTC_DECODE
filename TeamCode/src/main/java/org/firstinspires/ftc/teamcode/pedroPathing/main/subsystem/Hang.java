@@ -2,8 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 
 public class Hang {
     MotorConfig motor = RobotConstants.HANG_CONFIG;

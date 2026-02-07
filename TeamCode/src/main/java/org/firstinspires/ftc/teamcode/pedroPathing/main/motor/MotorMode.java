@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main.config;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.motor;
 
 public enum MotorMode {
     PROFILED_PIDF,

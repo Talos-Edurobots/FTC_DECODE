@@ -3,8 +3,6 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
-
 public class Leds {
     Servo left, right;
     public void init(HardwareMap hwmap) {

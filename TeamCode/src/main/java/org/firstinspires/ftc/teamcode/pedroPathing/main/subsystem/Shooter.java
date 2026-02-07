@@ -1,14 +1,11 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 
 @Configurable
 public class Shooter {

@@ -24,7 +24,7 @@ import com.pedropathing.util.*;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.PPConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 
 import java.util.ArrayList;
 import java.util.List;

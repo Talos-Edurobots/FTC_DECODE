@@ -16,9 +16,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorUse;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 

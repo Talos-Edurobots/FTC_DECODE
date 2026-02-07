@@ -1,14 +1,12 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
-import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorMode;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
 
 public class Turret {
     HardwareMap hwmap;

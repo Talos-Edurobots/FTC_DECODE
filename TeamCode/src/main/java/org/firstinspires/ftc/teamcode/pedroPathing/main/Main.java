@@ -17,10 +17,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.HardwareManager;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.PPConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.HardwareManager;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
