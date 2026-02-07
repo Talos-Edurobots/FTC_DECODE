@@ -21,7 +21,7 @@ public class PPConstants {
             .headingPIDFCoefficients(new PIDFCoefficients(0.8, 0, 0.04, 0.02))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.009, 0, 0, 0.6, 0.01))
             .centripetalScaling(0.005)
-            .mass(7.3);
+            .mass(9.7);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
@@ -36,8 +36,8 @@ public class PPConstants {
             .xVelocity(70.4635)
             .yVelocity(59.7103);
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(3.4) // check
-            .strafePodX(4) // check
+            .forwardPodY(4.78) // check
+            .strafePodX(3.34) // check
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName(RobotConstants.PINPOINT_NAME)
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)

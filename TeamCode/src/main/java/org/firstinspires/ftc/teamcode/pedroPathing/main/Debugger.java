@@ -2,20 +2,20 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
 import android.util.Log;
 
+import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.telemetry.SelectableOpMode;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.config.DcMotorConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.config.RobotConstants;
@@ -49,6 +49,7 @@ public class Debugger extends SelectableOpMode {
             });
             s.folder("position control", pc -> {
                 pc.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
+                pc.add("turret ka test", () -> new KaTestOpMode(RobotConstants.TURRET_CONFIG));
             });
             s.folder("ke characterization", kect -> {
                 kect.add("shooter ke", () -> new KeCharacterizationOpMode(RobotConstants.SHOOTER_CONFIG));
@@ -59,7 +60,8 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
                 hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
 //                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
-                hlt.add("hang control", hangControl::new);
+                hlt.add("hang control", HangControl::new);
+                hlt.add("turret simple pidf with turret", LimelightTurretAlign::new);
             });
         });
     }
@@ -136,7 +138,13 @@ class MotorPositionTest extends OpMode {
     @Override
     public void init() {
         motor.init(hardwareMap);
-        kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kU; ka = motor.kA;
+        kp = motor.kP;
+        ki = motor.kI;
+        kd = motor.kD;
+        ks = motor.kS;
+        kv = motor.kV;
+        ka = motor.kA;
+        PanelsConfigurables.INSTANCE.refreshClass(MotorPositionTest.class);
     }
 
     @Override
@@ -159,10 +167,11 @@ class MotorPositionTest extends OpMode {
 
     @Override
     public void loop() {
-        motor.kP = kp; motor.kI = ki; motor.kD = kd; motor.kS = ks; motor.kU = kv; motor.kA = ka;
-        motor.setPositionInTicks(targetPosition);
-        motor.updateVelocityPIDF(timer.seconds(), 12);
+        MotorConfig.setDt(timer.seconds());
         timer.reset();
+        motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
+        motor.setPositionInTicks(targetPosition * motor.getMotorType().getTicksPerDegree());
+        motor.updateSimplePositionControl();
         telemetryM.addData("current pos", motor.getCurrentPosition());
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("kp", kp);
@@ -170,6 +179,70 @@ class MotorPositionTest extends OpMode {
         telemetryM.update(telemetry);
     }
 }
+@Configurable
+class LimelightTurretAlign extends OpMode {
+    ElapsedTime timer;
+    MotorConfig motor = RobotConstants.TURRET_CONFIG;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    Limelight3A limelight;
+    public static double maxPower = .2;
+    public static double targetPosition = 0, kp, ki, kd, ks;
+    @Override
+    public void init() {
+        motor.init(hardwareMap);
+        motor.kP = 0; motor.kD = 0;
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        telemetry.setMsTransmissionInterval(11);
+        limelight.pipelineSwitch(2);
+
+        kp = motor.kP;
+        ki = motor.kI;
+        kd = motor.kD;
+        ks = motor.kS;
+        PanelsConfigurables.INSTANCE.refreshClass(MotorPositionTest.class);
+    }
+    @Override
+    public void start() {
+        limelight.start();
+        timer.reset();
+    }
+    @Override
+    public void loop() {
+        MotorConfig.setDt(timer.seconds());
+        timer.reset();
+        motor.maxPower = maxPower;
+        motor.kP = kp; motor.kD = kd;
+        LLResult result = limelight.getLatestResult();
+        if (result != null) {
+            if (result.isValid()) {
+                telemetryM.addLine("valid result");
+                if (result.getTx() == 0) {
+                    motor.manualPositionPIDF(0);
+                    telemetryM.addLine("0 power");
+                }
+                else {
+                    motor.manualPositionPIDF(result.getTx());
+                    telemetryM.addLine("running turret");
+                }
+            }
+            else {
+                motor.manualPositionPIDF(0);
+                telemetryM.addLine("invalid result");
+            }
+        }
+        else {
+            telemetryM.addLine("null result");
+        }
+        telemetryM.addData("kp", motor.kP);
+        telemetryM.addData("kd", motor.kD);
+        telemetryM.addData("tx", result.getTx());
+        telemetryM.addData("max power", motor.maxPower);
+        telemetryM.addData("power", motor.getPower());
+        telemetryM.update(telemetry);
+    }
+}
+
+
 @Configurable
 class MotorPIDFVelocityTest extends OpMode {
     boolean runMotor = true;
@@ -188,6 +261,7 @@ class MotorPIDFVelocityTest extends OpMode {
         telemetryM.addLine("Init Complete");
         telemetryM.update(telemetry);
         timer.startTime();
+        kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
     }
     @Override
     public void init_loop() {
@@ -205,6 +279,8 @@ class MotorPIDFVelocityTest extends OpMode {
 
     @Override
     public void loop() {
+        MotorConfig.setDt(timer.seconds());
+        MotorConfig.setBatteryVoltage(12);
         timer.reset();
         motor.setVelocityTicksPerSecond(targetVelocity);
         motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
@@ -213,7 +289,7 @@ class MotorPIDFVelocityTest extends OpMode {
             runMotor ^= true;
         }
         if (runMotor) {
-            motor.updateVelocityPIDF(timer.seconds(), 12);
+            motor.updateVelocityPIDF();
         }
         else {
             motor.setPower(0);
@@ -300,7 +376,7 @@ class FlickerAnalogControl extends OpMode{
     }
 }
 
-class hangControl extends OpMode {
+class HangControl extends OpMode {
     Hang hang = new Hang();
     static double power = 1;
     static double degrees = 90;
@@ -322,11 +398,12 @@ class KeCharacterizationOpMode extends OpMode {
     }
     MotorConfig motor;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    static int SAMPLES = 5;
+    static int SAMPLES = 10;
+    static double maxPower = .5;
     double[] powerLevels = new double[SAMPLES];
     {
         for (int i = 1; i <= SAMPLES; i++) {
-            powerLevels[i-1] = i * (1.0 / (SAMPLES));
+            powerLevels[i-1] = i * maxPower * (1.0 / (SAMPLES));
         }
     }
     int index = 0;
@@ -339,7 +416,7 @@ class KeCharacterizationOpMode extends OpMode {
     @Override
     public void init() {
         motor.init(hardwareMap);
-        Log.d(TAG, ",Velocity,applied-voltage");
+        Log.d(TAG, "velocity,applied_voltage");
     }
     @Override
     public void init_loop() {
@@ -403,7 +480,7 @@ class KeCharacterizationOpMode extends OpMode {
         telemetryM.addData("Battery Voltage (V)", batteryVoltage);
         telemetryM.addData("Applied Voltage (V)", appliedVoltage);
         telemetryM.update();
-        Log.d(TAG, String.format(",%.3f,%.3f",
+        Log.d(TAG, String.format("%.3f,%.3f",
                     velocity, appliedVoltage)
         );
 
@@ -419,6 +496,63 @@ class KeCharacterizationOpMode extends OpMode {
     }
 }
 
+@Configurable
+class KaTestOpMode extends OpMode {
+    MotorConfig motor;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    static double degreesOffset = 30;
+    private double lastTime = 0.0;
+    private double timer;
+    private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
+    private int direction = 1;
+    public KaTestOpMode(MotorConfig motor) {
+        this.motor = motor;
+    }
+
+    @Override
+    public void init() {
+        motor.init(hardwareMap);
+        kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
+        maxVel = motor.maxVelocity;
+        maxAcc = motor.maxAcceleration;
+    }
+    @Override
+    public void init_loop() {
+    }
+
+    @Override
+    public void loop() {
+        double now = getRuntime();
+        double dt = now - lastTime;
+        lastTime = now;
+        motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
+        motor.maxAcceleration = maxAcc;
+        motor.maxVelocity = maxVel;
+        if (timer >= 2) {
+            direction *= -1;
+            timer = 0;
+        }
+        motor.setPositionInDegrees(degreesOffset * direction);
+        motor.updatePositionProfiledPIDF();
+        if (dt <= 0) return;
+
+        timer += dt;
+        MotorConfig.setDt(dt);
+        telemetryM.addData("power", motor.getPower());
+        telemetryM.addData("velocity", motor.getVelocity());
+        telemetryM.addData("ref vel", motor.getvRef());
+        telemetryM.addData("position", motor.getCurrentPosition());
+        telemetryM.addData("ref pos", motor.getxRef());
+        telemetryM.addData("target pos", degreesOffset * direction);
+        telemetryM.addData("ref a", motor.getaRef());
+        telemetryM.addData("current", motor.getCurrent());
+        telemetryM.addData("dt", dt);
+        telemetryM.addData("timer", timer);
+        telemetryM.addData("ks", ks);
+        telemetryM.addData("ks motor", motor.kS);
+        telemetryM.update(telemetry);
+    }
+}
 
 class VoltageSensorReadoutOpMode extends OpMode {
 
@@ -467,5 +601,41 @@ class VoltageSensorReadoutOpMode extends OpMode {
         }
 
         telemetry.update();
+    }
+}
+
+@Configurable
+class RampPowerOpMode extends OpMode {
+    public RampPowerOpMode(MotorConfig motor) {
+        this.motor = motor;
+    }
+    static double acceleration = 1.0; // change in power per second
+    MotorConfig motor;
+    double lastTime = 0;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private double rampPower(double current, double target, double dt) {
+        double maxPowerChange = RobotConstants.DrivetrainMaxAcceleration * dt;
+        double diff = target - current;
+        if (Math.abs(diff) > maxPowerChange) {
+            diff = Math.signum(diff) * maxPowerChange;
+        }
+        return current + diff;
+    }
+    @Override
+    public void init() {
+        motor.init(hardwareMap);
+    }
+
+    @Override
+    public void loop() {
+        double currentTime = getRuntime();
+        double dt = currentTime - lastTime;
+        double targetPower = gamepad1.right_trigger - gamepad1.left_trigger;
+        double currentPower = motor.getPower();
+        double newPower = rampPower(currentPower, targetPower, dt);
+        motor.setPower(newPower);
+        telemetryM.addData("Target Power", targetPower);
+        telemetryM.update(telemetry);
+        lastTime = currentTime;
     }
 }

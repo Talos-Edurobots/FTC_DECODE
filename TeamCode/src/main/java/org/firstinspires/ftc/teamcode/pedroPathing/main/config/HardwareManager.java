@@ -17,7 +17,7 @@ public final class HardwareManager {
         }
     }
 
-    public void bulkRead() {
+    public void update() {
         for (LynxModule hub : hubs) {
             hub.clearBulkCache();
         }

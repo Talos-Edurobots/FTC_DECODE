@@ -13,7 +13,7 @@ public class Hang {
         motor.init(hwmap);
     }
     public void update(double power, int posInDegrees) {
-        motor.simplePositionControl((int) (motor.getMotorType().getTicksPerDegree() * posInDegrees));
-        motor.updateSimplePositionControl(power);
+        motor.setPositionInTicks(posInDegrees * motor.getMotorType().getTicksPerDegree());
+        motor.updateSimplePositionControl();
     }
 }
