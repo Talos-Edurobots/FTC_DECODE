@@ -119,8 +119,18 @@ public class MotorConfig {
 
     /* ---------------- Angle limits (radians, API only) ---------------- */
 
-    private double minAngle = Double.NEGATIVE_INFINITY;
-    private double maxAngle = Double.POSITIVE_INFINITY;
+    public MotorConfig setMinAngleTicks(double minAngleTicks) {
+        this.minAngleTicks = minAngleTicks;
+        return this;
+    }
+
+    public MotorConfig setMaxAngleTicks(double maxAngleTicks) {
+        this.maxAngleTicks = maxAngleTicks;
+        return this;
+    }
+
+    private double minAngleTicks = Double.NEGATIVE_INFINITY;
+    private double maxAngleTicks = Double.POSITIVE_INFINITY;
 
     /* ---------------- Constructors ---------------- */
 
@@ -221,13 +231,13 @@ public class MotorConfig {
     /* ---------------- Position targets ---------------- */
 
     public void setRadianLimit(double minAngle, double maxAngle) {
-        this.minAngle = minAngle;
-        this.maxAngle = maxAngle;
+        this.minAngleTicks = minAngle;
+        this.maxAngleTicks = maxAngle;
     }
 
     public void setPositionInRadians(double radians) {
         double clamped =
-                Range.clip(radians, minAngle, maxAngle);
+                Range.clip(radians, minAngleTicks, maxAngleTicks);
 
         targetPositionTicks =
                 clamped * motorType.getTicksPerRadian() * externalGearRatio;
@@ -311,9 +321,23 @@ public class MotorConfig {
         double output =
                 kP * error +
                         kD * derivative;
-
+        int pos = motor.getCurrentPosition();
+        boolean motorTooLowPos = pos < minAngleTicks;
+        boolean motorTooHighPos = pos > maxAngleTicks;
+        if (motorTooLowPos && output > 0) {
+            output = 0;
+        }
+        if (motorTooHighPos && output < 0) {
+            output = 0;
+        }
+        if (Math.abs(error) < 1) {
+            output = 0;
+        }
         telemetryM.addData("output", output);
         telemetryM.addData("error", error);
+        telemetryM.addData("pos", pos);
+        telemetryM.addData("too low", motorTooLowPos);
+        telemetryM.addData("too high", motorTooHighPos);
         motor.setPower(
                 Range.clip(output, -maxPower, maxPower)
         );

@@ -17,9 +17,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.HardwareManager;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
@@ -69,7 +69,7 @@ public class Main extends LinearOpMode {
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         telemetry.setMsTransmissionInterval(11);
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(2);
 
         leds = new Leds();
         leds.init(hardwareMap);
@@ -95,12 +95,16 @@ public class Main extends LinearOpMode {
         intake = new Intake(hardwareMap);
         intake.init();
 
+        turret = new Turret(hardwareMap);
+        turret.init();
+
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
         leds.setLeft(.72);
         leds.setRight(.72);
+        limelight.start();
         waitForStart();
         while (opModeIsActive()){
 
@@ -111,11 +115,7 @@ public class Main extends LinearOpMode {
             follower.update();
 
             LLResult result = limelight.getLatestResult();
-            if (result != null) {
-                if (result.isValid()) {
-                    turretError = result.getTx();
-                }
-            }
+//            turret.limelightAim(result);
             if (gamepad1.xWasPressed()) {
                 far ^= true;
                 Shooter.targetVelocity = far ? 2400 : 1200;

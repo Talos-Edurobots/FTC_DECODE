@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 
 public class Intake {

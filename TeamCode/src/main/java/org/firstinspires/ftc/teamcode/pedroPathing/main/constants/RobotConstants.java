@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.constants;
 
 import com.bylazar.field.Style;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
@@ -63,7 +63,10 @@ public final class RobotConstants {
             .setMotorUse(MotorUse.MECHANICAL_STOP)
             .setMotorMode(MotorMode.PROFILED_PIDF)
             .setMotionProfileCoefficients(1000, 1000, .5)
-            .setPIDFCoefficients(.05, 0, 0, 0.4, 0.0053, 0);
+//            .setPIDFCoefficients(.05, 0, 0, 0.4, 0.0053, 0)
+            .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
+            .setMinAngleTicks(-500)
+            .setMaxAngleTicks(250);
     public static MotorConfig HANG_CONFIG = new MotorConfig(
             "hang",
             GoBildaMotor.MOTOR_117_RPM,

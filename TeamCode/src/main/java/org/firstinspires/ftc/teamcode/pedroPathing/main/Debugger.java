@@ -18,7 +18,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 
@@ -118,7 +118,7 @@ class MotorPowerTest extends OpMode {
         telemetryM.addLine("-----------------------------");
         telemetryM.addData("Power", power);
         telemetryM.addData("Velocity", currentVelocity);
-        telemetryM.addData("motor pos", motor.getVelocity());
+        telemetryM.addData("motor pos", motor.getCurrentPosition());
         telemetryM.addData("current Direction", motor.getDirection().toString());
         telemetryM.addData("current", motor.getCurrent());
         telemetryM.addData("Max Velocity", maxVelocity);
@@ -181,7 +181,7 @@ class MotorPositionTest extends OpMode {
 }
 @Configurable
 class LimelightTurretAlign extends OpMode {
-    ElapsedTime timer;
+    ElapsedTime timer = new ElapsedTime();
     MotorConfig motor = RobotConstants.TURRET_CONFIG;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Limelight3A limelight;
@@ -221,7 +221,7 @@ class LimelightTurretAlign extends OpMode {
                     telemetryM.addLine("0 power");
                 }
                 else {
-                    motor.manualPositionPIDF(result.getTx());
+                    motor.manualPositionPIDF(-result.getTx());
                     telemetryM.addLine("running turret");
                 }
             }

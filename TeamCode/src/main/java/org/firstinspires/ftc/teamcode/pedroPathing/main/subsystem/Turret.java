@@ -1,14 +1,21 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+
+import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
 
+@Configurable
 public class Turret {
+    static double maxPower = .2, kp=0.005, kd = .001;
     HardwareMap hwmap;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;
@@ -38,9 +45,34 @@ public class Turret {
         turret.init(hwmap);
         faceForward();
     }
-    public void limelightAim(double tx) {
-        turret.manualPositionPIDF(tx);
-        turret.setMotorMode(MotorMode.CUSTOM_ERROR_POSITION_PIDF);
+    public void limelightAim(LLResult result) {
+        turret.maxPower = maxPower;
+        turret.kP = kp; turret.kD = kd;
+        if (result != null) {
+            if (result.isValid()) {
+                telemetryM.addLine("valid result");
+                if (result.getTx() == 0) {
+                    turret.manualPositionPIDF(0);
+                    telemetryM.addLine("0 power");
+                }
+                else {
+                    turret.manualPositionPIDF(-result.getTx());
+                    telemetryM.addLine("running turret");
+                }
+            }
+            else {
+                turret.manualPositionPIDF(0);
+                telemetryM.addLine("invalid result");
+            }
+        }
+        else {
+            telemetryM.addLine("null result");
+        }
+        telemetryM.addData("kp", turret.kP);
+        telemetryM.addData("kd", turret.kD);
+        telemetryM.addData("tx", result.getTx());
+        telemetryM.addData("max power", turret.maxPower);
+        telemetryM.addData("power", turret.getPower());
     }
     public void loop() {
         turret.update();
