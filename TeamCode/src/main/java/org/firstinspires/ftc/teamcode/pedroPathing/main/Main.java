@@ -37,6 +37,8 @@ import java.util.function.Supplier;
 @TeleOp(name = "Main TeleOp", group = "main")
 @Configurable
 public class Main extends LinearOpMode {
+    static int backVel = 2100;
+    static int frontVel = 1200;
     HardwareManager hardwareManager;
     DriveTrain driveTrain;
     Intake intake;
@@ -103,24 +105,25 @@ public class Main extends LinearOpMode {
 //        for (LynxModule hub : allHubs) {
 //            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
 //        }
-        leds.setLeft(.72);
-        leds.setRight(.72);
+
         limelight.start();
         waitForStart();
         while (opModeIsActive()){
-
             newTime = getRuntime();
             dt = newTime - oldTime;
             oldTime = newTime;
             hardwareManager.update();
             MotorConfig.setDt(dt);
+            double color = newTime - (int)(newTime);
+            leds.setLeft(color);
+            leds.setRight(color);
             follower.update();
 
             LLResult result = limelight.getLatestResult();
             turret.limelightAim(result);
             if (gamepad1.xWasPressed()) {
                 far ^= true;
-                Shooter.targetVelocity = far ? 2400 : 1200;
+                Shooter.targetVelocity = far ? backVel : frontVel;
             }
 
             if (gamepad1.options) {
