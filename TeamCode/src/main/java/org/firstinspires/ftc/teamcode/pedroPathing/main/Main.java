@@ -115,7 +115,7 @@ public class Main extends LinearOpMode {
             follower.update();
 
             LLResult result = limelight.getLatestResult();
-//            turret.limelightAim(result);
+            turret.limelightAim(result);
             if (gamepad1.xWasPressed()) {
                 far ^= true;
                 Shooter.targetVelocity = far ? 2400 : 1200;
