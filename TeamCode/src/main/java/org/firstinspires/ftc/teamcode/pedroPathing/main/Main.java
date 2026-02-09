@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
@@ -98,10 +99,10 @@ public class Main extends LinearOpMode {
         turret = new Turret(hardwareMap);
         turret.init();
 
-        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
-        for (LynxModule hub : allHubs) {
-            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-        }
+//        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+//        for (LynxModule hub : allHubs) {
+//            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+//        }
         leds.setLeft(.72);
         leds.setRight(.72);
         limelight.start();
@@ -112,6 +113,7 @@ public class Main extends LinearOpMode {
             dt = newTime - oldTime;
             oldTime = newTime;
             hardwareManager.update();
+            MotorConfig.setDt(dt);
             follower.update();
 
             LLResult result = limelight.getLatestResult();

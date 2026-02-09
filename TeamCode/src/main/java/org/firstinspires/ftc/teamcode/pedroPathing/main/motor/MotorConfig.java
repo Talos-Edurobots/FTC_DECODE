@@ -314,6 +314,9 @@ public class MotorConfig {
     }
 
     public void manualPositionPIDF(double error) {
+        if (error == 0) {
+            throw new ArithmeticException("dt cannot be 0");
+        }
         double derivative =
                 (error - lastVelocityError) / dt;
         lastVelocityError = error;
