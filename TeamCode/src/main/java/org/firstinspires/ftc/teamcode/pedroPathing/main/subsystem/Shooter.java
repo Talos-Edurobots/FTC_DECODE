@@ -12,8 +12,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 public class Shooter {
     private HardwareMap hwmap;
     private MotorConfig motor;
-    private LED greenLED;
-    private LED redLED;
     private Servo hoodServo;
     private double integralSum = 0;
     private double lastError = 0;
@@ -40,22 +38,15 @@ public class Shooter {
         hoodServo.setPosition(1);
         hoodServo.setDirection(Servo.Direction.FORWARD);
 
-        greenLED = hwmap.get(LED.class, RobotConstants.SHOOTER_LED_GREEN);
-        redLED = hwmap.get(LED.class, RobotConstants.SHOOTER_LED_RED);
+
     }
 
     public void update(double dt) {
         this.dt = dt;
         if (runMotor) {
             setVelocity();
-            if (isBusy()) {
-                setLEDsNotReady();
-            } else {
-                setLEDsReady();
-            }
         } else {
             floatShooter();
-            setLEDsOff();
         }
     }
     public void run(boolean runMotor) {
@@ -107,16 +98,5 @@ public class Shooter {
     public double getCurrent() {
         return motor.getCurrent();
     }
-    public void setLEDsOff() {
-        greenLED.enable(false);
-        redLED.enable(false);
-    }
-    public void setLEDsReady() {
-        greenLED.enable(true);
-        redLED.enable(false);
-    }
-    public void setLEDsNotReady() {
-        greenLED.enable(false);
-        redLED.enable(true);
-    }
+
 }

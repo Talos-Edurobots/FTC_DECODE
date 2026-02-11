@@ -114,7 +114,7 @@ public class Main extends LinearOpMode {
             oldTime = newTime;
             hardwareManager.update();
             MotorConfig.setDt(dt);
-            double color = newTime - (int)(newTime);
+            double color = shooter.isBusy() ? .28 : .5;
             leds.setLeft(color);
             leds.setRight(color);
             follower.update();
