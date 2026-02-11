@@ -15,12 +15,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class PPConstants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .forwardZeroPowerAcceleration(-30.1)
-            .lateralZeroPowerAcceleration(-53) // to check
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.04, 0, 0.001, 0.02))
-            .headingPIDFCoefficients(new PIDFCoefficients(0.8, 0, 0.04, 0.02))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.009, 0, 0, 0.6, 0.01))
-            .centripetalScaling(0.005)
+            .forwardZeroPowerAcceleration(-26.64)
+            .lateralZeroPowerAcceleration(-55.48) // to check
+            .translationalPIDFCoefficients(new PIDFCoefficients(.1, 0, 0.01, 0.03))
+            .headingPIDFCoefficients(new PIDFCoefficients(2, 0, 0.17, 0.02))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.03))
+//            .centripetalScaling(0.005)
             .mass(9.7);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
@@ -33,11 +33,11 @@ public class PPConstants {
             .leftRearMotorDirection(RobotConstants.LEFT_BACK_CONFIG.getDirection())
             .rightFrontMotorDirection(RobotConstants.RIGHT_FRONT_CONFIG.getDirection())
             .rightRearMotorDirection(RobotConstants.RIGHT_BACK_CONFIG.getDirection())
-            .xVelocity(70.4635)
-            .yVelocity(59.7103);
+            .xVelocity(67.56)
+            .yVelocity(56.21);
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(4.78) // check
-            .strafePodX(3.34) // check
+            .forwardPodY(5.5) // check
+            .strafePodX(2.7) // check
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName(RobotConstants.PINPOINT_NAME)
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
@@ -48,7 +48,7 @@ public class PPConstants {
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
-                .pathConstraints(pathConstraints)
+//                .pathConstraints(pathConstraints)
                 .mecanumDrivetrain(driveConstants)
                 .pinpointLocalizer(localizerConstants)
                 .build();

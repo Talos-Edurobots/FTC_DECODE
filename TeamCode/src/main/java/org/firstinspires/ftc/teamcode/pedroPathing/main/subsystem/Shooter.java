@@ -65,7 +65,7 @@ public class Shooter {
         return hoodServo.getPosition();
     }
     public boolean isBusy () {
-        return Math.abs(targetVelocity - motor.getVelocity()) < 70;
+        return Math.abs(targetVelocity - motor.getVelocity()) > 70;
     }
     private void setVelocity() {
         // Set velocity via triggers
