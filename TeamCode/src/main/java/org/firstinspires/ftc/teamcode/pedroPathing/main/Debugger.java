@@ -505,6 +505,7 @@ class KaTestOpMode extends OpMode {
     private double timer;
     private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
     private int direction = 1;
+    static double maxPower = .02;
     public KaTestOpMode(MotorConfig motor) {
         this.motor = motor;
     }
@@ -513,8 +514,10 @@ class KaTestOpMode extends OpMode {
     public void init() {
         motor.init(hardwareMap);
         kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
+        motor.maxPower = maxPower;
         maxVel = motor.maxVelocity;
         maxAcc = motor.maxAcceleration;
+        PanelsConfigurables.INSTANCE.refreshClass(KaTestOpMode.class);
     }
     @Override
     public void init_loop() {
@@ -528,6 +531,7 @@ class KaTestOpMode extends OpMode {
         motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
         motor.maxAcceleration = maxAcc;
         motor.maxVelocity = maxVel;
+        motor.maxPower = maxPower;
         if (timer >= 2) {
             direction *= -1;
             timer = 0;

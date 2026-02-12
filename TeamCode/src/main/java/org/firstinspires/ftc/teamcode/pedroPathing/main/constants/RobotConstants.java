@@ -63,8 +63,8 @@ public final class RobotConstants {
             .setMotorUse(MotorUse.MECHANICAL_STOP)
             .setMotorMode(MotorMode.PROFILED_PIDF)
             .setMotionProfileCoefficients(1000, 1000, .5)
-//            .setPIDFCoefficients(.05, 0, 0, 0.4, 0.0053, 0)
-            .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
+            .setPIDFCoefficients(.05, 0, 0, 0.4, 0.0053, 0)
+//            .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
             .setMinAngleTicks(-500)
             .setMaxAngleTicks(250);
     public static MotorConfig HANG_CONFIG = new MotorConfig(

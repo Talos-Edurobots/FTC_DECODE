@@ -89,6 +89,10 @@ public class MotorConfig {
 
     /* ---------------- Motion profile state (TICKS) ---------------- */
 
+    public double getTargetPositionTicks() {
+        return targetPositionTicks;
+    }
+
     private double targetPositionTicks = 0.0;
 
     public double getvRef() {

@@ -20,7 +20,7 @@ public class PPConstants {
             .translationalPIDFCoefficients(new PIDFCoefficients(.1, 0, 0.01, 0.03))
             .headingPIDFCoefficients(new PIDFCoefficients(2, 0, 0.17, 0.02))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.03))
-//            .centripetalScaling(0.005)
+            .centripetalScaling(0.00035)
             .mass(9.7);
 
     public static MecanumConstants driveConstants = new MecanumConstants()

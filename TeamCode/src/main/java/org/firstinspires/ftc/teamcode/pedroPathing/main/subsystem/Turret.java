@@ -75,7 +75,17 @@ public class Turret {
         telemetryM.addData("power", turret.getPower());
     }
     public void loop() {
+        turret.maxPower = maxPower;
         turret.update();
         telemetryM.addData("turret mode", turret.getMotorMode());
+        telemetryM.addData("power", turret.getPower());
+        telemetryM.addData("velocity", turret.getVelocity());
+        telemetryM.addData("ref vel", turret.getvRef());
+        telemetryM.addData("position", turret.getCurrentPosition());
+        telemetryM.addData("ref pos", turret.getxRef());
+        telemetryM.addData("ref a", turret.getaRef());
+        telemetryM.addData("current", turret.getCurrent());
+        telemetryM.addData("ks motor", turret.kS);
+        telemetryM.addData("target", turret.getTargetPositionTicks());
     }
 }

@@ -65,7 +65,7 @@ public class Main extends LinearOpMode {
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
         follower.update();
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
-                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
+                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98, 180))))
                 .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
                 .build();
         hardwareManager = new HardwareManager(hardwareMap);
@@ -108,6 +108,7 @@ public class Main extends LinearOpMode {
 
         limelight.start();
         waitForStart();
+        follower.startTeleopDrive();
         while (opModeIsActive()){
             newTime = getRuntime();
             dt = newTime - oldTime;
@@ -120,7 +121,9 @@ public class Main extends LinearOpMode {
             follower.update();
 
             LLResult result = limelight.getLatestResult();
-            turret.limelightAim(result);
+//            turret.limelightAim(result);
+            turret.lookToGoal(follower.getPose(), false);
+            turret.loop();
             if (gamepad1.xWasPressed()) {
                 far ^= true;
                 Shooter.targetVelocity = far ? backVel : frontVel;
@@ -151,9 +154,9 @@ public class Main extends LinearOpMode {
             Drawing.sendPacket();
 
 
-            if (gamepad2.options) {
+            if (gamepad2.x) {
                 follower.activateAllPIDFs();
-            } else if (gamepad2.share) {
+            } else if (gamepad2.a) {
                 follower.deactivateAllPIDFs();
             }
 //            if (gamepad1.dpadDownWasPressed()) {
@@ -177,17 +180,17 @@ public class Main extends LinearOpMode {
             intake.update();
 
             double forward = -gamepad1.left_stick_y;
-            double strafe = gamepad1.left_stick_x;
-            double rotate = gamepad1.right_stick_x;
+            double strafe = -gamepad1.left_stick_x;
+            double rotate = -gamepad1.right_stick_x;
 //            double heading = follower.getHeading();
             double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             double speed = 1;
-            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
+//            driveTrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, speed, dt);
             if (!automatedDrive) {
-//                follower.setTeleOpDrive(forward, strafe, rotate, false);
+                follower.setTeleOpDrive(forward, strafe, rotate, false);
             }
-//            follower.update();
+            follower.update();
 
             telemetryM.addData("fps", 1/ dt);
             telemetryM.addData("shooter vel", shooter.getVelocity());
