@@ -73,6 +73,7 @@ public class Debugger extends SelectableOpMode {
 // ===================================================
 // MOTOR POWER TEST
 // ===================================================
+@Configurable
 class MotorPowerTest extends OpMode {
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     public MotorPowerTest(MotorConfig motorName) {
@@ -81,6 +82,7 @@ class MotorPowerTest extends OpMode {
     private MotorConfig motor;
 
     private double maxVelocity = 0;
+    private static double mult = 1;
 
     @Override
     public void init() {
@@ -107,7 +109,7 @@ class MotorPowerTest extends OpMode {
             motor.setDirection(motor.getDirection() == DcMotor.Direction.FORWARD ? DcMotor.Direction.REVERSE : DcMotor.Direction.FORWARD);
         }
         // Set power via triggers
-        double power = gamepad1.right_trigger - gamepad1.left_trigger;
+        double power = mult * (gamepad1.right_trigger - gamepad1.left_trigger);
         motor.setPower(power);
 
         double currentVelocity = motor.getVelocity();
@@ -543,6 +545,7 @@ class KaTestOpMode extends OpMode {
         timer += dt;
         MotorConfig.setDt(dt);
         telemetryM.addData("power", motor.getPower());
+        telemetryM.addData("max power", motor.maxPower);
         telemetryM.addData("velocity", motor.getVelocity());
         telemetryM.addData("ref vel", motor.getvRef());
         telemetryM.addData("position", motor.getCurrentPosition());

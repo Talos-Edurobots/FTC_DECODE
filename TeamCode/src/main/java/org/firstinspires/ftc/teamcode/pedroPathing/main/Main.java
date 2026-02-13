@@ -65,7 +65,7 @@ public class Main extends LinearOpMode {
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
         follower.update();
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
-                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98, 180))))
+                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
                 .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
                 .build();
         hardwareManager = new HardwareManager(hardwareMap);
@@ -131,6 +131,7 @@ public class Main extends LinearOpMode {
 
             if (gamepad1.options) {
                 imu.resetYaw();
+                follower.setPose(follower.getPose().setHeading(0));
             }
             // Shooter control
             if (gamepad1.dpadUpWasPressed()) {
