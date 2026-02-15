@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.motor;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
 
-class PIDFFVelocityController {
+class PIDFFVelocityController implements MotorController{
     double lastError, integral;
     PIDFFCoefficients coef;
 
@@ -10,7 +10,7 @@ class PIDFFVelocityController {
         this.coef = coefficients;
     }
 
-
+    @Override
     public double update(double target, MotionState motionState, LoopState loopState) {
         double error = target - motionState.velocity;
         double derivative = (error - lastError) / loopState.dt;
@@ -26,4 +26,6 @@ class PIDFFVelocityController {
         lastError = error;
         return output;
     }
+
+
 }
