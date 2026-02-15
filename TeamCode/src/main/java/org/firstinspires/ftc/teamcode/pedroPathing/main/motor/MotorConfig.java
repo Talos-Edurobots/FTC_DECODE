@@ -79,6 +79,7 @@ public class MotorConfig {
     /* ---------------- Configuration ---------------- */
 
     private double externalGearRatio = 1.0;
+    public double extraPower = 0.0;
 
     private MotorUse motorUse = MotorUse.FREE_SPIN;
 
@@ -327,7 +328,7 @@ public class MotorConfig {
 
         double output =
                 kP * error +
-                        kD * derivative;
+                        kD * derivative + extraPower;
         int pos = motor.getCurrentPosition();
         boolean motorTooLowPos = pos < minAngleTicks;
         boolean motorTooHighPos = pos > maxAngleTicks;

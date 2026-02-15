@@ -13,8 +13,11 @@ class PIDFFVelocityController implements MotorController{
     @Override
     public double update(double target, MotionState motionState, LoopState loopState) {
         double error = target - motionState.velocity;
-        double derivative = (error - lastError) / loopState.dt;
+        if (loopState.dt == 0) {
+            throw new ArithmeticException("LoopState dt cannot be zero for PIDFFVelocityController");
+        }
         integral += error * loopState.dt;
+        double derivative = (error - lastError) / loopState.dt;
         double pid = coef.getKp() * error
                 + coef.getKi() * integral
                 + coef.getKd() * derivative;

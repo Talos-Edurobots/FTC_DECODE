@@ -33,6 +33,9 @@ class PIDFFPositionController implements MotorController {
         double ff = coef.getKs() * Math.signum(-error);
         double output = pid + ff;
         if (!antiWindup || Math.abs(output) < integralAntiWindupLimit) {
+            if (loopState.dt == 0) {
+                throw new ArithmeticException("LoopState dt cannot be zero for PIDFFVelocityController");
+            }
             integral += error * loopState.dt;
         }
         lastError = error;
