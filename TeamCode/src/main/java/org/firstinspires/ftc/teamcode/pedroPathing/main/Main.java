@@ -11,7 +11,6 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -29,7 +28,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 
@@ -121,7 +119,7 @@ public class Main extends LinearOpMode {
             follower.update();
 
             LLResult result = limelight.getLatestResult();
-            turret.manualControl(gamepad1.right_trigger - gamepad1.left_trigger);
+            turret.manualControl(gamepad1.left_trigger - gamepad1.right_trigger);
             turret.limelightAim(result);
 //            turret.lookToGoal(follower.getPose(), false);
 //            turret.loop();
@@ -170,14 +168,18 @@ public class Main extends LinearOpMode {
 //                automatedDrive = false;
 //            }
 
-            if (gamepad1.aWasPressed()) {
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
-            }
-            else if (gamepad1.bWasPressed()) {
+            boolean aPressed = gamepad1.aWasPressed();
+            if (aPressed && intake.getCurrentState() == Intake.IntakeState.INTAKE) {
                 intake.setCurrentState(Intake.IntakeState.STOP);
+            }
+            else if (aPressed && intake.getCurrentState() == Intake.IntakeState.STOP) {
+                intake.setCurrentState(Intake.IntakeState.INTAKE);
             }
             else if (gamepad1.yWasPressed()) {
                 intake.setCurrentState(Intake.IntakeState.OUTTAKE);
+            }
+            else if (gamepad1.bWasPressed()) {
+                intake.setCurrentState(Intake.IntakeState.STOP);
             }
             intake.update();
 
@@ -195,6 +197,7 @@ public class Main extends LinearOpMode {
             follower.update();
 
             telemetryM.addData("fps", 1/ dt);
+            telemetryM.addData("intake status", intake.getCurrentState());
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());

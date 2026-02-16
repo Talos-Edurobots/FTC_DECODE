@@ -328,20 +328,24 @@ public class MotorConfig {
 
         double output =
                 kP * error +
-                        kD * derivative + extraPower;
+                        kD * derivative;
         int pos = motor.getCurrentPosition();
         boolean motorTooLowPos = pos < minAngleTicks;
         boolean motorTooHighPos = pos > maxAngleTicks;
-        if (motorTooLowPos && output > 0) {
-            output = 0;
-        }
-        if (motorTooHighPos && output < 0) {
-            output = 0;
-        }
         if (Math.abs(error) < 1) {
             output = 0;
         }
+        output += extraPower;
+        if (motorTooLowPos && output < 0) {
+            output = 0;
+            telemetryM.addLine("turret motor pos too low");
+        }
+        if (motorTooHighPos && output > 0) {
+            output = 0;
+            telemetryM.addLine("turret motor pos too high");
+        }
         telemetryM.addData("output", output);
+        telemetryM.addData("extra power 2", extraPower);
         telemetryM.addData("error", error);
         telemetryM.addData("pos", pos);
         telemetryM.addData("too low", motorTooLowPos);

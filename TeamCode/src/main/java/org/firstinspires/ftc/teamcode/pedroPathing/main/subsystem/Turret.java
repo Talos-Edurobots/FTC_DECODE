@@ -76,6 +76,7 @@ public class Turret {
     }
     public void manualControl(double input) {
         turret.extraPower = manualMaxPower * input;
+        telemetryM.addData("turret extra power", turret.extraPower);
     }
     public void loop() {
         turret.maxPower = maxPower;
