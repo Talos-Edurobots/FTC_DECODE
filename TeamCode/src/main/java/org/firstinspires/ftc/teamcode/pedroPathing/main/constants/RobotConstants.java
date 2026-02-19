@@ -59,11 +59,11 @@ public final class RobotConstants {
             GoBildaMotor.MOTOR_312_RPM,
             DcMotorSimple.Direction.FORWARD,
             DcMotor.ZeroPowerBehavior.FLOAT
-    ).addExternalGearRatio((double) 130 /270)
+    ).addExternalGearRatio((double) 270 /130)
             .setMotorUse(MotorUse.MECHANICAL_STOP)
             .setMotorMode(MotorMode.PROFILED_PIDF)
             .setMotionProfileCoefficients(1000, 1000, .5)
-            .setPIDFCoefficients(.05, 0, 0, 0.4, 0.0053, 0)
+            .setPIDFCoefficients(0.05, 0, 0.001, 0.4, 0.0053, 0.0005)
 //            .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
             .setMinAngleTicks(-500)
             .setMaxAngleTicks(250);

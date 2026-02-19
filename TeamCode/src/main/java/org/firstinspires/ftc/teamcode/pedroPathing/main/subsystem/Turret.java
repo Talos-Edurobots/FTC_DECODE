@@ -15,15 +15,16 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
 
 @Configurable
 public class Turret {
-    static double maxPower = .2, kp=0.005, kd = .001, manualMaxPower = .1;
+    static double maxPower = .5, kp=0.005, kd = .001, manualMaxPower = .1;
     HardwareMap hwmap;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;
-    final Pose RED_GOAL_POSE = new Pose(144, 144);
-    final Pose BLUE_GOAL_POSE = new Pose(144, -144);
+    final Pose RED_GOAL_POSE = new Pose(140, 140);
+    final Pose BLUE_GOAL_POSE = new Pose(140, 0);
     public Turret(HardwareMap hwmap) {
         this.hwmap = hwmap;
     }
+    double angleToGoal;
     public void faceForward() {
         turret.setPositionInRadians(0);
     }
@@ -31,15 +32,20 @@ public class Turret {
         turret.setPositionInRadians(angleRadians);
         turret.setMotorMode(MotorMode.PROFILED_PIDF);
     }
+    public double getAngleToGoal(){
+        return angleToGoal;
+    }
     public void lookToGoal(Pose pose, boolean isRed) {
-        double angleToGoal;
+
         if (isRed) {
             angleToGoal = Math.atan2(RED_GOAL_POSE.getX()-pose.getX(), RED_GOAL_POSE.getY()-pose.getY());
         } else {
            angleToGoal = Math.atan2(BLUE_GOAL_POSE.getX()-pose.getX(), BLUE_GOAL_POSE.getY()-pose.getY());
         }
-        setAngleRadians(angleToGoal);
+        setAngleRadians(pose.getHeading() - angleToGoal);
         turret.setMotorMode(MotorMode.PROFILED_PIDF);
+        telemetryM.addData("angle to goal", angleToGoal);
+        telemetryM.addData("robot angle", pose.getHeading());
     }
     public void init() {
         turret.init(hwmap);

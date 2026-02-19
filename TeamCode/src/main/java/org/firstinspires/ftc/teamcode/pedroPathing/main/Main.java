@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.field.Style;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -48,7 +49,7 @@ public class Main extends LinearOpMode {
     Follower follower;
     private Limelight3A limelight;
     Supplier<PathChain> pathChain;
-    Pose startingPose = new Pose(45, 98);
+    Pose startingPose = new Pose(72, 72, 0);
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Leds leds;
     boolean automatedDrive = false;
@@ -150,7 +151,7 @@ public class Main extends LinearOpMode {
 
 //            pinpoint.update();
 //            robotPos = pinpoint.getPosition();
-            Drawing.drawRobot(follower.getPose());
+            Drawing.drawRobot(follower.getPose(), turret.getAngleToGoal());
             Drawing.sendPacket();
 
 
@@ -205,7 +206,8 @@ public class Main extends LinearOpMode {
             telemetryM.addData("dt", dt);
             telemetryM.addData("intake velocity", intake.getVelocity());
             telemetryM.addData("intake current", intake.getCurrent());
-//            telemetryM.addData("pinpoint pos", follower.getPose());
+            telemetryM.addData("pinpoint pos", follower.getPose());
+            telemetryM.addData("pinpoint heading", follower.getHeading());
             telemetryM.update(telemetry);
         }
     }

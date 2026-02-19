@@ -508,6 +508,7 @@ class KaTestOpMode extends OpMode {
     private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
     private int direction = 1;
     static double maxPower = .02;
+    static double loopTime = 5;
     public KaTestOpMode(MotorConfig motor) {
         this.motor = motor;
     }
@@ -534,7 +535,7 @@ class KaTestOpMode extends OpMode {
         motor.maxAcceleration = maxAcc;
         motor.maxVelocity = maxVel;
         motor.maxPower = maxPower;
-        if (timer >= 2) {
+        if (timer >= loopTime) {
             direction *= -1;
             timer = 0;
         }

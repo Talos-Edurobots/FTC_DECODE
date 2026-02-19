@@ -1280,6 +1280,18 @@ class Drawing {
         panelsField.moveCursor(x1, y1);
         panelsField.line(x2, y2);
     }
+    public static void drawRobot(Pose pose, double turretAngle) {
+        drawRobot(pose, robotLook);
+
+        Vector v = pose.getHeadingAsUnitVector();
+        v.setMagnitude(v.getMagnitude() * ROBOT_RADIUS);
+        double x1 = pose.getX() + v.getXComponent() / 2, y1 = pose.getY() + v.getYComponent() / 2;
+        double x2 = pose.getX() + v.getXComponent(), y2 = pose.getY() + v.getYComponent();
+        panelsField.setStyle(robotLook);
+        panelsField.moveCursor(x1, y1);
+        panelsField.line(x2, y2);
+
+    }
 
     /**
      * This draws a robot at a specified Pose. The heading is represented as a line.

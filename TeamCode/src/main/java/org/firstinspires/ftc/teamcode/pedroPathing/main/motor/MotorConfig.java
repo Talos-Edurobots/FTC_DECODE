@@ -241,8 +241,8 @@ public class MotorConfig {
     }
 
     public void setPositionInRadians(double radians) {
-        double clamped =
-                Range.clip(radians, minAngleTicks, maxAngleTicks);
+        double clamped = radians;
+//                Range.clip(radians, minAngleTicks, maxAngleTicks);
 
         targetPositionTicks =
                 clamped * motorType.getTicksPerRadian() * externalGearRatio;
@@ -253,8 +253,10 @@ public class MotorConfig {
         targetPositionTicks = ticks;
     }
     public void setPositionInDegrees(double degrees) {
-        double radians = Math.toRadians(degrees);
-        setPositionInRadians(radians);
+        targetPositionTicks = degrees * motorType.getTicksPerDegree() * externalGearRatio;
+        telemetryM.addData("TICKS PER ROTATION", motorType.getTicksPerOutputRev());
+        telemetryM.addData("SET POS DEG VAL", degrees);
+        telemetryM.addData("SET POS TICKS VAL", targetPositionTicks);
     }
 
     /* ---------------- Profiled position PIDF ---------------- */
