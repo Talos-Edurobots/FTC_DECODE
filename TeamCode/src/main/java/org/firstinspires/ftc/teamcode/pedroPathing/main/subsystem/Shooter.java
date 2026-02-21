@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
@@ -35,7 +36,7 @@ public class Shooter {
         motor.init(hwmap);
 
         hoodServo = hwmap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
-        hoodServo.setPosition(1);
+        hoodServo.setPosition(.5);
         hoodServo.setDirection(Servo.Direction.FORWARD);
 
 
@@ -59,7 +60,7 @@ public class Shooter {
         this.runMotor ^= true;
     }
     public void setHoodAngle(double pwm) {
-        hoodServo.setPosition(pwm);
+        hoodServo.setPosition(Range.clip(pwm, 0, .5));
     }
     public double getHoodAngle() {
         return hoodServo.getPosition();

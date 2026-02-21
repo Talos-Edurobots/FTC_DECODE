@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 
 public class MotorConfig {
 
@@ -115,6 +116,7 @@ public class MotorConfig {
     public double maxVelocity = 1500.0;      // ticks / sec
     public double maxAcceleration = 3000.0;  // ticks / sec^2
     public double maxPower = 1.0;
+    public double rampPowerAcceleration = 1;
 
     /* ---------------- Velocity PID ---------------- */
 
@@ -320,6 +322,14 @@ public class MotorConfig {
         telemetryM.addData("ff volts", ffVolts);
     }
 
+    public double rampPower(double current, double target, double dt) {
+        double maxPowerChange = rampPowerAcceleration * dt;
+        double diff = target - current;
+        if (Math.abs(diff) > maxPowerChange) {
+            diff = Math.signum(diff) * maxPowerChange;
+        }
+        return current + diff;
+    }
     public void manualPositionPIDF(double error) {
         if (dt == 0) {
             throw new ArithmeticException("dt cannot be 0");
@@ -328,14 +338,19 @@ public class MotorConfig {
                 (error - lastVelocityError) / dt;
         lastVelocityError = error;
 
-        double output =
+        double output = rampPower( motor.getPower(),
                 kP * error +
-                        kD * derivative;
+                        kI * velocityIntegral +
+                        kD * derivative + kS * Math.signum(error),
+                dt);
         int pos = motor.getCurrentPosition();
         boolean motorTooLowPos = pos < minAngleTicks;
         boolean motorTooHighPos = pos > maxAngleTicks;
         if (Math.abs(error) < 1) {
             output = 0;
+        }
+        if (output < maxPower) {
+            velocityIntegral += error;
         }
         output += extraPower;
         if (motorTooLowPos && output < 0) {
