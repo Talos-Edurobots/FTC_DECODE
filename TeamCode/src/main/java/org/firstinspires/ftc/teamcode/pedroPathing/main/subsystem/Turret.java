@@ -38,11 +38,13 @@ public class Turret {
     public void lookToGoal(Pose pose, boolean isRed) {
 
         if (isRed) {
-            angleToGoal = Math.atan2(RED_GOAL_POSE.getX()-pose.getX(), RED_GOAL_POSE.getY()-pose.getY());
+            angleToGoal = Math.atan2(RED_GOAL_POSE.getY()-pose.getY(), RED_GOAL_POSE.getX()-pose.getX());
         } else {
-           angleToGoal = Math.atan2(BLUE_GOAL_POSE.getX()-pose.getX(), BLUE_GOAL_POSE.getY()-pose.getY());
+           angleToGoal = Math.atan2(BLUE_GOAL_POSE.getY()-pose.getY(), BLUE_GOAL_POSE.getX()-pose.getX());
         }
-        setAngleRadians(pose.getHeading() - angleToGoal);
+
+        // TODO: add robot heading to angleToGoal
+        setAngleRadians(angleToGoal);
         turret.setMotorMode(MotorMode.PROFILED_PIDF);
         telemetryM.addData("angle to goal", angleToGoal);
         telemetryM.addData("robot angle", pose.getHeading());
