@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.auto; // make sure this aligns with class location
 
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
@@ -11,13 +13,18 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 
 @Autonomous(name = "Example Auto", group = "Examples")
 public class ExampleAuto extends OpMode {
-
+    private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private Follower follower;
     private Intake intake;
+    private Flickers flickers;
+    Shooter shooter;
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
@@ -79,6 +86,7 @@ public class ExampleAuto extends OpMode {
         switch (pathState) {
             case 0:
                 follower.followPath(scorePreload);
+                shooter.run(true);
                 setPathState(1);
                 break;
             case 1:
@@ -90,43 +98,39 @@ public class ExampleAuto extends OpMode {
             */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
+                if(!follower.isBusy() && !shooter.isBusy()) {
                     /* Score Preload */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup2,true);
-                    intake.setCurrentState(Intake.IntakeState.INTAKE);
-//                    setPathState(2);
+                    flickers.leftFlick(true);
+                    setPathState(2);
                 }
                 break;
             case 2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
-                if(!follower.isBusy()) {
+                if(pathTimer.getElapsedTime() > 2) {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(scorePickup1,true);
+                    flickers.leftFlick(false);
                     setPathState(3);
                 }
                 break;
             case 3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
+                if(pathTimer.getElapsedTime() > 2) {
                     /* Score Sample */
-
+                    flickers.rightFlick(true);
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup2,true);
+
                     setPathState(4);
                 }
                 break;
             case 4:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
-                if(!follower.isBusy()) {
-                    /* Grab Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(scorePickup2,true);
-                    setPathState(5);
+                if(pathTimer.getElapsedTime() > 2) {
+                    flickers.rightFlick(false);
+//                    setPathState(5);
                 }
                 break;
             case 5:
@@ -168,18 +172,24 @@ public class ExampleAuto extends OpMode {
     /** This is the main loop of the OpMode, it will run repeatedly after clicking "Play". **/
     @Override
     public void loop() {
-
         // These loop the movements of the robot, these must be called continuously in order to work
+        opmodeTimer.resetTimer();
         follower.update();
         intake.update();
+        shooter.update(opmodeTimer.getElapsedTime());
+        Drawing.drawRobot(follower.getPose());
+        Drawing.sendPacket();
+
         autonomousPathUpdate();
 
         // Feedback to Driver Hub for debugging
-        telemetry.addData("path state", pathState);
-        telemetry.addData("x", follower.getPose().getX());
-        telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());
-        telemetry.update();
+        telemetryM.addData("path state", pathState);
+        telemetryM.addData("x", follower.getPose().getX());
+        telemetryM.addData("y", follower.getPose().getY());
+        telemetryM.addData("heading", follower.getPose().getHeading());
+        telemetryM.addData("shooter busy", shooter.isBusy());
+        telemetryM.addData("path timer", pathTimer.getElapsedTime());
+        telemetryM.update(telemetry);
     }
 
     /** This method is called once at the init of the OpMode. **/
@@ -191,6 +201,11 @@ public class ExampleAuto extends OpMode {
 
         intake = new Intake(hardwareMap);
         intake.init();
+        flickers = new Flickers();
+        flickers.init(hardwareMap);
+        shooter = new Shooter(hardwareMap);
+        shooter.init();
+        Shooter.targetVelocity = 1200;
         follower = PPConstants.createFollower(hardwareMap);
         buildPaths();
         follower.setStartingPose(startPose);
