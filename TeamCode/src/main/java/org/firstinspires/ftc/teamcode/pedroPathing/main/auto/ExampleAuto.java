@@ -102,25 +102,25 @@ public class ExampleAuto extends OpMode {
                     /* Score Preload */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    flickers.leftFlick(true);
+                    flickers.rightFlick(true);
                     setPathState(2);
                 }
                 break;
             case 2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
-                if(pathTimer.getElapsedTime() > 2) {
+                if(pathTimer.getElapsedTimeSeconds() > 1) {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    flickers.leftFlick(false);
+                    flickers.rightFlick(false);
                     setPathState(3);
                 }
                 break;
             case 3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(pathTimer.getElapsedTime() > 2) {
+                if(pathTimer.getElapsedTimeSeconds() > 1) {
                     /* Score Sample */
-                    flickers.rightFlick(true);
+                    intake.setCurrentState(Intake.IntakeState.INTAKE);
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
 
                     setPathState(4);
@@ -128,38 +128,51 @@ public class ExampleAuto extends OpMode {
                 break;
             case 4:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
-                if(pathTimer.getElapsedTime() > 2) {
-                    flickers.rightFlick(false);
-//                    setPathState(5);
+                if(pathTimer.getElapsedTimeSeconds() > 2) {
+
+                    flickers.leftFlick(true);
+                    setPathState(5);
                 }
                 break;
             case 5:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
+                if(pathTimer.getElapsedTimeSeconds() > .5) {
                     /* Score Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(grabPickup3,true);
+                    flickers.leftFlick(false);
                     setPathState(6);
                 }
                 break;
             case 6:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if(!follower.isBusy()) {
+                if(pathTimer.getElapsedTimeSeconds() > 2) {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(scorePickup3, true);
+//                    intake.setCurrentState(Intake.IntakeState.STOP);
+                    flickers.leftFlick(true);
                     setPathState(7);
                 }
                 break;
             case 7:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
+                if(pathTimer.getElapsedTimeSeconds() > 2) {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-                    setPathState(-1);
+                    flickers.leftFlick(false);
+                    setPathState(8);
                 }
                 break;
+            case 8:
+                if (pathTimer.getElapsedTimeSeconds() > 1) {
+                    flickers.rightFlick(true);
+                    setPathState(9);
+                }
+            case 9:
+                if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    flickers.rightFlick(false);
+                    setPathState(10);
+                }
         }
     }
 
@@ -176,7 +189,7 @@ public class ExampleAuto extends OpMode {
         opmodeTimer.resetTimer();
         follower.update();
         intake.update();
-        shooter.update(opmodeTimer.getElapsedTime());
+        shooter.update(opmodeTimer.getElapsedTimeSeconds());
         Drawing.drawRobot(follower.getPose());
         Drawing.sendPacket();
 
