@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.field.Style;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -136,7 +135,7 @@ public class Main extends LinearOpMode {
             }
             // Shooter control
             if (gamepad1.dpadUpWasPressed()) {
-                shooter.changeRun();
+                shooter.changeState();
             }
             shooter.update(dt);
 

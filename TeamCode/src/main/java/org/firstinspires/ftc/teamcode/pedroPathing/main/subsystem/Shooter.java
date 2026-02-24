@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
@@ -18,7 +17,8 @@ public class Shooter {
     private double lastError = 0;
     private double dt = 0;
     private boolean runMotor = true;
-
+    public static double alpha = .2;
+    public double filteredVelocity = 0;
     public double getTargetVelocity() {
         return targetVelocity;
     }
@@ -38,17 +38,19 @@ public class Shooter {
         hoodServo = hwmap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
         hoodServo.setPosition(.5);
         hoodServo.setDirection(Servo.Direction.FORWARD);
-
-
     }
 
     public void update(double dt) {
         this.dt = dt;
+        calculateFilteredVelocity();
         if (runMotor) {
             setVelocity();
         } else {
             floatShooter();
         }
+    }
+    void calculateFilteredVelocity() {
+        filteredVelocity = alpha * motor.getVelocity() + (1 - alpha) * filteredVelocity;
     }
     public void run(boolean runMotor) {
         this.runMotor = runMotor;
@@ -56,7 +58,7 @@ public class Shooter {
     public boolean getRun(){
         return runMotor;
     }
-    public void changeRun(){
+    public void changeState(){
         this.runMotor ^= true;
     }
     public void setHoodAngle(double pwm) {
