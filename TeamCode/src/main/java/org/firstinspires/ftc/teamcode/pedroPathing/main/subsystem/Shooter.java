@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
@@ -16,9 +17,19 @@ public class Shooter {
     private double integralSum = 0;
     private double lastError = 0;
     private double dt = 0;
-    private boolean runMotor = true;
+    private boolean isRunning = true;
     public static double alpha = .2;
+    public static double dropThreshold = 100;
+    public static double debounceTime = .5;
     public double filteredVelocity = 0;
+    private double lastFilteredVel;
+
+    public boolean isImpactDetected() {
+        return impactDetected;
+    }
+
+    private boolean impactDetected = false;
+    ElapsedTime impactTimer = new ElapsedTime();
     public double getTargetVelocity() {
         return targetVelocity;
     }
@@ -43,7 +54,7 @@ public class Shooter {
     public void update(double dt) {
         this.dt = dt;
         calculateFilteredVelocity();
-        if (runMotor) {
+        if (isRunning) {
             setVelocity();
         } else {
             floatShooter();
@@ -51,15 +62,27 @@ public class Shooter {
     }
     void calculateFilteredVelocity() {
         filteredVelocity = alpha * motor.getVelocity() + (1 - alpha) * filteredVelocity;
+        double delta = (filteredVelocity - lastError) / dt;
+        // Detect shot
+        if (!impactDetected && delta > dropThreshold) {
+            impactDetected = true;
+            impactTimer.reset();
+        }
+
+        // Debounce reset
+        if (impactDetected && impactTimer.seconds() > debounceTime) {
+            impactDetected = false;
+        }
+        lastFilteredVel = filteredVelocity;
     }
     public void run(boolean runMotor) {
-        this.runMotor = runMotor;
+        this.isRunning = runMotor;
     }
     public boolean getRun(){
-        return runMotor;
+        return isRunning;
     }
     public void changeState(){
-        this.runMotor ^= true;
+        this.isRunning ^= true;
     }
     public void setHoodAngle(double pwm) {
         hoodServo.setPosition(Range.clip(pwm, 0, .5));
@@ -77,7 +100,7 @@ public class Shooter {
         double derivative = (error - lastError) / dt;
         integralSum += error * dt;
 
-        if (runMotor) {
+        if (isRunning) {
             motor.setPower(
                 RobotConstants.SHOOTER_K_P * error +
                 RobotConstants.SHOOTER_K_I * integralSum +

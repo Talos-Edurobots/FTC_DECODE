@@ -202,6 +202,8 @@ public class Main extends LinearOpMode {
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
+            telemetryM.addData("shooter filtered vel", shooter.filteredVelocity);
+            telemetryM.addData("is impact detected", shooter.isImpactDetected());
             telemetryM.addData("Heading", heading);
             telemetryM.addData("dt", dt);
             telemetryM.addData("intake velocity", intake.getVelocity());

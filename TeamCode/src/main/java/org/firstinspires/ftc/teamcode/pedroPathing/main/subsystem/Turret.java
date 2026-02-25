@@ -44,10 +44,11 @@ public class Turret {
         }
 
         // TODO: add robot heading to angleToGoal
-        setAngleRadians(angleToGoal);
+        double robotAngle = (pose.getHeadingAsUnitVector().getTheta() + Math.PI/2) % (2*Math.PI);
+        setAngleRadians(angleToGoal - robotAngle);
         turret.setMotorMode(MotorMode.PROFILED_PIDF);
-        telemetryM.addData("angle to goal", angleToGoal);
-        telemetryM.addData("robot angle", pose.getHeading());
+        telemetryM.addData("angle to goal", angleToGoal - robotAngle);
+        telemetryM.addData("robot angle", robotAngle);
     }
     public void init() {
         turret.init(hwmap);
