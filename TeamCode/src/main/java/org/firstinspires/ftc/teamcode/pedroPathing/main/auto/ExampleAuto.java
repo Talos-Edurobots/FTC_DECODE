@@ -13,10 +13,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
 @Autonomous(name = "Example Auto", group = "Examples")
 public class ExampleAuto extends OpMode {
@@ -24,16 +26,17 @@ public class ExampleAuto extends OpMode {
     private Follower follower;
     private Intake intake;
     private Flickers flickers;
+    private Turret turret;
     Shooter shooter;
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private int pathState;
     private final Pose startPose = new Pose(48, 135, Math.toRadians(180)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(72, 72, Math.toRadians(135)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose pickup1Pose = new Pose(40, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose scorePose = new Pose(48, 85, Math.toRadians(135)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup1IntakePose = new Pose(18, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(40, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickupIntake2Pose = new Pose(18, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private final Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private final Pose pickupIntake2Pose = new Pose(16, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose pickup3Pose = new Pose(40, 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickupIntake3Pose = new Pose(18, 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private Path scorePreload;
@@ -71,7 +74,9 @@ public class ExampleAuto extends OpMode {
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(pickupIntake2Pose, scorePose))
+                .addPath(new BezierLine(pickupIntake2Pose, pickup2Pose))
+                .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), pickup2Pose.getHeading())
+                .addPath(new BezierLine(pickup2Pose, scorePose))
                 .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), scorePose.getHeading())
                 .build();
 
@@ -95,6 +100,8 @@ public class ExampleAuto extends OpMode {
             case 0:
                 follower.followPath(scorePreload);
                 shooter.run(true);
+                shooter.setHoodAngle(.3);
+                turret.setAngleRadians(Math.toRadians(45));
                 setPathState(1);
                 break;
             case 1:
@@ -116,7 +123,7 @@ public class ExampleAuto extends OpMode {
                 break;
             case 2:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
-                if(pathTimer.getElapsedTimeSeconds() > 1) {
+                if(pathTimer.getElapsedTimeSeconds() > .3) {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
@@ -126,7 +133,7 @@ public class ExampleAuto extends OpMode {
                 break;
             case 3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(pathTimer.getElapsedTimeSeconds() > 1) {
+                if(pathTimer.getElapsedTimeSeconds() > .2) {
                     /* Score Sample */
                     intake.setCurrentState(Intake.IntakeState.INTAKE);
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
@@ -136,25 +143,25 @@ public class ExampleAuto extends OpMode {
                 break;
             case 4:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
-                if(pathTimer.getElapsedTimeSeconds() > 2) {
+                if(pathTimer.getElapsedTimeSeconds() > .5) {
 
-                    flickers.leftFlick(true);
+                    flickers.rightFlick(true);
                     setPathState(5);
                 }
                 break;
             case 5:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(pathTimer.getElapsedTimeSeconds() > .5) {
+                if(pathTimer.getElapsedTimeSeconds() > .3) {
                     /* Score Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    flickers.leftFlick(false);
+                    flickers.rightFlick(false);
                     setPathState(6);
                 }
                 break;
             case 6:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if(pathTimer.getElapsedTimeSeconds() > 2) {
+                if(pathTimer.getElapsedTimeSeconds() > .3) {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
@@ -165,22 +172,39 @@ public class ExampleAuto extends OpMode {
                 break;
             case 7:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(pathTimer.getElapsedTimeSeconds() > 2) {
+                if(pathTimer.getElapsedTimeSeconds() > .5) {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
                     flickers.leftFlick(false);
                     setPathState(8);
                 }
                 break;
             case 8:
-                if (pathTimer.getElapsedTimeSeconds() > 1) {
+                if (pathTimer.getElapsedTimeSeconds() > .5) {
                     flickers.rightFlick(true);
                     setPathState(9);
                 }
+                break;
             case 9:
-                if (pathTimer.getElapsedTimeSeconds() > 2) {
+                if (pathTimer.getElapsedTimeSeconds() > .5) {
                     flickers.rightFlick(false);
                     setPathState(10);
                 }
+                break;
+            case 10:
+                follower.followPath(grabPickup2);
+                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                setPathState(11);
+                break;
+            case 11:
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.1){
+                    intake.setCurrentState(Intake.IntakeState.STOP);
+                    setPathState(12);
+                }
+                break;
+            case 12:
+                follower.followPath(scorePickup2);
+                setPathState(13);
+                break;
         }
     }
 
@@ -196,8 +220,10 @@ public class ExampleAuto extends OpMode {
         // These loop the movements of the robot, these must be called continuously in order to work
         opmodeTimer.resetTimer();
         follower.update();
+        MotorConfig.setDt(opmodeTimer.getElapsedTimeSeconds());
         intake.update();
         shooter.update(opmodeTimer.getElapsedTimeSeconds());
+//        turret.loop();
         Drawing.drawRobot(follower.getPose());
         Drawing.sendPacket();
 
@@ -209,6 +235,8 @@ public class ExampleAuto extends OpMode {
         telemetryM.addData("y", follower.getPose().getY());
         telemetryM.addData("heading", follower.getPose().getHeading());
         telemetryM.addData("shooter busy", shooter.isBusy());
+        telemetryM.addData("Shooter vel", shooter.getVelocity());
+        telemetryM.addData("Shooter target", shooter.getTargetVelocity());
         telemetryM.addData("path timer", pathTimer.getElapsedTime());
         telemetryM.update(telemetry);
     }
@@ -220,11 +248,14 @@ public class ExampleAuto extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
+        turret = new Turret(hardwareMap);
+
         intake = new Intake(hardwareMap);
         intake.init();
         flickers = new Flickers();
         flickers.init(hardwareMap);
         shooter = new Shooter(hardwareMap);
+
         shooter.init();
         Shooter.targetVelocity = 1200;
         follower = PPConstants.createFollower(hardwareMap);
