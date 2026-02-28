@@ -194,7 +194,6 @@ class LimelightTurretAlign extends OpMode {
     @Override
     public void init() {
         motor.init(hardwareMap);
-        motor.kP = 0; motor.kD = 0;
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         telemetry.setMsTransmissionInterval(11);
         limelight.pipelineSwitch(2);
@@ -209,6 +208,11 @@ class LimelightTurretAlign extends OpMode {
     public void start() {
         limelight.start();
         timer.reset();
+        Log.d("LimelightTurretAlign", "tx,power,time");
+    }
+    void log() {
+        Log.d("LimelightTurretAlign", String.format("%.2f,%.2f,%.2f",
+                limelight.getLatestResult().getTx(), motor.getPower(), getRuntime()));
     }
     @Override
     public void loop() {
