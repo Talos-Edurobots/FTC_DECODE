@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.LED;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
@@ -17,8 +16,6 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
     private DcMotor leftDrive;
     // private CRServo servo;
     private DcMotor rightDrive;
-    LED frontLED_red;
-    LED frontLED_green;
 
     // Setting our velocity targets. These values are in ticks per second!
     private static final int bankVelocity = 1300;
@@ -34,14 +31,12 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
         leftDrive = hardwareMap.get(DcMotor.class, "leftDrive");
         // servo = hardwareMap.get(CRServo.class, "servo");
         rightDrive = hardwareMap.get(DcMotor.class, "rightDrive");
-        frontLED_green = hardwareMap.get(LED.class, "front_led_green");
-        frontLED_red = hardwareMap.get(LED.class, "front_led_red");
 
 
         // Establishing the direction and mode for the motors
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotor.Direction.REVERSE);
-        coreHex.setDirection(DcMotor.Direction.REVERSE);
+        coreHex.setDirection(DcMotor.Direction.FORWARD);
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         //Ensures the servo is active and ready
         // servo.setPower(0);
@@ -76,17 +71,6 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
         y = -gamepad1.left_stick_y;
         leftDrive.setPower(y - x);
         rightDrive.setPower(y + x);
-    }
-    private void controlLED() {
-        if (isFlywheelTargetVel){
-            frontLED_green.on();
-            frontLED_red.off();
-        }
-        else {
-            frontLED_green.off();
-            frontLED_red.off();
-        }
-
     }
     /**
      * Manual control for the Core Hex powered feeder and the agitator servo in the hopper
@@ -143,10 +127,8 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
         // servo.setPower(-1);
         if (((DcMotorEx) flywheel).getVelocity() >= bankVelocity - 50) {
             isFlywheelTargetVel = true;
-            frontLED_red.off();
             coreHex.setPower(1);
         } else {
-            frontLED_red.on();
             isFlywheelTargetVel = false;
             coreHex.setPower(0);
         }
@@ -162,11 +144,9 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
         // servo.setPower(-1);
         if (((DcMotorEx) flywheel).getVelocity() >= farVelocity - 100) {
             isFlywheelTargetVel = true;
-            frontLED_red.off();
             coreHex.setPower(1);
         } else {
             isFlywheelTargetVel = false;
-            frontLED_red.on();
             coreHex.setPower(0);
         }
     }

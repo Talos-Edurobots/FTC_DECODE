@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
@@ -47,6 +48,7 @@ public class Main extends LinearOpMode {
     Turret turret;
     Pinpoint pinpoint;
     Follower follower;
+    Hang hang;
     private Limelight3A limelight;
     Supplier<PathChain> pathChain;
     Pose startingPose = new Pose(72, 72, 0);
@@ -75,6 +77,8 @@ public class Main extends LinearOpMode {
 
         leds = new Leds();
         leds.init(hardwareMap);
+        hang = new Hang();
+        hang.init(hardwareMap);
         shooter = new Shooter(hardwareMap);
         shooter.init();
         shooter.run(false);
@@ -118,10 +122,11 @@ public class Main extends LinearOpMode {
             leds.setLeft(color);
             leds.setRight(color);
             follower.update();
-
+            hang.update(1, 0);
             LLResult result = limelight.getLatestResult();
             turret.manualControl(gamepad1.left_trigger - gamepad1.right_trigger);
             turret.limelightAim(result);
+//            turret.setAngleRadians(Math.toRadians(90));
 //            turret.lookToGoal(follower.getPose(), false);
 //            turret.loop();
             if (gamepad1.xWasPressed()) {
