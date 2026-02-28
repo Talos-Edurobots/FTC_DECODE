@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.motor;
 
-public enum GoBildaMotor {
+public enum GoBILDAMotorTypes {
 
     // Yellow Jacket Planetary Motors (312 RPM series and below)
 
@@ -15,7 +15,7 @@ public enum GoBildaMotor {
     private final double rpm;
     private final double gearRatio;
 
-    GoBildaMotor(double rpm, double gearRatio) {
+    GoBILDAMotorTypes(double rpm, double gearRatio) {
         this.rpm = rpm;
         this.gearRatio = gearRatio;
     }

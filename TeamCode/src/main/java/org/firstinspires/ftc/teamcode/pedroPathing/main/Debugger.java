@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+
 import android.util.Log;
 
 import com.bylazar.configurables.PanelsConfigurables;
@@ -21,6 +22,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.VoltageSensorReadout;
 
 
 @TeleOp(name = "Debugger", group = "main")
@@ -503,6 +505,7 @@ class KeCharacterizationOpMode extends OpMode {
 @Configurable
 class KaTestOpMode extends OpMode {
     MotorConfig motor;
+    VoltageSensorReadout voltageSensor;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     static double degreesOffset = 30;
     private double lastTime = 0.0;
@@ -514,14 +517,32 @@ class KaTestOpMode extends OpMode {
     public KaTestOpMode(MotorConfig motor) {
         this.motor = motor;
     }
+    static boolean logPoints = false;
+    public void log() {
+        double velocity = motor.getVelocity();
+        double appliedVoltage = motor.getPower() * voltageSensor.getVoltage();
+        double current = motor.getCurrent();
+        double power = motor.getPower();
+        double position = motor.getCurrentPosition();
+        double xref = motor.getxRef();
+        double vref = motor.getvRef();
+        double aref = motor.getaRef();
+        double targetPos = motor.getTargetPositionTicks();
+
+        Log.d("KaTest", String.format("%.3f,%.3f%.3f,%.3f%.3f,%.3f%.3f,%.3f%.3f",
+                velocity, appliedVoltage, current, power, position, xref, vref, aref, targetPos)
+        );
+    }
 
     @Override
     public void init() {
         motor.init(hardwareMap);
+        voltageSensor.init(hardwareMap);
         kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
         motor.maxPower = maxPower;
         maxVel = motor.maxVelocity;
         maxAcc = motor.maxAcceleration;
+        Log.d("KaTest", "velocity,applied_voltage,current,power,position,xref,vref,aref,targetPos");
         PanelsConfigurables.INSTANCE.refreshClass(KaTestOpMode.class);
     }
     @Override
@@ -561,6 +582,7 @@ class KaTestOpMode extends OpMode {
         telemetryM.addData("ks", ks);
         telemetryM.addData("ks motor", motor.kS);
         telemetryM.update(telemetry);
+        if (logPoints) log();
     }
 }
 

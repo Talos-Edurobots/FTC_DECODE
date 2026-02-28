@@ -8,8 +8,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.MotionProfilingCoefficients;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.controllers.MotorController;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.controllers.TrapezoidalMotionProfileController;
 
+@Deprecated
 public class MotorConfig {
 
     /* ---------------- Telemetry ---------------- */
@@ -24,7 +27,7 @@ public class MotorConfig {
     public String getHardwareName() {
         return hardwareName;
     }
-    private final GoBildaMotor motorType;
+    private final GoBILDAMotorTypes motorType;
 
     /* --------------- Getters and Setters ------------*/
     public MotorConfig setDirection(DcMotor.Direction direction) {
@@ -55,7 +58,7 @@ public class MotorConfig {
     public MotorUse getMotorUse() {
         return motorUse;
     }
-    public GoBildaMotor getMotorType() {
+    public GoBILDAMotorTypes getMotorType() {
         return motorType;
     }
     public MotorConfig setMotorMode(MotorMode mode) {
@@ -142,7 +145,7 @@ public class MotorConfig {
     /* ---------------- Constructors ---------------- */
 
     public MotorConfig(String hardwareName,
-                       GoBildaMotor motorType,
+                       GoBILDAMotorTypes motorType,
                        DcMotor.Direction direction) {
         this.hardwareName = hardwareName;
         this.motorType = motorType;
@@ -150,12 +153,12 @@ public class MotorConfig {
     }
 
     public MotorConfig(String hardwareName,
-                       GoBildaMotor motorType) {
+                       GoBILDAMotorTypes motorType) {
         this(hardwareName, motorType, DcMotor.Direction.FORWARD);
     }
     public MotorConfig(
             String hardwareName,
-            GoBildaMotor motorType,
+            GoBILDAMotorTypes motorType,
             DcMotor.Direction direction,
             DcMotor.ZeroPowerBehavior zeroPowerBehavior
     ) {
@@ -270,6 +273,7 @@ public class MotorConfig {
 
     public void updatePositionProfiledPIDF() {
         if (dt <= 0.0) return;
+        MotorController x = new TrapezoidalMotionProfileController(new MotionProfilingCoefficients(kP, kI, kD, kS, kV, kA, maxVelocity, maxAcceleration));
 
         double position = motor.getCurrentPosition();
         double velocity = motor.getVelocity();
@@ -347,12 +351,11 @@ public class MotorConfig {
         boolean motorTooLowPos = pos < minAngleTicks;
         boolean motorTooHighPos = pos > maxAngleTicks;
         if (Math.abs(error) < 1) {
-            output = 0;
+            output = extraPower;
         }
         if (output < maxPower) {
             velocityIntegral += error;
-        }
-        output += extraPower;
+        };
         if (motorTooLowPos && output < 0) {
             output = 0;
             telemetryM.addLine("turret motor pos too low");

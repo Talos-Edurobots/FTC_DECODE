@@ -1,7 +1,9 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main.motor;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.motor.controllers;
 
 import androidx.annotation.NonNull;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotionState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
 
 class PIDFFPositionController implements MotorController {
@@ -22,21 +24,28 @@ class PIDFFPositionController implements MotorController {
 
     @Override
     public double update(double target, @NonNull MotionState motionState, LoopState loopState) {
-        double error = target - motionState.position;
+        double error = target - motionState.getPosition();
         return  updateWithError(error, motionState, loopState);
     }
+
+    @Override
+    public void init(MotionState currentState) {
+        reset();
+    }
+
+    @Override
     public double updateWithError(double error, @NonNull MotionState motionState, LoopState loopState) {
         double pid = coef.getKp() * error
                 + coef.getKi() * integral
-                + coef.getKd() * (-motionState.velocity);
+                + coef.getKd() * (-motionState.getVelocity());
 
         double ff = coef.getKs() * Math.signum(-error);
         double output = pid + ff;
         if (!antiWindup || Math.abs(output) < integralAntiWindupLimit) {
-            if (loopState.dt == 0) {
+            if (loopState.getDt() == 0) {
                 throw new ArithmeticException("LoopState dt cannot be zero for PIDFFVelocityController");
             }
-            integral += error * loopState.dt;
+            integral += error * loopState.getDt();
         }
         lastError = error;
         return output;

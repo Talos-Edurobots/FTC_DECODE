@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.DcMotorConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.GoBildaMotor;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.GoBILDAMotorTypes;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
@@ -20,43 +20,43 @@ public final class RobotConstants {
 // Drivetrain motors
     public static MotorConfig LEFT_FRONT_CONFIG = new MotorConfig(
             "leftFront",
-            GoBildaMotor.MOTOR_312_RPM,
+            GoBILDAMotorTypes.MOTOR_312_RPM,
             DcMotorSimple.Direction.REVERSE,
             DcMotor.ZeroPowerBehavior.BRAKE
     ).setMotorUse(MotorUse.DRIVETRAIN);
     public static MotorConfig LEFT_BACK_CONFIG = new MotorConfig(
             "leftBack",
-            GoBildaMotor.MOTOR_312_RPM,
+            GoBILDAMotorTypes.MOTOR_312_RPM,
             DcMotorSimple.Direction.REVERSE,
             DcMotor.ZeroPowerBehavior.BRAKE
     ).setMotorUse(MotorUse.DRIVETRAIN);
     public static MotorConfig RIGHT_BACK_CONFIG = new MotorConfig(
             "rightBack",
-            GoBildaMotor.MOTOR_312_RPM,
+            GoBILDAMotorTypes.MOTOR_312_RPM,
             DcMotorSimple.Direction.FORWARD,
             DcMotor.ZeroPowerBehavior.BRAKE
     ).setMotorUse(MotorUse.DRIVETRAIN);
     public static MotorConfig RIGHT_FRONT_CONFIG = new MotorConfig(
             "rightFront",
-            GoBildaMotor.MOTOR_312_RPM,
+            GoBILDAMotorTypes.MOTOR_312_RPM,
             DcMotorSimple.Direction.FORWARD,
             DcMotor.ZeroPowerBehavior.BRAKE
     ).setMotorUse(MotorUse.DRIVETRAIN);
     public static MotorConfig INTAKE_CONFIG = new MotorConfig(
             "intake",
-            GoBildaMotor.MOTOR_1150_RPM,
+            GoBILDAMotorTypes.MOTOR_1150_RPM,
             DcMotorSimple.Direction.FORWARD
     ).setMotorUse(MotorUse.FREE_SPIN)
             .setMotorMode(MotorMode.OPEN_LOOP);
     public static MotorConfig SHOOTER_CONFIG = new MotorConfig(
             "shooter",
-            GoBildaMotor.MOTOR_6000_RPM,
+            GoBILDAMotorTypes.MOTOR_6000_RPM,
             DcMotorSimple.Direction.REVERSE
     ).setPIDFCoefficients(.01, 0, 0, .02, .00052, 0)
             .setMotorMode(MotorMode.VELOCITY_CONTROL);
     public static MotorConfig TURRET_CONFIG = new MotorConfig(
             "turret",
-            GoBildaMotor.MOTOR_312_RPM,
+            GoBILDAMotorTypes.MOTOR_312_RPM,
             DcMotorSimple.Direction.FORWARD,
             DcMotor.ZeroPowerBehavior.FLOAT
     ).addExternalGearRatio((double) 270 /130)
@@ -69,7 +69,7 @@ public final class RobotConstants {
             .setMaxAngleTicks(250);
     public static MotorConfig HANG_CONFIG = new MotorConfig(
             "hang",
-            GoBildaMotor.MOTOR_117_RPM,
+            GoBILDAMotorTypes.MOTOR_117_RPM,
             DcMotorSimple.Direction.FORWARD,
             DcMotor.ZeroPowerBehavior.BRAKE
     ).setMotorUse(MotorUse.MECHANICAL_STOP)

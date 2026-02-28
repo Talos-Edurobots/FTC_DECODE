@@ -1,18 +1,18 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.motor;
 
 public final class LoopState {
-    double dt, batteryVoltage;
+    private double dt, batteryVoltageFactor;
 
     public double getDt() {
         return dt;
     }
-
-    public double getBatteryVoltage() {
-        return batteryVoltage;
+    public double getBatteryVoltageFactor() {
+        return batteryVoltageFactor;
     }
 
-    public LoopState(double dt, double batteryVoltage) {
+    public LoopState() {}
+    public void set(double dt, double batteryVoltageFactor) {
         this.dt = dt;
-        this.batteryVoltage = batteryVoltage;
+        this.batteryVoltageFactor = batteryVoltageFactor;
     }
 }

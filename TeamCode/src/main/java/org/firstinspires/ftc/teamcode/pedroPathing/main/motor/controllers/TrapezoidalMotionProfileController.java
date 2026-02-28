@@ -1,13 +1,15 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main.motor;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.motor.controllers;
 
 
 import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotionState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.MotionProfilingCoefficients;
 
-class TrapezoidalMotionProfileController implements MotorController{
+public class TrapezoidalMotionProfileController implements MotorController{
     MotionProfilingCoefficients coef;
     PIDFFPositionController pidFFController;
     private double xRef = 0.0, vRef = 0.0, aRef = 0.0;
@@ -15,11 +17,22 @@ class TrapezoidalMotionProfileController implements MotorController{
         this.coef = coefficients;
         pidFFController = new PIDFFPositionController(coef.getPidCoef());
     }
+    public void init(MotionState currentState) {
+        xRef = currentState.getPosition();
+        vRef = 0.0;
+        aRef = 0.0;
+        pidFFController.reset();
+    }
+
+    @Override
+    public double updateWithError(double error, MotionState motionState, LoopState loopState) {
+        return 0;
+    }
 
     @Override
     public double update(double target, @NonNull MotionState motionState, LoopState loopState) {
-        double position = motionState.position;
-        double velocity = motionState.velocity;
+        double position = motionState.getPosition();
+        double velocity = motionState.getVelocity();
 
         double remaining = target - xRef;
 
@@ -32,10 +45,10 @@ class TrapezoidalMotionProfileController implements MotorController{
             aRef = Math.signum(remaining) *coef.getMaxAcceleration();
         }
 
-        vRef += aRef * loopState.dt;
+        vRef += aRef * loopState.getDt();
         vRef = Range.clip(vRef, -coef.getMaxVelocity(), coef.getMaxVelocity());
 
-        xRef += vRef * loopState.dt;
+        xRef += vRef * loopState.getDt();
 
         if (Math.signum(target - xRef)
                 != Math.signum(remaining)) {
@@ -53,7 +66,7 @@ class TrapezoidalMotionProfileController implements MotorController{
                         coef.getPidCoef().getKa() * aRef;
 
         double power =
-                (pidVolts + ffVolts) / loopState.batteryVoltage;
+                (pidVolts + ffVolts) / loopState.getBatteryVoltageFactor();
         return power;
     }
 }
