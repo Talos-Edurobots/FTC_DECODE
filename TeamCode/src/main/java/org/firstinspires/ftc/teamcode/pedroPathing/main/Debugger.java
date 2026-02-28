@@ -529,8 +529,9 @@ class KaTestOpMode extends OpMode {
         double aref = motor.getaRef();
         double targetPos = motor.getTargetPositionTicks();
 
-        Log.d("KaTest", String.format("%.3f,%.3f%.3f,%.3f%.3f,%.3f%.3f,%.3f%.3f",
-                velocity, appliedVoltage, current, power, position, xref, vref, aref, targetPos)
+
+        Log.d("KaTest", String.format("%.3f,%.3f%.3f,%.3f%.3f,%.3f%.3f,%.3f,%.3f,%.3f",
+                velocity, appliedVoltage, current, power, position, xref, vref, aref, targetPos, getRuntime())
         );
     }
 
@@ -542,7 +543,7 @@ class KaTestOpMode extends OpMode {
         motor.maxPower = maxPower;
         maxVel = motor.maxVelocity;
         maxAcc = motor.maxAcceleration;
-        Log.d("KaTest", "velocity,applied_voltage,current,power,position,xref,vref,aref,targetPos");
+        Log.d("KaTest", "velocity,applied_voltage,current,power,position,xref,vref,aref,targetPos,time");
         PanelsConfigurables.INSTANCE.refreshClass(KaTestOpMode.class);
     }
     @Override
