@@ -37,7 +37,7 @@ import java.util.function.Supplier;
 @TeleOp(name = "Main TeleOp", group = "main")
 @Configurable
 public class Main extends LinearOpMode {
-    static int backVel = 2100;
+    static int backVel = 2000;
     static int frontVel = 1200;
     HardwareManager hardwareManager;
     DriveTrain driveTrain;
@@ -57,6 +57,7 @@ public class Main extends LinearOpMode {
     boolean automatedDrive = false;
     boolean far = true;
     double turretError;
+    int pipeline = 3;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -110,6 +111,16 @@ public class Main extends LinearOpMode {
 //        }
 
         limelight.start();
+        while(opModeInInit()) {
+            telemetryM.addLine("running alliance " + (pipeline==2 ? "blue":"red"));
+            telemetryM.addLine("press back to change");
+            telemetryM.addData("pipeline", pipeline);
+            if (gamepad1.backWasPressed()) {
+                pipeline = pipeline == 2 ? 3 : 2;
+                limelight.pipelineSwitch(pipeline);
+            }
+            telemetryM.update(telemetry);
+        }
         waitForStart();
         follower.startTeleopDrive();
         while (opModeIsActive()){

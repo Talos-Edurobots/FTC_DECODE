@@ -509,7 +509,7 @@ class KeCharacterizationOpMode extends OpMode {
 @Configurable
 class KaTestOpMode extends OpMode {
     MotorConfig motor;
-    VoltageSensorReadout voltageSensor;
+//    VoltageSensorReadout voltageSensor;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     static double degreesOffset = 30;
     private double lastTime = 0.0;
@@ -524,7 +524,7 @@ class KaTestOpMode extends OpMode {
     static boolean logPoints = false;
     public void log() {
         double velocity = motor.getVelocity();
-        double appliedVoltage = motor.getPower() * voltageSensor.getVoltage();
+        double appliedVoltage = motor.getPower() * 12;
         double current = motor.getCurrent();
         double power = motor.getPower();
         double position = motor.getCurrentPosition();
@@ -534,7 +534,7 @@ class KaTestOpMode extends OpMode {
         double targetPos = motor.getTargetPositionTicks();
 
 
-        Log.d("KaTest", String.format("%.3f,%.3f%.3f,%.3f%.3f,%.3f%.3f,%.3f,%.3f,%.3f",
+        Log.d("KaTest", String.format("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f",
                 velocity, appliedVoltage, current, power, position, xref, vref, aref, targetPos, getRuntime())
         );
     }
@@ -542,7 +542,7 @@ class KaTestOpMode extends OpMode {
     @Override
     public void init() {
         motor.init(hardwareMap);
-        voltageSensor.init(hardwareMap);
+//        voltageSensor.init(hardwareMap);
         kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
         motor.maxPower = maxPower;
         maxVel = motor.maxVelocity;

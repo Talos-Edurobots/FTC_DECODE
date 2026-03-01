@@ -14,7 +14,7 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
     private DcMotor flywheel;
     private DcMotor coreHex;
     private DcMotor leftDrive;
-    // private CRServo servo;
+     private CRServo servo;
     private DcMotor rightDrive;
 
     // Setting our velocity targets. These values are in ticks per second!
@@ -29,7 +29,7 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
         flywheel = hardwareMap.get(DcMotor.class,   "flywheel");
         coreHex = hardwareMap.get(DcMotor.class, "coreHex");
         leftDrive = hardwareMap.get(DcMotor.class, "leftDrive");
-        // servo = hardwareMap.get(CRServo.class, "servo");
+        servo = hardwareMap.get(CRServo.class, "servo");
         rightDrive = hardwareMap.get(DcMotor.class, "rightDrive");
 
 
@@ -39,7 +39,7 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
         coreHex.setDirection(DcMotor.Direction.FORWARD);
         leftDrive.setDirection(DcMotor.Direction.REVERSE);
         //Ensures the servo is active and ready
-        // servo.setPower(0);
+        servo.setPower(0);
 
         waitForStart();
         if (opModeIsActive()) {
@@ -83,10 +83,13 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
             coreHex.setPower(-0.5);
         }
         // Manual control for the hopper's servo
-        if (gamepad1.dpad_left) {
-            // servo.setPower(1);
-        } else if (gamepad1.dpad_right) {
-            // servo.setPower(-1);
+        if (gamepad1.dpadLeftWasPressed()) {
+             servo.setPower(1);
+        } else if (gamepad1.dpadRightWasPressed()) {
+             servo.setPower(-1);
+        }
+        else if (gamepad1.dpadDownWasPressed()) {
+            servo.setPower(0);
         }
     }
 

@@ -264,7 +264,7 @@ public class SoloShortAuto {
                     follower.followPath(scorePreload);
                     shooter.run(true);
                     shooter.setHoodAngle(.2);
-                    turret.setAngleRadians(Math.toRadians(-45));
+                    turret.setAngleRadians(Math.toRadians(isBlue ? -45: 45));
                     setPathState(1);
                     break;
                 case 1:
