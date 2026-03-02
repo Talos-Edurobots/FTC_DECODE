@@ -263,11 +263,8 @@ public class MotorConfig {
     }
 
     public void setPositionInRadians(double radians) {
-        double clamped =
-                Range.clip(radians, minAngleTicks, maxAngleTicks);
-
-        targetPositionTicks =
-                clamped * motorType.getTicksPerRadian() * externalGearRatio;
+        int toTicks = (int) (radians * motorType.getTicksPerRadian() * externalGearRatio);
+        targetPositionTicks = Range.clip(toTicks, minAngleTicks, maxAngleTicks);
     }
 
 

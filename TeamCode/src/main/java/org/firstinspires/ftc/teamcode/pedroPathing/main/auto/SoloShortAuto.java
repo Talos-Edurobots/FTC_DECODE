@@ -48,7 +48,7 @@ public class SoloShortAuto {
     private final Pose pickupIntake3Pose = new Pose(18.5, 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private Path scorePreload;
     private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3;
-    public void buildPathsBlue() {
+    public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePose));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
@@ -98,165 +98,116 @@ public class SoloShortAuto {
                 .setLinearHeadingInterpolation(pickupIntake3Pose.getHeading(), scorePose.getHeading())
                 .build();
     }
-    public void buildPathsRed() {
-        /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
-        scorePreload = new Path(new BezierLine(startPose, scorePose));
-        scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
 
-    /* Here is an example for Constant Interpolation
-    scorePreload.setConstantInterpolation(startPose.getHeading()); */
-
-        /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(scorePose, pickup1Pose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
-                .setReversed()
-                .addPath(new BezierLine(pickup1Pose, pickup1IntakePose))
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1IntakePose.getHeading())
-                .setReversed()
-                .build();
-
-        /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(pickup1IntakePose, scorePose))
-                .setLinearHeadingInterpolation(pickup1IntakePose.getHeading(), scorePose.getHeading())
-                .setReversed()
-                .build();
-
-        /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(pickup2Pose, pickupIntake2Pose))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickupIntake2Pose.getHeading())
-                .setReversed()
-                .addPath(new BezierLine(pickupIntake2Pose, pickup2Pose))
-                .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), pickup2Pose.getHeading())
-                .setReversed()
-                .build();
-
-        /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(pickup2Pose, score2ControlPos, scorePose))
-                .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), scorePose.getHeading())
-                .setReversed()
-                .build();
-
-        /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(scorePose, pickup3Pose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
-                .setReversed()
-                .addPath(new BezierLine(pickup3Pose, pickupIntake3Pose))
-                .setLinearHeadingInterpolation(pickup3Pose.getHeading(), pickupIntake3Pose.getHeading())
-                .setReversed()
-                .build();
-
-        /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(pickupIntake3Pose, scorePose))
-                .setLinearHeadingInterpolation(pickupIntake3Pose.getHeading(), scorePose.getHeading())
-                .setReversed()
-                .build();
+//    public SoloShortAuto get() {
+//        if (auto == null) {
+//            auto = new SoloShortAuto();
+//        }
+//        return auto;
+//    }
+    private void setAlliance(boolean isBlue) {
+        if (isBlue) return;
+        startPose.mirror();
+        scorePose.mirror();
+        pickup1Pose.mirror();
+        pickup1IntakePose.mirror();
+        pickup2Pose.mirror();
+        pickupIntake2Pose.mirror();
+        score2ControlPos.mirror();
+        pickup3Pose.mirror();
+        pickupIntake3Pose.mirror();
     }
-    public SoloShortAuto() {
+    public void shootArtifacts() {
+        flickersBusy = true;
+        switch (flickerState) {
+            case 0:
+            /* You could check for
+            - Follower State: "if(!follower.isBusy()) {}"
+            - Time: "if(pathTimer.getElapsedTimeSeconds() > 1) {}"
+            - Robot Position: "if(follower.getPose().getX() > 36) {}"
+            */
 
-    }
-    public SoloShortAuto get() {
-        if (auto == null) {
-            auto = new SoloShortAuto();
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if (!follower.isBusy() && !shooter.isBusy()) {
+                    /* Score Preload */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    flickers.rightFlick(true);
+                    setFlickerState(1);
+                }
+                break;
+            case 1:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
+                if (flickerTimer.getElapsedTimeSeconds() > .3) {
+                    /* Grab Sample */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    flickers.rightFlick(false);
+                    setFlickerState(2);
+                }
+                break;
+            case 2:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if (flickerTimer.getElapsedTimeSeconds() > .4) {
+                    /* Score Sample */
+                    intake.setCurrentState(Intake.IntakeState.INTAKE);
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+
+                    setFlickerState(3);
+                }
+                break;
+            case 3:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
+                if (flickerTimer.getElapsedTimeSeconds() > .5) {
+
+                    flickers.rightFlick(true);
+                    setFlickerState(4);
+                }
+                break;
+            case 4:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if (flickerTimer.getElapsedTimeSeconds() > .3) {
+                    /* Score Sample */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    flickers.rightFlick(false);
+                    setFlickerState(5);
+                }
+                break;
+            case 5:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
+                if (flickerTimer.getElapsedTimeSeconds() > .3) {
+                    /* Grab Sample */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    //                    intake.setCurrentState(Intake.IntakeState.STOP);
+                    flickers.leftFlick(true);
+                    setFlickerState(6);
+                }
+                break;
+            case 6:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if (flickerTimer.getElapsedTimeSeconds() > .5) {
+                    /* Set the state to a Case we won't use or define, so it just stops running an new paths */
+                    flickers.leftFlick(false);
+                    setFlickerState(7);
+                }
+                break;
+            case 7:
+                if (flickerTimer.getElapsedTimeSeconds() > .5) {
+                    flickers.rightFlick(true);
+                    setFlickerState(8);
+                }
+                break;
+            case 8:
+                if (flickerTimer.getElapsedTimeSeconds() > .5) {
+                    flickers.rightFlick(false);
+                    setFlickerState(0);
+                    flickersBusy = false;
+                }
+                break;
         }
-        return auto;
     }
-        public void shootArtifacts() {
-            flickersBusy = true;
-            switch (flickerState) {
-                case 0:
-                /* You could check for
-                - Follower State: "if(!follower.isBusy()) {}"
-                - Time: "if(pathTimer.getElapsedTimeSeconds() > 1) {}"
-                - Robot Position: "if(follower.getPose().getX() > 36) {}"
-                */
-
-                    /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                    if (!follower.isBusy() && !shooter.isBusy()) {
-                        /* Score Preload */
-
-                        /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                        flickers.rightFlick(true);
-                        setFlickerState(1);
-                    }
-                    break;
-                case 1:
-                    /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
-                    if (flickerTimer.getElapsedTimeSeconds() > .3) {
-                        /* Grab Sample */
-
-                        /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                        flickers.rightFlick(false);
-                        setFlickerState(2);
-                    }
-                    break;
-                case 2:
-                    /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                    if (flickerTimer.getElapsedTimeSeconds() > .4) {
-                        /* Score Sample */
-                        intake.setCurrentState(Intake.IntakeState.INTAKE);
-                        /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-
-                        setFlickerState(3);
-                    }
-                    break;
-                case 3:
-                    /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
-                    if (flickerTimer.getElapsedTimeSeconds() > .5) {
-
-                        flickers.rightFlick(true);
-                        setFlickerState(4);
-                    }
-                    break;
-                case 4:
-                    /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                    if (flickerTimer.getElapsedTimeSeconds() > .3) {
-                        /* Score Sample */
-
-                        /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                        flickers.rightFlick(false);
-                        setFlickerState(5);
-                    }
-                    break;
-                case 5:
-                    /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                    if (flickerTimer.getElapsedTimeSeconds() > .3) {
-                        /* Grab Sample */
-
-                        /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                        //                    intake.setCurrentState(Intake.IntakeState.STOP);
-                        flickers.leftFlick(true);
-                        setFlickerState(6);
-                    }
-                    break;
-                case 6:
-                    /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                    if (flickerTimer.getElapsedTimeSeconds() > .5) {
-                        /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-                        flickers.leftFlick(false);
-                        setFlickerState(7);
-                    }
-                    break;
-                case 7:
-                    if (flickerTimer.getElapsedTimeSeconds() > .5) {
-                        flickers.rightFlick(true);
-                        setFlickerState(8);
-                    }
-                    break;
-                case 8:
-                    if (flickerTimer.getElapsedTimeSeconds() > .5) {
-                        flickers.rightFlick(false);
-                        setFlickerState(0);
-                        flickersBusy = false;
-                    }
-                    break;
-            }
-        }
 
         public void autonomousPathUpdate() {
             switch (pathState) {
@@ -406,15 +357,10 @@ public class SoloShortAuto {
             Shooter.targetVelocity = 1250;
 
             follower = PPConstants.createFollower(hwMap);
-            if (isBlue) {
-                buildPathsBlue();
-            }
-            else {
-                buildPathsRed();
-            }
+            setAlliance(isBlue);
+            buildPaths();
+
             follower.setStartingPose(startPose);
-            if (!isBlue) {
-            }
         }
 
     }
