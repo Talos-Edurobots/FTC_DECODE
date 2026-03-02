@@ -12,11 +12,11 @@
       "id": "line-xjh0ccpp1kk",
       "name": "Path 1",
       "endPoint": {
-        "x": 72,
-        "y": 72,
+        "x": 48,
+        "y": 85,
         "heading": "linear",
         "startDeg": 180,
-        "endDeg": 135
+        "endDeg": 180
       },
       "controlPoints": [],
       "color": "#B8C6A6",
@@ -30,11 +30,11 @@
       "id": "mm14w8ml-57nkzp",
       "name": "Path 2",
       "endPoint": {
-        "x": 40,
+        "x": 45,
         "y": 60,
         "heading": "linear",
         "reverse": false,
-        "startDeg": 135,
+        "startDeg": 180,
         "endDeg": 180
       },
       "controlPoints": [],
@@ -63,17 +63,45 @@
       "waitAfterName": ""
     },
     {
-      "id": "mm14xt83-41znsn",
+      "id": "mm9qe4cg-pzlqzs",
       "name": "Path 4",
       "endPoint": {
-        "x": 72,
-        "y": 72,
+        "x": 13,
+        "y": 70,
         "heading": "linear",
         "reverse": false,
         "startDeg": 180,
-        "endDeg": 135
+        "endDeg": 180
       },
-      "controlPoints": [],
+      "controlPoints": [
+        {
+          "x": 30,
+          "y": 70
+        }
+      ],
+      "color": "#A6665D",
+      "waitBeforeMs": 0,
+      "waitAfterMs": 0,
+      "waitBeforeName": "",
+      "waitAfterName": ""
+    },
+    {
+      "id": "mm14xt83-41znsn",
+      "name": "Path 5",
+      "endPoint": {
+        "x": 48,
+        "y": 85,
+        "heading": "linear",
+        "reverse": false,
+        "startDeg": 180,
+        "endDeg": 180
+      },
+      "controlPoints": [
+        {
+          "x": 57,
+          "y": 72
+        }
+      ],
       "color": "#9DB797",
       "waitBeforeMs": 0,
       "waitAfterMs": 0,
@@ -81,26 +109,8 @@
       "waitAfterName": ""
     },
     {
-      "id": "mm14zl29-7kjh3b",
-      "name": "Path 5",
-      "endPoint": {
-        "x": 40,
-        "y": 85,
-        "heading": "linear",
-        "reverse": false,
-        "startDeg": 135,
-        "endDeg": 180
-      },
-      "controlPoints": [],
-      "color": "#C69DD9",
-      "waitBeforeMs": 0,
-      "waitAfterMs": 0,
-      "waitBeforeName": "",
-      "waitAfterName": ""
-    },
-    {
       "id": "mm151c9j-jj5bet",
-      "name": "Path 6",
+      "name": "Path 7",
       "endPoint": {
         "x": 18,
         "y": 85,
@@ -118,14 +128,14 @@
     },
     {
       "id": "mm153luw-xnh4qs",
-      "name": "Path 7",
+      "name": "Path 8",
       "endPoint": {
-        "x": 72,
-        "y": 72,
+        "x": 48,
+        "y": 85,
         "heading": "linear",
         "reverse": false,
         "startDeg": 180,
-        "endDeg": 135
+        "endDeg": 180
       },
       "controlPoints": [],
       "color": "#DA6C5B",
@@ -136,13 +146,13 @@
     },
     {
       "id": "mm155uxk-qjbzgf",
-      "name": "Path 8",
+      "name": "Path 9",
       "endPoint": {
         "x": 40,
         "y": 35,
         "heading": "linear",
         "reverse": false,
-        "startDeg": 135,
+        "startDeg": 180,
         "endDeg": 180
       },
       "controlPoints": [],
@@ -154,7 +164,7 @@
     },
     {
       "id": "mm156bt7-3xuw4l",
-      "name": "Path 9",
+      "name": "Path 10",
       "endPoint": {
         "x": 18,
         "y": 35,
@@ -172,14 +182,14 @@
     },
     {
       "id": "mm156pei-b1tvmr",
-      "name": "Path 10",
+      "name": "Path 11",
       "endPoint": {
-        "x": 72,
-        "y": 72,
+        "x": 60,
+        "y": 74,
         "heading": "linear",
         "reverse": false,
         "startDeg": 180,
-        "endDeg": 135
+        "endDeg": 180
       },
       "controlPoints": [],
       "color": "#9557AC",
@@ -190,14 +200,14 @@
     },
     {
       "id": "mm1570ap-8w73b5",
-      "name": "Path 11",
+      "name": "Path 12",
       "endPoint": {
         "x": 60,
         "y": 60,
         "heading": "linear",
         "reverse": false,
-        "startDeg": 135,
-        "endDeg": 135
+        "startDeg": 180,
+        "endDeg": 180
       },
       "controlPoints": [],
       "color": "#B5A6BD",
@@ -223,11 +233,11 @@
     },
     {
       "kind": "path",
-      "lineId": "mm14xt83-41znsn"
+      "lineId": "mm9qe4cg-pzlqzs"
     },
     {
       "kind": "path",
-      "lineId": "mm14zl29-7kjh3b"
+      "lineId": "mm14xt83-41znsn"
     },
     {
       "kind": "path",
@@ -255,5 +265,5 @@
     }
   ],
   "version": "1.2.1",
-  "timestamp": "2026-02-24T21:58:08.780Z"
+  "timestamp": "2026-03-02T22:36:31.164Z"
 }

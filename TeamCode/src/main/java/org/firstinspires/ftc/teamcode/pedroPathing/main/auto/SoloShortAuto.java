@@ -39,14 +39,18 @@ public class SoloShortAuto {
     private SoloShortAuto auto;
     private final Pose startPose = new Pose(48, 135, Math.toRadians(180)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(48, 85, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose gatePose = new Pose(13, 70, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private final Pose gateControlPose1 = new Pose(30, 70, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
     private final Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup1IntakePose = new Pose(18, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose pickupIntake2Pose = new Pose(16, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose score2ControlPos = new Pose(50, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private final Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose pickup3Pose = new Pose(40, 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose pickupIntake3Pose = new Pose(18.5, 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private Path scorePreload;
+    private final Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose parkingPose = new Pose(60, 60, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
+    private Path scorePreload, openGate, park;
     private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3;
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
@@ -57,12 +61,25 @@ public class SoloShortAuto {
     scorePreload.setConstantInterpolation(startPose.getHeading()); */
 
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+        grabPickup2 = follower.pathBuilder()
+                .addPath(new BezierLine(pickup2Pose, pickupIntake2Pose))
+                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickupIntake2Pose.getHeading())
+                .addPath(new BezierLine(pickupIntake2Pose, pickup2Pose))
+                .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), pickup2Pose.getHeading())
+                .build();
+
+        openGate = new Path(new BezierCurve(scorePose, gateControlPose1, gatePose));
+
+        scorePickup2 = follower.pathBuilder()
+                .addPath(new BezierCurve(pickup2Pose, score2ControlPos, scorePose))
+                .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), scorePose.getHeading())
+                .build();
+
         grabPickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(scorePose, pickup1Pose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
-                .addPath(new BezierLine(pickup1Pose, pickup1IntakePose))
+                .addPath(new BezierLine(scorePose, pickup1IntakePose))
                 .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1IntakePose.getHeading())
                 .build();
+
 
         /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup1 = follower.pathBuilder()
@@ -71,18 +88,8 @@ public class SoloShortAuto {
                 .build();
 
         /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(pickup2Pose, pickupIntake2Pose))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickupIntake2Pose.getHeading())
-                .addPath(new BezierLine(pickupIntake2Pose, pickup2Pose))
-                .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), pickup2Pose.getHeading())
-                .build();
 
         /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(pickup2Pose, score2ControlPos, scorePose))
-                .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), scorePose.getHeading())
-                .build();
 
         /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup3 = follower.pathBuilder()
@@ -94,9 +101,11 @@ public class SoloShortAuto {
 
         /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(pickupIntake3Pose, scorePose))
-                .setLinearHeadingInterpolation(pickupIntake3Pose.getHeading(), scorePose.getHeading())
+                .addPath(new BezierLine(pickupIntake3Pose, score2ndPose))
+                .setLinearHeadingInterpolation(pickupIntake3Pose.getHeading(), score2ndPose.getHeading())
                 .build();
+
+        park = new Path(new BezierLine(score2ndPose, parkingPose));
     }
 
 //    public SoloShortAuto get() {
@@ -252,37 +261,70 @@ public class SoloShortAuto {
                     }
                     break;
                 case 5:
-                    follower.followPath(scorePickup2);
+                    follower.followPath(openGate);
                     setPathState(6);
                     break;
                 case 6:
+                        if (!follower.isBusy()) {
+                            follower.followPath(scorePickup2);
+                            setPathState(7);
+                        }
+                        break;
+                case 7:
                     if (!follower.isBusy()) {
                         shootArtifacts();
                         if (!flickersBusy) {
-                            setPathState(7);
+                            setPathState(8);
                         }
                     }
                     break;
-                case 7:
+                case 8:
                     intake.setCurrentState(Intake.IntakeState.INTAKE);
                     follower.followPath(grabPickup1);
-                    setPathState(8);
+                    setPathState(9);
                     break;
-                case 8:
+                case 9:
                     if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
                         intake.setCurrentState(Intake.IntakeState.STOP);
                         follower.followPath(scorePickup1);
-                        setPathState(9);
+                        setPathState(10);
                     }
                     break;
-                case 9:
+                case 10:
                     if (!follower.isBusy()) {
                         shootArtifacts();
                         if (!flickersBusy) {
-                            setPathState(10);
+                            setPathState(11);
                         }
                     }
                     break;
+                case 11:
+                    follower.followPath(grabPickup3);
+                    intake.setCurrentState(Intake.IntakeState.INTAKE);
+                    setPathState(12);
+                    break;
+                case 12:
+                    if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
+                        intake.setCurrentState(Intake.IntakeState.STOP);
+                        follower.followPath(scorePickup3);
+                        setPathState(13);
+                    }
+                    break;
+                case 13:
+                    if (!follower.isBusy()) {
+                        shootArtifacts();
+                        if (!flickersBusy) {
+                            setPathState(14);
+                        }
+                    }
+                    break;
+                case 14:
+                    follower.followPath(park);
+                    setPathState(-1);
+                    break;
+                case -1:
+                    shooter.run(false);
+                    intake.setCurrentState(Intake.IntakeState.STOP);
             }
         }
 
