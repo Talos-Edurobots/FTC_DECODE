@@ -43,7 +43,7 @@ public class Turret {
             atan2 = Math.atan2(BLUE_GOAL_POSE.getY()-pose.getY(), BLUE_GOAL_POSE.getX()-pose.getX());
         }
         // robot angle must be -180 degrees to 180 degrees
-        double rad = (atan2 - pose.getHeading() +2 * Math.PI) % (2 * Math.PI);
+        double rad = (atan2 - pose.getHeading());
         rad = (rad > Math.PI) ? rad - 2 * Math.PI : rad;
         angleToGoal = rad;
         // TODO: add robot heading to angleToGoal
