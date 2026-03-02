@@ -64,9 +64,9 @@ public final class RobotConstants {
             .setMotorMode(MotorMode.PROFILED_PIDF)
             .setMotionProfileCoefficients(1000, 1000, .5)
             .setPIDFCoefficients(0.05, 0, 0.001, 0.4, 0.0053, 0.0005)
-//            .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
-            .setMinAngleTicks(-500)
-            .setMaxAngleTicks(250);
+//           .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
+            .setMinAngleRadians(Math.toRadians(-180))
+            .setMaxAngleRadians(Math.toRadians(45));
     public static MotorConfig HANG_CONFIG = new MotorConfig(
             "hang",
             GoBILDAMotorTypes.MOTOR_117_RPM,

@@ -45,7 +45,7 @@ public class SoloShortAuto {
     private final Pose pickupIntake2Pose = new Pose(16, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose score2ControlPos = new Pose(50, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose pickup3Pose = new Pose(40, 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose pickupIntake3Pose = new Pose(18, 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickupIntake3Pose = new Pose(18.5, 35, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private Path scorePreload;
     private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3;
     public void buildPathsBlue() {
@@ -197,7 +197,7 @@ public class SoloShortAuto {
                     break;
                 case 2:
                     /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                    if (flickerTimer.getElapsedTimeSeconds() > .2) {
+                    if (flickerTimer.getElapsedTimeSeconds() > .4) {
                         /* Score Sample */
                         intake.setCurrentState(Intake.IntakeState.INTAKE);
                         /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
@@ -264,7 +264,7 @@ public class SoloShortAuto {
                     follower.followPath(scorePreload);
                     shooter.run(true);
                     shooter.setHoodAngle(.2);
-                    turret.setAngleRadians(Math.toRadians(isBlue ? -45: 45));
+                    turret.setAngleRadians(Math.toRadians(isBlue ? -50: 50));
                     setPathState(1);
                     break;
                 case 1:
@@ -403,7 +403,7 @@ public class SoloShortAuto {
 
             shooter = new Shooter(hwMap);
             shooter.init();
-            Shooter.targetVelocity = 1200;
+            Shooter.targetVelocity = 1250;
 
             follower = PPConstants.createFollower(hwMap);
             if (isBlue) {

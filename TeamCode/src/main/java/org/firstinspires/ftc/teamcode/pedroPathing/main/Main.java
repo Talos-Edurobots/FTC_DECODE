@@ -51,7 +51,7 @@ public class Main extends LinearOpMode {
     Hang hang;
     private Limelight3A limelight;
     Supplier<PathChain> pathChain;
-    Pose startingPose = new Pose(72, 72, 0);
+    Pose startingPose = new Pose(72, 72, Math.toRadians(180));
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Leds leds;
     boolean automatedDrive = false;
@@ -64,7 +64,7 @@ public class Main extends LinearOpMode {
         double oldTime = 0, newTime, dt;
 
         follower = PPConstants.createFollower(hardwareMap);
-        follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
+        follower.setStartingPose(startingPose);
         follower.update();
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
                 .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
@@ -92,9 +92,6 @@ public class Main extends LinearOpMode {
 
         flickers = new Flickers();
         flickers.init(hardwareMap);
-
-        pinpoint = new Pinpoint(hardwareMap);
-        pinpoint.init();
 
         driveTrain = new DriveTrain(hardwareMap);
         driveTrain.init();
@@ -138,8 +135,8 @@ public class Main extends LinearOpMode {
             turret.manualControl(gamepad1.left_trigger - gamepad1.right_trigger);
             turret.limelightAim(result);
 //            turret.setAngleRadians(Math.toRadians(90));
-//            turret.lookToGoal(follower.getPose(), false);
-//            turret.loop();
+            turret.lookToGoal(follower.getPose(), false);
+            turret.loop();
             if (gamepad1.xWasPressed()) {
                 far ^= true;
                 Shooter.targetVelocity = far ? backVel : frontVel;
@@ -200,8 +197,8 @@ public class Main extends LinearOpMode {
             }
             intake.update();
 
-            double forward = -gamepad1.left_stick_y;
-            double strafe = -gamepad1.left_stick_x;
+            double forward = gamepad1.left_stick_y;
+            double strafe = gamepad1.left_stick_x;
             double rotate = -gamepad1.right_stick_x;
 //            double heading = follower.getHeading();
             double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
@@ -225,6 +222,7 @@ public class Main extends LinearOpMode {
             telemetryM.addData("intake velocity", intake.getVelocity());
             telemetryM.addData("intake current", intake.getCurrent());
             telemetryM.addData("pinpoint pos", follower.getPose());
+            telemetryM.addData("follower x", follower.getPose().getX());
             telemetryM.addData("pinpoint heading", follower.getHeading());
             telemetryM.update(telemetry);
         }

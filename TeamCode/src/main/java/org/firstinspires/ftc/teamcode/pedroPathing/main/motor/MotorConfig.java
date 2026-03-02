@@ -139,6 +139,23 @@ public class MotorConfig {
         return this;
     }
 
+    public double getMinAngleTicks() {
+        return minAngleTicks;
+    }
+
+    public double getMaxAngleTicks() {
+        return maxAngleTicks;
+    }
+
+    public MotorConfig setMinAngleRadians(double minAngleRadians) {
+        this.minAngleTicks = minAngleRadians * motorType.getTicksPerRadian() * externalGearRatio;
+        return this;
+    }
+    public MotorConfig setMaxAngleRadians(double maxAngleRadians) {
+        this.maxAngleTicks = maxAngleRadians * motorType.getTicksPerRadian() * externalGearRatio;
+        return this;
+    }
+
     private double minAngleTicks = Double.NEGATIVE_INFINITY;
     private double maxAngleTicks = Double.POSITIVE_INFINITY;
 
@@ -246,8 +263,8 @@ public class MotorConfig {
     }
 
     public void setPositionInRadians(double radians) {
-        double clamped = radians;
-//                Range.clip(radians, minAngleTicks, maxAngleTicks);
+        double clamped =
+                Range.clip(radians, minAngleTicks, maxAngleTicks);
 
         targetPositionTicks =
                 clamped * motorType.getTicksPerRadian() * externalGearRatio;

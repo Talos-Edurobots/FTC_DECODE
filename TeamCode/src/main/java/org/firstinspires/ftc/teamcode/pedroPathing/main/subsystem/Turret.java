@@ -19,8 +19,8 @@ public class Turret {
     HardwareMap hwmap;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;
-    final Pose RED_GOAL_POSE = new Pose(140, 140);
-    final Pose BLUE_GOAL_POSE = new Pose(140, 0);
+    final Pose RED_GOAL_POSE = new Pose(144, 144);
+    final Pose BLUE_GOAL_POSE = new Pose(0, 144);
     public Turret(HardwareMap hwmap) {
         this.hwmap = hwmap;
     }
@@ -46,12 +46,11 @@ public class Turret {
         double rad = (atan2 - pose.getHeading());
         rad = (rad > Math.PI) ? rad - 2 * Math.PI : rad;
         angleToGoal = rad;
-        // TODO: add robot heading to angleToGoal
-        double robotAngle = (pose.getHeadingAsUnitVector().getTheta() + Math.PI/2) % (2*Math.PI);
-        setAngleRadians(angleToGoal - robotAngle);
+        setAngleRadians(angleToGoal);
         turret.setMotorMode(MotorMode.PROFILED_PIDF);
-        telemetryM.addData("angle to goal", angleToGoal - robotAngle);
-        telemetryM.addData("robot angle", robotAngle);
+        telemetryM.addData("angle to goal", angleToGoal);
+        telemetryM.addData("rad", rad);
+        telemetryM.addData("atan2", rad);
     }
     public void init() {
         turret.init(hwmap);
@@ -98,6 +97,8 @@ public class Turret {
         telemetryM.addData("velocity", turret.getVelocity());
         telemetryM.addData("ref vel", turret.getvRef());
         telemetryM.addData("position", turret.getCurrentPosition());
+        telemetryM.addData("min pos", turret.getMinAngleTicks());
+        telemetryM.addData("max pos", turret.getMaxAngleTicks());
         telemetryM.addData("ref pos", turret.getxRef());
         telemetryM.addData("ref a", turret.getaRef());
         telemetryM.addData("current", turret.getCurrent());
