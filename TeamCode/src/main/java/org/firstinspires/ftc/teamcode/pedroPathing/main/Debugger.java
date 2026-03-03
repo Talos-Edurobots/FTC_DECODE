@@ -22,6 +22,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.VoltageSensorReadout;
 
 
@@ -491,7 +493,7 @@ class KeCharacterizationOpMode extends OpMode {
         telemetryM.addData("Applied Voltage (V)", appliedVoltage);
         telemetryM.update();
         Log.d(TAG, String.format("%.3f,%.3f",
-                    velocity, appliedVoltage)
+                velocity, appliedVoltage)
         );
 
     }
@@ -676,3 +678,40 @@ class RampPowerOpMode extends OpMode {
         lastTime = currentTime;
     }
 }
+
+    @Configurable
+    class TestThoughPut extends OpMode {
+        static double velocity = 2100;
+        static boolean runWIthVel = true;
+        TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+        Intake intake = new Intake(hardwareMap);
+        Shooter shooter = new Shooter(hardwareMap);
+        Flickers flickers = new Flickers();
+        @Override
+        public void init() {
+            intake.init();
+            shooter.init();
+            flickers.init(hardwareMap);
+            Log.d("ThroughputTest", "shooter velocity,shooter power");
+        }
+
+        @Override
+        public void loop() {
+            flickers.leftFlick(gamepad1.left_bumper);
+            flickers.rightFlick(gamepad1.right_bumper);
+            if (runWIthVel) {
+                Shooter.targetVelocity = velocity;
+                shooter.run(true);
+            }
+            else {
+                shooter.setPower(shooter.getInstance().kV * velocity);
+            }
+            telemetryM.addData("shooter velocity", shooter.getVelocity());
+            telemetryM.addData("shooter power", shooter.getInstance().getPower());
+            telemetryM.update(telemetry);
+        }
+        public void log() {
+            Log.d("ThroughputTest", String.format("%.2f,%.2f", shooter.getVelocity(), shooter.getInstance().getPower()));
+        }
+    }
+

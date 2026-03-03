@@ -60,7 +60,10 @@ public class Shooter {
             floatShooter();
         }
     }
-    void calculateFilteredVelocity() {
+    public double getImpactTime() {
+        return impactTimer.seconds();
+    }
+    public void calculateFilteredVelocity() {
         filteredVelocity = alpha * motor.getVelocity() + (1 - alpha) * filteredVelocity;
         double delta = (filteredVelocity - lastError) / dt;
         // Detect shot
@@ -93,28 +96,18 @@ public class Shooter {
     public boolean isBusy () {
         return Math.abs(targetVelocity - motor.getVelocity()) > 70;
     }
-    private void setVelocity() {
-        // Set velocity via triggers
-        double currentVelocity = motor.getVelocity();
-        double error = targetVelocity - currentVelocity;
-        double derivative = (error - lastError) / dt;
-        integralSum += error * dt;
-
-        if (isRunning) {
-            motor.setPower(
-                RobotConstants.SHOOTER_K_P * error +
-                RobotConstants.SHOOTER_K_I * integralSum +
-                RobotConstants.SHOOTER_K_D * derivative +
-                RobotConstants.SHOOTER_K_S * Math.signum(targetVelocity) +
-                RobotConstants.SHOOTER_K_V * targetVelocity
-            );
-        }
-        else {
-            motor.setPower(0);
-        }
+    public void setVelocity() {
+        if (isRunning) motor.updateVelocityPIDF();
+        else floatShooter();
     }
-    private void floatShooter() {
+    public void setPower(double power) {
+        motor.setPower(power);
+    }
+    public void floatShooter() {
         motor.setPower(0);
+    }
+    public MotorConfig getInstance() {
+        return motor;
     }
 
     public double getVelocity() {
