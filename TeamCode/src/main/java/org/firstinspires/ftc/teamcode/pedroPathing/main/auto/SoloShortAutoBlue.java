@@ -11,7 +11,6 @@ public class SoloShortAutoBlue extends OpMode {
     SoloShortAuto opMode = new SoloShortAuto();
     @Override
     public void init() {
-        opMode = opMode.get();
         opMode.init(hardwareMap, telemetry, true);
     }
 
