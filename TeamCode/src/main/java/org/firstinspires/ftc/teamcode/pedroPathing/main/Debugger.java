@@ -692,7 +692,9 @@ class RampPowerOpMode extends OpMode {
             intake.init();
             shooter.init();
             flickers.init(hardwareMap);
-            Log.d("ThroughputTest", "shooter velocity,shooter power");
+            telemetryM.addLine("init complete");
+            telemetryM.update(telemetry);
+            Log.d("ThroughputTest", "shooter_velocity,shooter_power,time");
         }
 
         @Override
@@ -706,12 +708,16 @@ class RampPowerOpMode extends OpMode {
             else {
                 shooter.setPower(shooter.getInstance().kV * velocity);
             }
+            if (gamepad1.aWasPressed()) intake.setCurrentState(Intake.IntakeState.INTAKE);
+            else if (gamepad1.bWasPressed()) intake.setCurrentState(Intake.IntakeState.STOP);
+            intake.update();
+            telemetryM.addLine("running with " + (runWIthVel ? "velocity":"open loop power"));
             telemetryM.addData("shooter velocity", shooter.getVelocity());
             telemetryM.addData("shooter power", shooter.getInstance().getPower());
             telemetryM.update(telemetry);
         }
         public void log() {
-            Log.d("ThroughputTest", String.format("%.2f,%.2f", shooter.getVelocity(), shooter.getInstance().getPower()));
+            Log.d("ThroughputTest", String.format("%.2f,%.2f,%.2f", shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime()));
         }
     }
 

@@ -100,18 +100,8 @@ public final class RobotConstants {
     /* PID, Velocity Constants */
     public static double DrivetrainMaxAcceleration = 5; // motor power / second
 
-    public static double DrivetrainMotorTicksPerRevolution = DcMotorConstants.Motor312EncoderResolution;
-    public static double ShooterMotorTicksPerRevolution = DcMotorConstants.Motor6000EncoderResolution;
-    public static double IntakeMotorTicksPerRevolution = DcMotorConstants.Motor1150EncoderResolution;
-
-    public static double INTAKE_MAX_VELOCITY = 2700; // ticks per second
 
     public static Style ROBOT_DRAW_STYLE = new Style(
             "", "#3F51B5", .75
     );
-    public static double SHOOTER_K_P = 0.01;
-    public static double SHOOTER_K_I = 0;
-    public static double SHOOTER_K_D = 0;
-    public static double SHOOTER_K_S = 0.02;
-    public static double SHOOTER_K_V = 0.0004;
 }

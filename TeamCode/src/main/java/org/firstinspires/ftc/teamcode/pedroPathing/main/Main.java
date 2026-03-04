@@ -58,6 +58,8 @@ public class Main extends LinearOpMode {
     boolean far = true;
     double turretError;
     int pipeline = 3;
+    boolean slowMode = false;
+    boolean useLimelight = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -133,10 +135,12 @@ public class Main extends LinearOpMode {
             hang.update(1, 0);
             LLResult result = limelight.getLatestResult();
             turret.manualControl(gamepad1.left_trigger - gamepad1.right_trigger);
-            turret.limelightAim(result);
-//            turret.setAngleRadians(Math.toRadians(90));
-            turret.lookToGoal(follower.getPose(), false);
-            turret.loop();
+            if (useLimelight) turret.limelightAim(result);
+            else {
+                turret.lookToGoal(follower.getPose(), false);
+                turret.loop();
+            }
+            if (gamepad1.dpadDownWasPressed()) useLimelight ^= true;
             if (gamepad1.xWasPressed()) {
                 far ^= true;
                 Shooter.targetVelocity = far ? backVel : frontVel;
@@ -197,9 +201,11 @@ public class Main extends LinearOpMode {
             }
             intake.update();
 
-            double forward = gamepad1.left_stick_y;
-            double strafe = gamepad1.left_stick_x;
-            double rotate = -gamepad1.right_stick_x;
+            slowMode = gamepad1.left_stick_button || gamepad1.right_stick_button;
+            double mult = slowMode ? 0.4 : 1;
+            double forward = gamepad1.left_stick_y * mult;
+            double strafe = gamepad1.left_stick_x * mult;
+            double rotate = -gamepad1.right_stick_x * mult;
 //            double heading = follower.getHeading();
             double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 

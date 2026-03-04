@@ -32,10 +32,10 @@ public class Intake {
     public void update(){
         switch (currentState){
             case INTAKE:
-                motor.setPower(RobotConstants.INTAKE_MAX_VELOCITY * .9);
+                motor.setPower(1);
                 break;
             case OUTTAKE:
-                motor.setPower(-1 * RobotConstants.INTAKE_MAX_VELOCITY * .9);
+                motor.setPower(-1);
                 break;
             case STOP:
                 motor.setPower(0);
