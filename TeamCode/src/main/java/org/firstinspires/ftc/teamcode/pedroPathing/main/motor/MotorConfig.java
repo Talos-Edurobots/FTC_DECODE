@@ -417,6 +417,10 @@ public class MotorConfig {
         motor.setPower(
                 Range.clip(output, -maxPower, maxPower)
         );
+        telemetryM.addData("shooter output from update", output);
+        telemetryM.addData("kp", kP);
+        telemetryM.addData("max power", maxPower);
+        telemetryM.addData("error", error);
     }
     public void update() {
         if (motorMode == MotorMode.VELOCITY_CONTROL) {

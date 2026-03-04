@@ -20,6 +20,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.Test;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
@@ -66,6 +67,7 @@ public class Debugger extends SelectableOpMode {
 //                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
                 hlt.add("hang control", HangControl::new);
                 hlt.add("turret simple pidf with turret", LimelightTurretAlign::new);
+                hlt.add("through put test", TestThoughPut::new);
             });
         });
     }
@@ -684,13 +686,16 @@ class RampPowerOpMode extends OpMode {
         static double velocity = 2100;
         static boolean runWIthVel = true;
         TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-        Intake intake = new Intake(hardwareMap);
-        Shooter shooter = new Shooter(hardwareMap);
-        Flickers flickers = new Flickers();
+        Intake intake;
+        Shooter shooter;
+        Flickers flickers;
         @Override
         public void init() {
+            intake = new Intake(hardwareMap);
             intake.init();
+            shooter = new Shooter(hardwareMap);
             shooter.init();
+            flickers = new Flickers();
             flickers.init(hardwareMap);
             telemetryM.addLine("init complete");
             telemetryM.update(telemetry);

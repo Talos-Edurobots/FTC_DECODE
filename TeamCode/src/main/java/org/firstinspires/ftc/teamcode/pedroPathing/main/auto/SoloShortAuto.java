@@ -39,15 +39,15 @@ public class SoloShortAuto {
     private SoloShortAuto auto;
     private final Pose startPose = new Pose(48, 135, Math.toRadians(180)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(48, 85, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose gatePose = new Pose(17, 71, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
-    private final Pose gateControlPose1 = new Pose(25, 65, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
+    private final Pose gatePose = new Pose(17, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private final Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
     private final Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose pickupIntake2Pose = new Pose(17, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickup3Pose = new Pose(40, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose pickupIntake3Pose = new Pose(16, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose parkingPose = new Pose(60, 60, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
     private Path scorePreload, openGate, park;
@@ -68,11 +68,12 @@ public class SoloShortAuto {
                 .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), pickup2Pose.getHeading())
                 .build();
 
-        openGate = new Path(new BezierCurve(pickup2Pose, gateControlPose1, gatePose));
-        openGate.setLinearHeadingInterpolation(pickup2Pose.getHeading(), gatePose.getHeading());
+        openGate = new Path(new BezierCurve(pickup1IntakePose, gateControlPose1, gatePose));
+        openGate.setLinearHeadingInterpolation(pickup1IntakePose.getHeading(), gatePose.getHeading());
+        openGate.setVelocityConstraint(10);
 
         scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(gatePose, score2ControlPos, scorePose))
+                .addPath(new BezierCurve(pickupIntake2Pose, score2ControlPos, score2ndPose))
                 .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), scorePose.getHeading())
                 .build();
 
@@ -84,7 +85,7 @@ public class SoloShortAuto {
 
         /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(pickup1IntakePose, scorePose))
+                .addPath(new BezierLine(gatePose, scorePose))
                 .setLinearHeadingInterpolation(pickup1IntakePose.getHeading(), scorePose.getHeading())
                 .build();
 
@@ -94,7 +95,7 @@ public class SoloShortAuto {
 
         /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(scorePose, pickup3Pose))
+                .addPath(new BezierLine(score2ndPose, pickup3Pose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
                 .addPath(new BezierLine(pickup3Pose, pickupIntake3Pose))
                 .setLinearHeadingInterpolation(pickup3Pose.getHeading(), pickupIntake3Pose.getHeading())
@@ -226,7 +227,7 @@ public class SoloShortAuto {
                     follower.followPath(scorePreload);
                     shooter.run(true);
                     shooter.setHoodAngle(.2);
-                    turret.setAngleRadians(Math.toRadians(isBlue ? -50: 50));
+                    turret.setAngleRadians(Math.toRadians(isBlue ? -48: 48));
                     setPathState(1);
                     break;
                 case 1:
@@ -252,7 +253,7 @@ public class SoloShortAuto {
                     }
                     break;
                 case 3:
-                    follower.followPath(grabPickup2);
+                    follower.followPath(grabPickup1);
                     intake.setCurrentState(Intake.IntakeState.INTAKE);
                     setPathState(4);
                     break;
@@ -268,7 +269,7 @@ public class SoloShortAuto {
                     break;
                 case 6:
                         if (!follower.isBusy()) {
-                            follower.followPath(scorePickup2);
+                            follower.followPath(scorePickup1);
                             setPathState(7);
                         }
                         break;
@@ -282,13 +283,16 @@ public class SoloShortAuto {
                     break;
                 case 8:
                     intake.setCurrentState(Intake.IntakeState.INTAKE);
-                    follower.followPath(grabPickup1);
+                    follower.followPath(grabPickup2);
                     setPathState(9);
                     break;
                 case 9:
                     if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
                         intake.setCurrentState(Intake.IntakeState.STOP);
-                        follower.followPath(scorePickup1);
+                        Shooter.targetVelocity = 1300;
+                        shooter.setHoodAngle(.25);
+                        turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
+                        follower.followPath(scorePickup2);
                         setPathState(10);
                     }
                     break;
@@ -307,13 +311,19 @@ public class SoloShortAuto {
                     break;
                 case 12:
                     if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
-                        intake.setCurrentState(Intake.IntakeState.STOP);
+
                         follower.followPath(scorePickup3);
-                        turret.setAngleRadians(Math.toRadians(isBlue ? -35:35));
+//                        turret.setAngleRadians(Math.toRadians(isBlue ? -38:38));
                         setPathState(13);
                     }
                     break;
                 case 13:
+                    if (pathTimer.getElapsedTimeSeconds() > .5) {
+                        intake.setCurrentState(Intake.IntakeState.STOP);
+                    }
+                    setPathState(14);
+                    break;
+                case 14:
                     if (!follower.isBusy()) {
                         shootArtifacts();
                         if (!flickersBusy) {
@@ -321,7 +331,7 @@ public class SoloShortAuto {
                         }
                     }
                     break;
-                case 14:
+                case 15:
                     follower.followPath(park);
                     setPathState(-1);
                     break;
@@ -350,7 +360,7 @@ public class SoloShortAuto {
             follower.update();
             MotorConfig.setDt(opmodeTimer.getElapsedTimeSeconds());
             intake.update();
-            shooter.update(opmodeTimer.getElapsedTimeSeconds());
+            shooter.update();
             turret.loop();
             Drawing.drawRobot(follower.getPose());
             Drawing.sendPacket();
@@ -365,6 +375,7 @@ public class SoloShortAuto {
             telemetryM.addData("x", follower.getPose().getX());
             telemetryM.addData("y", follower.getPose().getY());
             telemetryM.addData("heading", follower.getPose().getHeading());
+            telemetryM.addData("velocity", follower.getVelocity().toString());
             telemetryM.addData("shooter busy", shooter.isBusy());
             telemetryM.addData("Shooter vel", shooter.getVelocity());
             telemetryM.addData("Shooter target", shooter.getTargetVelocity());
@@ -400,7 +411,7 @@ public class SoloShortAuto {
 
             shooter = new Shooter(hwMap);
             shooter.init();
-            Shooter.targetVelocity = 1250;
+            Shooter.targetVelocity = 1150;
 
             setAlliance(isBlue);
             follower = PPConstants.createFollower(hwMap);

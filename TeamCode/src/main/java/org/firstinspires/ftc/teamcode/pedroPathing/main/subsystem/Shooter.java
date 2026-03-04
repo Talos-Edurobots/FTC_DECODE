@@ -51,14 +51,10 @@ public class Shooter {
         hoodServo.setDirection(Servo.Direction.FORWARD);
     }
 
-    public void update(double dt) {
-        this.dt = dt;
+    public void update() {
+        motor.setVelocityTicksPerSecond(targetVelocity);
         calculateFilteredVelocity();
-        if (isRunning) {
-            setVelocity();
-        } else {
-            floatShooter();
-        }
+        setVelocity();
     }
     public double getImpactTime() {
         return impactTimer.seconds();

@@ -292,7 +292,7 @@ public class ExampleAuto extends OpMode {
         follower.update();
         MotorConfig.setDt(opmodeTimer.getElapsedTimeSeconds());
         intake.update();
-        shooter.update(opmodeTimer.getElapsedTimeSeconds());
+        shooter.update();
         turret.loop();
         Drawing.drawRobot(follower.getPose());
         Drawing.sendPacket();

@@ -60,6 +60,7 @@ public class Main extends LinearOpMode {
     int pipeline = 3;
     boolean slowMode = false;
     boolean useLimelight = false;
+    boolean useHang = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -132,7 +133,8 @@ public class Main extends LinearOpMode {
             leds.setLeft(color);
             leds.setRight(color);
             follower.update();
-            hang.update(1, 0);
+            if (gamepad1.backWasPressed()) useHang ^= true;
+            hang.update(1, useHang?90:0);
             LLResult result = limelight.getLatestResult();
             turret.manualControl(gamepad1.left_trigger - gamepad1.right_trigger);
             if (useLimelight) turret.limelightAim(result);
@@ -154,7 +156,7 @@ public class Main extends LinearOpMode {
             if (gamepad1.dpadUpWasPressed()) {
                 shooter.changeState();
             }
-            shooter.update(dt);
+            shooter.update();
 
             if (gamepad1.dpadLeftWasPressed()) {
                 shooter.setHoodAngle(shooter.getHoodAngle() - .1);
@@ -221,6 +223,7 @@ public class Main extends LinearOpMode {
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
+            telemetryM.addData("shooter shooter running", shooter.getRun());
             telemetryM.addData("shooter filtered vel", shooter.filteredVelocity);
             telemetryM.addData("is impact detected", shooter.isImpactDetected());
             telemetryM.addData("Heading", heading);
