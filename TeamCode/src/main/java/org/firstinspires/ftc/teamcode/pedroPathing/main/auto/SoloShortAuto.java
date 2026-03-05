@@ -37,21 +37,24 @@ public class SoloShortAuto {
     private Shooter shooter;
     private Timer pathTimer, actionTimer, opmodeTimer, flickerTimer;
     private SoloShortAuto auto;
-    private final Pose startPose = new Pose(48, 135, Math.toRadians(180)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(48, 85, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose gatePose = new Pose(17, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
-    private final Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
-    private final Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickupIntake2Pose = new Pose(17, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private final Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose parkingPose = new Pose(60, 60, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
+    private  Pose startPose = new Pose(48, 135, Math.toRadians(180)); // Start Pose of our robot.
+    private  Pose scorePose = new Pose(48, 85, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private  Pose gatePose = new Pose(17, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private  Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
+    private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake2Pose = new Pose(17, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private  Pose parkingPose = new Pose(60, 60, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
     private Path scorePreload, openGate, park;
     private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3;
+    public Pose mirror(Pose pose) {
+        return new Pose(144-pose.getX(), 144- pose.getY(), -pose.getHeading());
+    }
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePose));
@@ -119,15 +122,19 @@ public class SoloShortAuto {
 //    }
     private void setAlliance(boolean isBlue) {
         if (isBlue) return;
-        startPose.mirror();
-        scorePose.mirror();
-        pickup1Pose.mirror();
-        pickup1IntakePose.mirror();
-        pickup2Pose.mirror();
-        pickupIntake2Pose.mirror();
-        score2ControlPos.mirror();
-        pickup3Pose.mirror();
-        pickupIntake3Pose.mirror();
+        startPose = startPose.mirror();
+        scorePose = scorePose.mirror();
+        gatePose = gatePose.mirror();
+        gateControlPose1 = gateControlPose1.mirror();
+        pickup1Pose = pickup1Pose.mirror();
+        pickup1IntakePose = pickup1IntakePose.mirror();
+        pickup2Pose = pickup2Pose.mirror();
+        pickupIntake2Pose = pickupIntake2Pose.mirror();
+        score2ControlPos = score2ControlPos.mirror();
+        pickup3Pose = pickup3Pose.mirror();
+        pickupIntake3Pose = pickupIntake3Pose.mirror();
+        score2ndPose = score2ndPose.mirror();
+        parkingPose = parkingPose.mirror();
     }
     public void shootArtifacts() {
         flickersBusy = true;
@@ -290,7 +297,7 @@ public class SoloShortAuto {
                     if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
                         intake.setCurrentState(Intake.IntakeState.STOP);
                         Shooter.targetVelocity = 1300;
-                        shooter.setHoodAngle(.25);
+                        shooter.setHoodAngle(.3);
                         turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
                         follower.followPath(scorePickup2);
                         setPathState(10);

@@ -37,7 +37,7 @@ import java.util.function.Supplier;
 @TeleOp(name = "Main TeleOp", group = "main")
 @Configurable
 public class Main extends LinearOpMode {
-    static int backVel = 2000;
+    static int backVel = 1600;
     static int frontVel = 1200;
     HardwareManager hardwareManager;
     DriveTrain driveTrain;
