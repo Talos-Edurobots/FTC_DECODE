@@ -55,12 +55,13 @@ public class Main extends LinearOpMode {
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Leds leds;
     boolean automatedDrive = false;
-    boolean far = true;
+    boolean isFar = true;
     double turretError;
     int pipeline = 3;
     boolean slowMode = false;
     boolean useLimelight = false;
     boolean useHang = false;
+    double hoodFarAngle = .5, hoodCloseAngle = .28;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -129,9 +130,10 @@ public class Main extends LinearOpMode {
             oldTime = newTime;
             hardwareManager.update();
             MotorConfig.setDt(dt);
-            double color = shooter.isBusy() ? .28 : .5;
-            leds.setLeft(color);
-            leds.setRight(color);
+            double color1 = shooter.isBusy() ? .28 : .5;
+            double color2 = isFar ? .388 : .666;
+            leds.setLeft(color1);
+            leds.setRight(color2);
             follower.update();
             if (gamepad1.backWasPressed()) useHang ^= true;
             hang.update(1, useHang?90:0);
@@ -144,8 +146,9 @@ public class Main extends LinearOpMode {
             }
             if (gamepad1.dpadDownWasPressed()) useLimelight ^= true;
             if (gamepad1.xWasPressed()) {
-                far ^= true;
-                Shooter.targetVelocity = far ? backVel : frontVel;
+                isFar ^= true;
+                Shooter.targetVelocity = isFar ? backVel : frontVel;
+                shooter.setHoodAngle(isFar ? hoodFarAngle : hoodCloseAngle);
             }
 
             if (gamepad1.options) {

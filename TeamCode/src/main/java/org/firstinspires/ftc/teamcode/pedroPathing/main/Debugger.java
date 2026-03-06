@@ -758,7 +758,7 @@ class CollectData extends OpMode {
         follower.startTeleopDrive();
         telemetryM.addLine("init complete");
         telemetryM.update(telemetry);
-        Log.d(tag, "is_successful,pose,turret_angle,shooter_velocity,hood_angle");
+        Log.d(tag, "is_successful,pose,turret_angle,shooter_velocity,hood_angle,velocity");
     }
 
     @Override
@@ -773,22 +773,24 @@ class CollectData extends OpMode {
         double shooterVel =  shooter.getVelocity();
         double hoodAngle = shooter.getHoodAngle();
         String followerPose = follower.getPose().toString();
+        String vel = follower.getVelocity().toString();
         if (gamepad1.xWasPressed()) runShooter ^= true;
         if (gamepad1.aWasPressed()) Log.d(
                 tag, String.format(
-                        "%b,%s,%f,%f,%f",
-                        true, followerPose, turretPos, shooterVel, hoodAngle
+                        "%b,%s,%f,%f,%f,%s",
+                        true, followerPose, turretPos, shooterVel, hoodAngle, vel
                 )
         );
         else if (gamepad1.bWasPressed()) Log.d(
                 tag, String.format(
-                        "%b,%s,%f,%f,%f",
-                        false, followerPose, turretPos, shooterVel, hoodAngle
+                        "%b,%s,%f,%f,%f,%s",
+                        false, followerPose, turretPos, shooterVel, hoodAngle, vel
                 )
         );
         Shooter.targetVelocity = shooterTarget;
         shooter.run(runShooter);
         shooter.update();
+        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
         follower.update();
         telemetryM.addData("follower pose", follower.getPose().toString());
         telemetryM.addData("turret angle", turretPos);
