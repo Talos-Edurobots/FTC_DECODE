@@ -1,22 +1,28 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
 
+import android.provider.SyncStateContract;
 import android.util.Log;
 
 import com.bylazar.configurables.PanelsConfigurables;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.pedropathing.telemetry.SelectableOpMode;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.sun.tools.javac.code.Attribute;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
@@ -25,6 +31,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.VoltageSensorReadout;
 
 
@@ -68,6 +75,7 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("hang control", HangControl::new);
                 hlt.add("turret simple pidf with turret", LimelightTurretAlign::new);
                 hlt.add("through put test", TestThoughPut::new);
+                hlt.add("collect data", CollectData::new);
             });
         });
     }
@@ -725,4 +733,67 @@ class RampPowerOpMode extends OpMode {
             Log.d("ThroughputTest", String.format("%.2f,%.2f,%.2f", shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime()));
         }
     }
+
+class CollectData extends OpMode {
+    Pose startPose = new Pose(72, 72, 0);
+    Follower follower;
+    Flickers flickers;
+    Shooter shooter;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    MotorConfig turret = RobotConstants.TURRET_CONFIG;
+    final String tag = "collectData";
+    boolean runShooter = true;
+    static double shooterTarget = 1000;
+    double newTime, dt, oldTime;
+
+    @Override
+    public void init() {
+        flickers = new Flickers();
+        flickers.init(hardwareMap);
+        shooter = new Shooter(hardwareMap);
+        shooter.init();
+        follower = PPConstants.createFollower(hardwareMap);
+        follower.setStartingPose(startPose);
+        turret.init(hardwareMap);
+        follower.startTeleopDrive();
+        telemetryM.addLine("init complete");
+        telemetryM.update(telemetry);
+        Log.d(tag, "is_successful,pose,turret_angle,shooter_velocity,hood_angle");
+    }
+
+    @Override
+    public void loop() {
+        newTime = getRuntime();
+        dt = newTime - oldTime;
+        oldTime = newTime;
+        flickers.leftFlick(gamepad1.left_bumper);
+        flickers.rightFlick(gamepad1.right_bumper);
+        shooter.setHoodAngle(shooter.getHoodAngle() + .5 * dt * (gamepad1.right_trigger-gamepad1.left_trigger));
+        double turretPos = turret.getCurrentPosition()/turret.getMotorType().getTicksPerRadian();
+        double shooterVel =  shooter.getVelocity();
+        double hoodAngle = shooter.getHoodAngle();
+        String followerPose = follower.getPose().toString();
+        if (gamepad1.xWasPressed()) runShooter ^= true;
+        if (gamepad1.aWasPressed()) Log.d(
+                tag, String.format(
+                        "%b,%s,%f,%f,%f",
+                        true, followerPose, turretPos, shooterVel, hoodAngle
+                )
+        );
+        else if (gamepad1.bWasPressed()) Log.d(
+                tag, String.format(
+                        "%b,%s,%f,%f,%f",
+                        false, followerPose, turretPos, shooterVel, hoodAngle
+                )
+        );
+        Shooter.targetVelocity = shooterTarget;
+        shooter.run(runShooter);
+        shooter.update();
+        follower.update();
+        telemetryM.addData("follower pose", follower.getPose().toString());
+        telemetryM.addData("turret angle", turretPos);
+        telemetryM.addData("shooter velocity", shooterVel);
+        telemetryM.update(telemetry);
+    }
+}
 
