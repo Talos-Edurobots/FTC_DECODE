@@ -47,7 +47,7 @@ public class SoloShortAuto {
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private  Pose pickupIntake2Pose = new Pose(17, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake2Pose = new Pose(18, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
@@ -160,7 +160,7 @@ public class SoloShortAuto {
                 break;
             case 1:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
-                if (flickerTimer.getElapsedTimeSeconds() > .3) {
+                if (flickerTimer.getElapsedTimeSeconds() > .6) {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
@@ -182,7 +182,7 @@ public class SoloShortAuto {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
                 if (flickerTimer.getElapsedTimeSeconds() > .5) {
 
-                    flickers.rightFlick(true);
+                    flickers.leftFlick(true);
                     setFlickerState(4);
                 }
                 break;
@@ -192,7 +192,7 @@ public class SoloShortAuto {
                     /* Score Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    flickers.rightFlick(false);
+                    flickers.leftFlick(false);
                     setFlickerState(5);
                 }
                 break;
@@ -203,7 +203,7 @@ public class SoloShortAuto {
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     //                    intake.setCurrentState(Intake.IntakeState.STOP);
-                    flickers.leftFlick(true);
+                    flickers.rightFlick(true);
                     setFlickerState(6);
                 }
                 break;
@@ -211,19 +211,19 @@ public class SoloShortAuto {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (flickerTimer.getElapsedTimeSeconds() > .5) {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-                    flickers.leftFlick(false);
+                    flickers.rightFlick(false);
                     setFlickerState(7);
                 }
                 break;
             case 7:
                 if (flickerTimer.getElapsedTimeSeconds() > .5) {
-                    flickers.rightFlick(true);
+                    flickers.leftFlick(true);
                     setFlickerState(8);
                 }
                 break;
             case 8:
                 if (flickerTimer.getElapsedTimeSeconds() > .5) {
-                    flickers.rightFlick(false);
+                    flickers.leftFlick(false);
                     setFlickerState(0);
                     flickersBusy = false;
                 }
@@ -294,13 +294,13 @@ public class SoloShortAuto {
             case 8:
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
                 follower.followPath(grabPickup2);
+                Shooter.targetVelocity = 1250;
+                shooter.setHoodAngle(.2);
                 setPathState(9);
                 break;
             case 9:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
+                if (!follower.isBusy()/* && pathTimer.getElapsedTimeSeconds() > .05*/) {
                     intake.setCurrentState(Intake.IntakeState.STOP);
-                    Shooter.targetVelocity = 1300;
-                    shooter.setHoodAngle(.3);
                     turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
                     follower.followPath(scorePickup2);
                     setPathState(10);
@@ -328,10 +328,10 @@ public class SoloShortAuto {
                 }
                 break;
             case 13:
-                if (pathTimer.getElapsedTimeSeconds() > .5) {
+                if (pathTimer.getElapsedTimeSeconds() > .2) {
                     intake.setCurrentState(Intake.IntakeState.STOP);
+                    setPathState(14);
                 }
-                setPathState(14);
                 break;
             case 14:
                 if (!follower.isBusy()) {

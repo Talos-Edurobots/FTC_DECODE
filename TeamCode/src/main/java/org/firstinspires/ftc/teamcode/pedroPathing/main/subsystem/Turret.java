@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
 
 @Configurable
 public class Turret {
-    static double maxPower = .5, kp=0.005, kd = .001, ki=0, ks=0, manualMaxPower = .1, ramp = 1;
+    static double maxPower = .5, kp=0.005, kd = .001, ki=0, ks=0, manualMaxPower = .2, ramp = 1;
     HardwareMap hwmap;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;

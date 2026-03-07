@@ -59,9 +59,9 @@ public class Main extends LinearOpMode {
     double turretError;
     int pipeline = 3;
     boolean slowMode = false;
-    boolean useLimelight = false;
+    boolean useLimelight = true;
     boolean useHang = false;
-    double hoodFarAngle = .5, hoodCloseAngle = .28;
+    static double hoodFarAngle = 0.1, hoodCloseAngle = .28;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -132,7 +132,7 @@ public class Main extends LinearOpMode {
             hardwareManager.update();
             MotorConfig.setDt(dt);
             double color1 = shooter.isBusy() ? .28 : .5;
-            double color2 = isFar ? .388 : .666;
+            double color2 = isFar ? .333 : .666;
             leds.setLeft(color1);
             leds.setRight(color2);
             follower.update();
