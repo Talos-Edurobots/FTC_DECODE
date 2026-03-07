@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
@@ -24,7 +25,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 @Autonomous(name = "Example Auto", group = "Examples")
 public class ExampleAuto extends OpMode {
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    private Follower follower;
+    private static Follower follower;
     private HardwareManager hwManager;
     private Intake intake;
     private Flickers flickers;
@@ -354,6 +355,5 @@ public class ExampleAuto extends OpMode {
     }
 
     /** We do not use this because everything should automatically disable **/
-    @Override
-    public void stop() {}
+
 }

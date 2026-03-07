@@ -104,4 +104,6 @@ public final class RobotConstants {
     public static Style ROBOT_DRAW_STYLE = new Style(
             "", "#3F51B5", .75
     );
+    public static final String ALLIANCE_KEY = "Alliance";
+    public static final String FOLLOWER_KEY = "Follower";
 }

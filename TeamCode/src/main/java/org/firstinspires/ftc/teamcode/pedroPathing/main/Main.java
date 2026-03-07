@@ -67,7 +67,8 @@ public class Main extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         double oldTime = 0, newTime, dt;
 
-        follower = PPConstants.createFollower(hardwareMap);
+        follower = (Follower) blackboard.get(RobotConstants.FOLLOWER_KEY);
+        if (follower == null) follower = PPConstants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose);
         follower.update();
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
@@ -237,6 +238,10 @@ public class Main extends LinearOpMode {
             telemetryM.addData("follower x", follower.getPose().getX());
             telemetryM.addData("pinpoint heading", follower.getHeading());
             telemetryM.update(telemetry);
+        }
+        if (isStopRequested()) {
+            blackboard.put(RobotConstants.FOLLOWER_KEY, null);
+            blackboard.put(RobotConstants.ALLIANCE_KEY, null);
         }
     }
 }
