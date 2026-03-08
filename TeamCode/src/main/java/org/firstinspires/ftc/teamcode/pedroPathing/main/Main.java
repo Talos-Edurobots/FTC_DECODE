@@ -131,14 +131,14 @@ public class Main extends LinearOpMode {
             oldTime = newTime;
             hardwareManager.update();
             MotorConfig.setDt(dt);
-            double color1 = shooter.isBusy() ? .28 : .5;
-            double color2 = isFar ? .333 : .666;
-            leds.setLeft(color1);
-            leds.setRight(color2);
             follower.update();
             if (gamepad1.backWasPressed()) useHang ^= true;
             hang.update(1, useHang?90:0);
             LLResult result = limelight.getLatestResult();
+            double color1 = shooter.isBusy() ? .28 : Math.abs(result.getTx())<1 ? .5 : .333;
+            double color2 = isFar ? .555 : .722;
+            leds.setLeft(color1);
+            leds.setRight(color2);
             turret.manualControl(gamepad1.left_trigger - gamepad1.right_trigger);
             if (useLimelight) turret.limelightAim(result);
             else {
