@@ -135,7 +135,7 @@ public class Main extends LinearOpMode {
             if (gamepad1.backWasPressed()) useHang ^= true;
             hang.update(1, useHang?90:0);
             LLResult result = limelight.getLatestResult();
-            double color1 = shooter.isBusy() ? .28 : Math.abs(result.getTx())<1 ? .5 : .333;
+            double color1 = shooter.isBusy() ? .28 : Math.abs(result.getTx())<3 && result.getTx() != 0 ? .5 : .333;
             double color2 = isFar ? .555 : .722;
             leds.setLeft(color1);
             leds.setRight(color2);
