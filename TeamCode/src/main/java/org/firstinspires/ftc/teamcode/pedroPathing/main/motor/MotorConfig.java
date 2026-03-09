@@ -415,7 +415,7 @@ public class MotorConfig {
                                 / batteryVoltage;
 
         motor.setPower(
-                Range.clip(output, -maxPower, maxPower)
+                Range.clip(output, 0, maxPower)
         );
         telemetryM.addData("shooter output from update", output);
         telemetryM.addData("kp", kP);

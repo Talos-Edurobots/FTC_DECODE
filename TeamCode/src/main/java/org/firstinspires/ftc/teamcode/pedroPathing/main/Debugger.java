@@ -707,13 +707,14 @@ class RampPowerOpMode extends OpMode {
             flickers.init(hardwareMap);
             telemetryM.addLine("init complete");
             telemetryM.update(telemetry);
-            Log.d("ThroughputTest", "shooter_velocity,shooter_power,time");
+            Log.d("ThroughputTest", "isPIDF,shooter_velocity,shooter_power,time");
         }
 
         @Override
         public void loop() {
             flickers.leftFlick(gamepad1.left_bumper);
             flickers.rightFlick(gamepad1.right_bumper);
+            if (gamepad1.right_bumper || gamepad1.left_bumper) log();
             if (runWIthVel) {
                 Shooter.targetVelocity = velocity;
                 shooter.run(true);
@@ -730,7 +731,7 @@ class RampPowerOpMode extends OpMode {
             telemetryM.update(telemetry);
         }
         public void log() {
-            Log.d("ThroughputTest", String.format("%.2f,%.2f,%.2f", shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime()));
+            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f", runWIthVel, shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime()));
         }
     }
 
