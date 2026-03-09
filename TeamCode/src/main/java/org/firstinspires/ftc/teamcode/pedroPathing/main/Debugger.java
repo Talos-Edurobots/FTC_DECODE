@@ -734,7 +734,7 @@ class RampPowerOpMode extends OpMode {
             Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f", runWIthVel, shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime()));
         }
     }
-
+@Configurable
 class CollectData extends OpMode {
     Pose startPose = new Pose(72, 72, 0);
     Follower follower;
@@ -753,6 +753,7 @@ class CollectData extends OpMode {
         flickers.init(hardwareMap);
         shooter = new Shooter(hardwareMap);
         shooter.init();
+        shooter.run(false);
         follower = PPConstants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         turret.init(hardwareMap);
@@ -771,11 +772,13 @@ class CollectData extends OpMode {
         flickers.rightFlick(gamepad1.right_bumper);
         shooter.setHoodAngle(shooter.getHoodAngle() + .5 * dt * (gamepad1.right_trigger-gamepad1.left_trigger));
         double turretPos = turret.getCurrentPosition()/turret.getMotorType().getTicksPerRadian();
-        double shooterVel =  shooter.getVelocity();
+        double shooterVel =  shooter.getTargetVelocity();
         double hoodAngle = shooter.getHoodAngle();
         String followerPose = follower.getPose().toString();
         String vel = follower.getVelocity().toString();
-        if (gamepad1.xWasPressed()) runShooter ^= true;
+        if (gamepad1.xWasPressed()) {
+            shooter.changeState();
+        }
         if (gamepad1.aWasPressed()) Log.d(
                 tag, String.format(
                         "%b,%s,%f,%f,%f,%s",
@@ -789,7 +792,6 @@ class CollectData extends OpMode {
                 )
         );
         Shooter.targetVelocity = shooterTarget;
-        shooter.run(runShooter);
         shooter.update();
         follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
         follower.update();

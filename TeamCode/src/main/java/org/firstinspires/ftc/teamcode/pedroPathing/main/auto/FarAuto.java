@@ -285,64 +285,68 @@ public class FarAuto {
                 }
                 break;
             case 2:
-                shootArtifacts();
-                if (!flickersBusy) {
+                if (pathTimer.getElapsedTimeSeconds() > 1) {
                     setPathState(3);
                 }
-                break;
             case 3:
-                follower.followPath(grabPickup3);
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
-                setPathState(4);
+                shootArtifacts();
+                if (!flickersBusy) {
+                    setPathState(4);
+                }
                 break;
             case 4:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.4){
-                    intake.setCurrentState(Intake.IntakeState.STOP);
-                    setPathState(5);
-                }
+                follower.followPath(grabPickup3);
+                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                setPathState(5);
                 break;
             case 5:
-                setPathState(6);
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.4){
+                    intake.setCurrentState(Intake.IntakeState.STOP);
+                    setPathState(6);
+                }
                 break;
             case 6:
-                if (!follower.isBusy()) {
-                    follower.followPath(scorePickup3);
-                    setPathState(7);
-                }
+                setPathState(7);
                 break;
             case 7:
                 if (!follower.isBusy()) {
+                    follower.followPath(scorePickup3);
                     setPathState(8);
                 }
                 break;
             case 8:
-                if (pathTimer.getElapsedTimeSeconds() > 1) {
-                    shootArtifacts();
-                    if (!flickersBusy) {
-                        setPathState(9);
-                    }
+                if (!follower.isBusy()) {
+                    setPathState(9);
                 }
                 break;
             case 9:
+                if (pathTimer.getElapsedTimeSeconds() > 1) {
+                    shootArtifacts();
+                    if (!flickersBusy) {
+                        setPathState(10);
+                    }
+                }
+                break;
+            case 10:
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
                 follower.followPath(grabHuman);
 //                Shooter.targetVelocity = 1250;
 //                shooter.setHoodAngle(.2);
-                setPathState(10);
+                setPathState(11);
                 break;
-            case 10:
+            case 11:
                 if (!follower.isBusy()/* && pathTimer.getElapsedTimeSeconds() > .05*/) {
                     intake.setCurrentState(Intake.IntakeState.STOP);
                     follower.followPath(scoreHuman);
-                    setPathState(11);
-                }
-                break;
-            case 11:
-                if (!follower.isBusy()) {
                     setPathState(12);
                 }
                 break;
             case 12:
+                if (!follower.isBusy()) {
+                    setPathState(13);
+                }
+                break;
+            case 13:
                 if (pathTimer.getElapsedTimeSeconds() > 1) {
                     shootArtifacts();
                     if (!flickersBusy) {
@@ -350,12 +354,12 @@ public class FarAuto {
                     }
                 }
                 break;
-            case 13:
+            case 14:
 //                follower.followPath(grabPickup3);
 //                intake.setCurrentState(Intake.IntakeState.INTAKE);
 //                setPathState(12);
                 break;
-            case 14:
+            case 15:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
 
                     follower.followPath(scorePickup3);
@@ -363,13 +367,13 @@ public class FarAuto {
                     setPathState(13);
                 }
                 break;
-            case 15:
+            case 16:
                 if (pathTimer.getElapsedTimeSeconds() > .2) {
                     intake.setCurrentState(Intake.IntakeState.STOP);
                     setPathState(14);
                 }
                 break;
-            case 16:
+            case 17:
                 if (!follower.isBusy()) {
                     shootArtifacts();
                     if (!flickersBusy) {
@@ -377,7 +381,7 @@ public class FarAuto {
                     }
                 }
                 break;
-            case 17:
+            case 18:
                 follower.followPath(park);
                 setPathState(-1);
                 break;
