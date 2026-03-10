@@ -55,7 +55,7 @@ public class Main extends LinearOpMode {
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Leds leds;
     boolean automatedDrive = false;
-    boolean isFar = true;
+    boolean isFar = false;
     double turretError;
     int pipeline = 3;
     boolean slowMode = false;
@@ -87,7 +87,9 @@ public class Main extends LinearOpMode {
         hang.init(hardwareMap);
         shooter = new Shooter(hardwareMap);
         shooter.init();
-        shooter.run(false);
+        shooter.run(true);
+        Shooter.targetVelocity = frontVel;
+        shooter.setHoodAngle(hoodCloseAngle);
 
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(RobotConstants.IMU_PARAMETERS);
@@ -132,7 +134,13 @@ public class Main extends LinearOpMode {
             hardwareManager.update();
             MotorConfig.setDt(dt);
             follower.update();
-            if (gamepad1.backWasPressed()) useHang ^= true;
+            if (gamepad1.backWasPressed()) {
+                if (!useHang) {
+                    intake.setCurrentState(Intake.IntakeState.STOP);
+                    shooter.run(false);
+                }
+                useHang ^= true;
+            };
             hang.update(1, useHang?90:0);
             LLResult result = limelight.getLatestResult();
             double color1 = shooter.isBusy() ? .28 : Math.abs(result.getTx())<3 && result.getTx() != 0 ? .5 : .333;
@@ -207,8 +215,8 @@ public class Main extends LinearOpMode {
             }
             intake.update();
 
-            slowMode = gamepad1.left_stick_button || gamepad1.right_stick_button;
-            double mult = slowMode ? 0.4 : 1;
+            if (gamepad1.leftStickButtonWasPressed() || gamepad1.rightStickButtonWasPressed()) slowMode ^= true;
+            double mult = slowMode ? 0.25 : 1;
             double forward = gamepad1.left_stick_y * mult;
             double strafe = gamepad1.left_stick_x * mult;
             double rotate = -gamepad1.right_stick_x * mult;
