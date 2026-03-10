@@ -185,7 +185,7 @@ public class SoloShortAuto {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
                 if (flickerTimer.getElapsedTimeSeconds() > .5) {
 
-                    flickers.leftFlick(true);
+                    flickers.rightFlick(true);
                     setFlickerState(4);
                 }
                 break;
@@ -195,7 +195,7 @@ public class SoloShortAuto {
                     /* Score Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    flickers.leftFlick(false);
+                    flickers.rightFlick(false);
                     setFlickerState(5);
                 }
                 break;
@@ -206,7 +206,7 @@ public class SoloShortAuto {
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     //                    intake.setCurrentState(Intake.IntakeState.STOP);
-                    flickers.rightFlick(true);
+                    flickers.leftFlick(true);
                     setFlickerState(6);
                 }
                 break;
@@ -214,19 +214,19 @@ public class SoloShortAuto {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (flickerTimer.getElapsedTimeSeconds() > .5) {
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-                    flickers.rightFlick(false);
+                    flickers.leftFlick(false);
                     setFlickerState(7);
                 }
                 break;
             case 7:
                 if (flickerTimer.getElapsedTimeSeconds() > .5) {
-                    flickers.leftFlick(true);
+                    flickers.rightFlick(true);
                     setFlickerState(8);
                 }
                 break;
             case 8:
                 if (flickerTimer.getElapsedTimeSeconds() > .5) {
-                    flickers.leftFlick(false);
+                    flickers.rightFlick(false);
                     setFlickerState(0);
                     flickersBusy = false;
                 }
