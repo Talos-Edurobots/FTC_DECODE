@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
 import java.util.HashMap;
 
-public class SoloShortAuto {
+public class ShortPickup3 {
     boolean flickersBusy = false, isBlue;
     int flickerState, pathState;
     Hang hang;
@@ -52,7 +52,7 @@ public class SoloShortAuto {
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private  Pose parkingPose = new Pose(60, 60, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
+    private  Pose parkingPose = new Pose(50, 70, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
     private Path scorePreload, openGate, park;
     private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3;
     public void buildPaths() {
@@ -91,7 +91,7 @@ public class SoloShortAuto {
 
         /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         scorePickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(gatePose, scorePose))
+                .addPath(new BezierLine(pickup1IntakePose, scorePose))
                 .setLinearHeadingInterpolation(pickup1IntakePose.getHeading(), scorePose.getHeading())
                 .setGlobalDeceleration()
                 .build();
@@ -116,11 +116,11 @@ public class SoloShortAuto {
                 .setGlobalDeceleration()
                 .build();
 
-        park = new Path(new BezierLine(score2ndPose, parkingPose));
-        park.setLinearHeadingInterpolation(score2ndPose.getHeading(), parkingPose.getHeading());
+        park = new Path(new BezierLine(pickupIntake3Pose, parkingPose));
+        park.setLinearHeadingInterpolation(pickupIntake3Pose.getHeading(), parkingPose.getHeading());
     }
 
-//    public SoloShortAuto get() {
+    //    public SoloShortAuto get() {
 //        if (auto == null) {
 //            auto = new SoloShortAuto();
 //        }
@@ -304,15 +304,15 @@ public class SoloShortAuto {
                 }
                 break;
             case 5:
-                follower.followPath(openGate);
+//                follower.followPath(openGate);
                 setPathState(6);
                 break;
             case 6:
-                    if (!follower.isBusy()) {
-                        follower.followPath(scorePickup1);
-                        setPathState(7);
-                    }
-                    break;
+                if (!follower.isBusy()) {
+                    follower.followPath(scorePickup1);
+                    setPathState(7);
+                }
+                break;
             case 7:
                 if (!follower.isBusy()) {
                     shootArtifacts();
@@ -352,7 +352,7 @@ public class SoloShortAuto {
             case 12:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
 
-                    follower.followPath(scorePickup3);
+//                    follower.followPath(scorePickup3);
 //                        turret.setAngleRadians(Math.toRadians(isBlue ? -38:38));
                     setPathState(13);
                 }
@@ -360,7 +360,7 @@ public class SoloShortAuto {
             case 13:
                 if (pathTimer.getElapsedTimeSeconds() > 0) {
                     intake.setCurrentState(Intake.IntakeState.STOP);
-                    setPathState(14);
+                    setPathState(15);
                 }
                 break;
             case 14:
@@ -378,6 +378,7 @@ public class SoloShortAuto {
             case -1:
                 shooter.run(false);
                 intake.setCurrentState(Intake.IntakeState.STOP);
+                break;
         }
     }
 
@@ -463,8 +464,8 @@ public class SoloShortAuto {
     }
 
     public void stop(HashMap blackboard) {
-            blackboard.put(RobotConstants.ALLIANCE_KEY, isBlue ? "BLUE":"RED");
-            blackboard.put(RobotConstants.FOLLOWER_KEY, follower);
+        blackboard.put(RobotConstants.ALLIANCE_KEY, isBlue ? "BLUE":"RED");
+        blackboard.put(RobotConstants.FOLLOWER_KEY, follower);
     }
 
 }

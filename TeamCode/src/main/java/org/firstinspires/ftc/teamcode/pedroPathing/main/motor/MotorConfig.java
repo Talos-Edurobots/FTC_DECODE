@@ -87,6 +87,15 @@ public class MotorConfig {
 
     private MotorUse motorUse = MotorUse.FREE_SPIN;
 
+    public void setCurrentAlert(double currentAlert) {
+        this.currentAlert = currentAlert;
+    }
+
+    double currentAlert = 0;
+    public boolean isOverCurrent() {
+        return motor.isOverCurrent();
+    }
+
     /* ---------------- Control gains ---------------- */
 
     public double kP, kI, kD;
@@ -203,6 +212,9 @@ public class MotorConfig {
         }
         else {
             motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
+        if (currentAlert != 0) {
+            motor.setCurrentAlert(currentAlert, CurrentUnit.AMPS);
         }
         return motor;
     }

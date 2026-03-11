@@ -34,9 +34,9 @@ import java.util.function.Supplier;
 
 
 //Im here
-@TeleOp(name = "Main TeleOp", group = "main")
+@TeleOp(name = "MainRed TeleOp", group = "main")
 @Configurable
-public class Main extends LinearOpMode {
+public class MainRed extends LinearOpMode {
     static int backVel = 1500;
     static int frontVel = 1200;
     HardwareManager hardwareManager;
@@ -57,7 +57,7 @@ public class Main extends LinearOpMode {
     boolean automatedDrive = false;
     boolean isFar = false;
     double turretError;
-    int pipeline = 3;
+    int pipeline = 2;
     boolean slowMode = false;
     boolean useLimelight = true;
     boolean useHang = false;
@@ -79,7 +79,7 @@ public class Main extends LinearOpMode {
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         telemetry.setMsTransmissionInterval(11);
-        limelight.pipelineSwitch(2);
+        limelight.pipelineSwitch(pipeline);
 
         leds = new Leds();
         leds.init(hardwareMap);
@@ -143,10 +143,21 @@ public class Main extends LinearOpMode {
             };
             hang.update(1, useHang?90:0);
             LLResult result = limelight.getLatestResult();
-            double color1 = shooter.isBusy() ? .28 : Math.abs(result.getTx())<3 && result.getTx() != 0 ? .5 : .333;
+            boolean isTurretTarget = Math.abs(result.getTx())<3 && result.getTx() != 0;
+            double color1 = shooter.isBusy() ? .28 : isTurretTarget ? .5 : .333;
             double color2 = isFar ? .555 : .722;
-            leds.setLeft(color1);
-            leds.setRight(color2);
+            if (isTurretTarget && shooter.isBusy()) {
+                leds.blinkLeft(0.2, dt, 1, 0);
+            }
+            else {
+                leds.setLeft(color1);
+            }
+            if (intake.getCurrentState() == Intake.IntakeState.STOP) {
+                leds.blinkRight(0.2, dt, color2, 1);
+            }
+            else {
+                leds.setRight(color2);
+            }
             turret.manualControl(gamepad1.left_trigger - gamepad1.right_trigger);
             if (useLimelight) turret.limelightAim(result);
             else {

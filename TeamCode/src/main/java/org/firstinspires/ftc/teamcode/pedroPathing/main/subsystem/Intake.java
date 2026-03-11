@@ -9,7 +9,8 @@ public class Intake {
     public enum IntakeState {
         INTAKE,
         OUTTAKE,
-        STOP
+        STOP,
+        KEEP
     }
     private IntakeState currentState = IntakeState.STOP;
 
@@ -28,6 +29,10 @@ public class Intake {
 
     public void init() {
         motor.init(hwMap);
+        motor.setCurrentAlert(6);
+    }
+    public boolean isOverCurrent() {
+        return motor.isOverCurrent();
     }
     public void update(){
         switch (currentState){
@@ -40,6 +45,8 @@ public class Intake {
             case STOP:
                 motor.setPower(0);
                 break;
+            case KEEP:
+                motor.setPower(.3);
         }
     }
     public double getVelocity(){
