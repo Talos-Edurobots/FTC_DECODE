@@ -57,7 +57,7 @@ public class MainRed extends LinearOpMode {
     boolean automatedDrive = false;
     boolean isFar = false;
     double turretError;
-    int pipeline = 2;
+    int pipeline = 3;
     boolean slowMode = false;
     boolean useLimelight = true;
     boolean useHang = false;

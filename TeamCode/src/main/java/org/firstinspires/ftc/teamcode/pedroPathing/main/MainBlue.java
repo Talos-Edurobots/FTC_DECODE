@@ -143,10 +143,21 @@ public class MainBlue extends LinearOpMode {
             };
             hang.update(1, useHang?90:0);
             LLResult result = limelight.getLatestResult();
-            double color1 = shooter.isBusy() ? .28 : Math.abs(result.getTx())<3 && result.getTx() != 0 ? .5 : .333;
+            boolean isTurretTarget = Math.abs(result.getTx())<3 && result.getTx() != 0;
+            double color1 = shooter.isBusy() ? .28 : isTurretTarget ? .5 : .333;
             double color2 = isFar ? .555 : .722;
-            leds.setLeft(color1);
-            leds.setRight(color2);
+            if (isTurretTarget && shooter.isBusy()) {
+                leds.blinkLeft(0.2, dt, 1, 0);
+            }
+            else {
+                leds.setLeft(color1);
+            }
+            if (intake.getCurrentState() == Intake.IntakeState.STOP) {
+                leds.blinkRight(0.2, dt, color2, 1);
+            }
+            else {
+                leds.setRight(color2);
+            }
             turret.manualControl(gamepad1.left_trigger - gamepad1.right_trigger);
             if (useLimelight) turret.limelightAim(result);
             else {
