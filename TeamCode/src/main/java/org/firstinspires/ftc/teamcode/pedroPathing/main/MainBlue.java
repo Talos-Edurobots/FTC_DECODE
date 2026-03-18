@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 
 
 //Im here
-@TeleOp(name = "MainBlue TeleOp", group = "main")
+@TeleOp(name = "MainBlue TeleOp", group = "!main")
 @Configurable
 public class MainBlue extends LinearOpMode {
     static int backVel = 1500;
@@ -186,6 +186,9 @@ public class MainBlue extends LinearOpMode {
             }
             if (gamepad1.dpadRightWasPressed()) {
                 shooter.setHoodAngle(shooter.getHoodAngle() + .1);
+            }
+            if (gamepad1.startWasPressed()) {
+                follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
             }
 
             flickers.leftFlick(gamepad1.left_bumper);

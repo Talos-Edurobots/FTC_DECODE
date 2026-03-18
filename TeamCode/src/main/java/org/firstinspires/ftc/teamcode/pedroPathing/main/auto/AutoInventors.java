@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
 import java.util.HashMap;
 
-public class FarAuto {
+public class AutoInventors {
     boolean flickersBusy = false, isBlue;
     int flickerState, pathState;
     Hang hang;
@@ -42,7 +42,7 @@ public class FarAuto {
     private SoloShortAuto auto;
     private  Pose startPose = new Pose(56, 8, Math.toRadians(180)); // Start Pose of our robot.
     private  Pose scorePose = new Pose(56, 18, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-//    private  Pose gatePose = new Pose(17, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    //    private  Pose gatePose = new Pose(17, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
 //    private  Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
@@ -51,7 +51,7 @@ public class FarAuto {
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-//    private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    //    private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private Pose pickupHuman = new Pose(11, 9, Math.toRadians(180)); // Position to pick up the human player drop.
     private  Pose parkingPose = new Pose(60, 30, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
     private Pose backPose = new Pose(20, 8, Math.toRadians(180));
@@ -209,7 +209,7 @@ public class FarAuto {
                 break;
             case 3:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
-                if (flickerTimer.getElapsedTimeSeconds() > .5) {
+                if (flickerTimer.getElapsedTimeSeconds() > .7) {
 
                     flickers.leftFlick(true);
                     setFlickerState(4);
@@ -292,17 +292,17 @@ public class FarAuto {
             case 3:
                 shootArtifacts();
                 if (!flickersBusy) {
-                    setPathState(4);
+                    setPathState(10);
                 }
                 break;
             case 4:
-                follower.followPath(grabPickup3);
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
+//                follower.followPath(grabPickup3);
+//                intake.setCurrentState(Intake.IntakeState.INTAKE);
                 setPathState(5);
                 break;
             case 5:
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.4){
-                    intake.setCurrentState(Intake.IntakeState.STOP);
+//                    intake.setCurrentState(Intake.IntakeState.STOP);
                     setPathState(6);
                 }
                 break;
@@ -311,8 +311,7 @@ public class FarAuto {
                 break;
             case 7:
                 if (!follower.isBusy()) {
-                    follower.followPath(scorePickup3);
-                    turret.setAngleRadians(Math.toRadians(isBlue ? -66: 66));
+//                    follower.followPath(scorePickup3);
                     setPathState(8);
                 }
                 break;
@@ -349,7 +348,7 @@ public class FarAuto {
                 }
                 break;
             case 13:
-                if (pathTimer.getElapsedTimeSeconds() > 1) {
+                if (pathTimer.getElapsedTimeSeconds() > 1.5) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(14);
@@ -359,24 +358,29 @@ public class FarAuto {
             case 14:
 //                follower.followPath(grabPickup3);
 //                intake.setCurrentState(Intake.IntakeState.INTAKE);
-                setPathState(15);
+                if (!follower.isBusy() && !flickersBusy) {
+                    follower.followPath(grabHuman);
+                    setPathState(15);
+                }
                 break;
             case 15:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
 
 //                    follower.followPath(scorePickup3);
 //                        turret.setAngleRadians(Math.toRadians(isBlue ? -38:38));
+                    intake.setCurrentState(Intake.IntakeState.STOP);
+                    follower.followPath(scoreHuman);
                     setPathState(16);
                 }
                 break;
             case 16:
                 if (pathTimer.getElapsedTimeSeconds() > .2) {
                     intake.setCurrentState(Intake.IntakeState.STOP);
-                    setPathState(18);
+                    setPathState(17);
                 }
                 break;
             case 17:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2.5) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(18);
@@ -390,7 +394,6 @@ public class FarAuto {
             case -1:
                 shooter.run(false);
                 intake.setCurrentState(Intake.IntakeState.STOP);
-                turret.setAngleRadians(0);
         }
     }
 
@@ -464,7 +467,7 @@ public class FarAuto {
 
         shooter = new Shooter(hwMap);
         shooter.init();
-        Shooter.targetVelocity = 1500;
+        Shooter.targetVelocity = 1450;
 
         setAlliance(isBlue);
         follower = PPConstants.createFollower(hwMap);

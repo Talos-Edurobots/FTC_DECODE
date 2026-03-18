@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 
 
 //Im here
-@TeleOp(name = "MainRed TeleOp", group = "main")
+@TeleOp(name = "MainRed TeleOp", group = "!main")
 @Configurable
 public class MainRed extends LinearOpMode {
     static int backVel = 1500;
@@ -201,6 +201,9 @@ public class MainRed extends LinearOpMode {
                 follower.activateAllPIDFs();
             } else if (gamepad2.a) {
                 follower.deactivateAllPIDFs();
+            }
+            if (gamepad1.startWasPressed()) {
+                follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
             }
 //            if (gamepad1.dpadDownWasPressed()) {
 ////                follower.followPath(pathChain.get());
