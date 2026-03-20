@@ -59,14 +59,14 @@ public final class RobotConstants {
             GoBILDAMotorTypes.MOTOR_312_RPM,
             DcMotorSimple.Direction.FORWARD,
             DcMotor.ZeroPowerBehavior.FLOAT
-    ).addExternalGearRatio((double) 270 /130)
+    ).addExternalGearRatio((double) 2.8 /1)
             .setMotorUse(MotorUse.MECHANICAL_STOP)
             .setMotorMode(MotorMode.PROFILED_PIDF)
-            .setMotionProfileCoefficients(1000, 1300, .5)
+            .setMotionProfileCoefficients(1000, 2800, 1)
             .setPIDFCoefficients(0.08, 0, 0.001, 0.4, 0.0053, 0.0004)
 //           .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
             .setMinAngleRadians(Math.toRadians(-80))
-            .setMaxAngleRadians(Math.toRadians(80));
+            .setMaxAngleRadians(Math.toRadians(100));
     public static MotorConfig HANG_CONFIG = new MotorConfig(
             "hang",
             GoBILDAMotorTypes.MOTOR_117_RPM,

@@ -59,7 +59,7 @@ public class MainBlue extends LinearOpMode {
     double turretError;
     int pipeline = 3;
     boolean slowMode = false;
-    boolean useLimelight = true;
+    boolean useLimelight = false;
     boolean useHang = false;
     static double hoodFarAngle = 0.1, hoodCloseAngle = .28;
 
