@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main.motor.controllers;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.controllers;
 
 
 import androidx.annotation.NonNull;

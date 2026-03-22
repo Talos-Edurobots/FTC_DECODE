@@ -560,7 +560,7 @@ class KaTestOpMode extends OpMode {
         maxVel = motor.maxVelocity;
         maxAcc = motor.maxAcceleration;
         Log.d("KaTest", "velocity,applied_voltage,current,power,position,xref,vref,aref,targetPos,time");
-        PanelsConfigurables.INSTANCE.refreshClass(KaTestOpMode.class);
+        PanelsConfigurables.INSTANCE.refreshClass(this);
     }
     @Override
     public void init_loop() {
