@@ -553,7 +553,6 @@ class KaTestOpMode extends OpMode {
 
     @Override
     public void init() {
-        motor.init(hardwareMap);
 //        voltageSensor.init(hardwareMap);
         kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
         motor.maxPower = maxPower;
@@ -561,9 +560,11 @@ class KaTestOpMode extends OpMode {
         maxAcc = motor.maxAcceleration;
         Log.d("KaTest", "velocity,applied_voltage,current,power,position,xref,vref,aref,targetPos,time");
         PanelsConfigurables.INSTANCE.refreshClass(this);
+        motor.init(hardwareMap);
     }
     @Override
     public void init_loop() {
+//        PanelsConfigurables.INSTANCE.refreshClass(this);
     }
 
     @Override

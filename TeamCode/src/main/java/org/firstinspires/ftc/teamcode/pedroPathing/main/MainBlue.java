@@ -246,6 +246,7 @@ public class MainBlue extends LinearOpMode {
 
             telemetryM.addData("fps", 1/ dt);
             telemetryM.addData("intake status", intake.getCurrentState());
+            telemetryM.addData("intake current", intake.getCurrent());
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
@@ -254,8 +255,6 @@ public class MainBlue extends LinearOpMode {
             telemetryM.addData("is impact detected", shooter.isImpactDetected());
             telemetryM.addData("Heading", heading);
             telemetryM.addData("dt", dt);
-            telemetryM.addData("intake velocity", intake.getVelocity());
-            telemetryM.addData("intake current", intake.getCurrent());
             telemetryM.addData("pinpoint pos", follower.getPose());
             telemetryM.addData("follower x", follower.getPose().getX());
             telemetryM.addData("pinpoint heading", follower.getHeading());
