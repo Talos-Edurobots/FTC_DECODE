@@ -35,7 +35,7 @@ public class PIDFFCoefficients {
         this.kv = kv;
         this.ka = ka;
     }
-    PIDFFCoefficients(double kp, double ki, double kd, double kf) {
+    public PIDFFCoefficients(double kp, double ki, double kd, double kf) {
         this(kp, ki, kd, kf, 0, 0);
     }
 }

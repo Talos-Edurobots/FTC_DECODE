@@ -6,17 +6,12 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotionState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
 
-class PIDFFVelocityController implements MotorController{
+public class PIDFFVelocityController implements MotorController{
     double lastError, integral;
     PIDFFCoefficients coef;
 
     public PIDFFVelocityController(PIDFFCoefficients coefficients) {
         this.coef = coefficients;
-    }
-
-    @Override
-    public void init(MotionState currentState) {
-
     }
 
     @Override
@@ -38,11 +33,9 @@ class PIDFFVelocityController implements MotorController{
         double ff =
                 (coef.getKs() * Math.signum(error)
                         + coef.getKv() * motionState.getVelocity()
-                        + coef.getKa() * motionState.getAcceleration()) / loopState.getBatteryVoltageFactor();
+                        + coef.getKa() * motionState.getAcceleration()) * loopState.getBatteryVoltageFactor();
         double output = pid + ff;
         lastError = error;
         return output;
     }
-
-
 }

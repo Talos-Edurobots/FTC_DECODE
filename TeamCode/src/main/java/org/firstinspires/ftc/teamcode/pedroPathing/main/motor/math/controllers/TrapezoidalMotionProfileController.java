@@ -17,12 +17,6 @@ public class TrapezoidalMotionProfileController implements MotorController{
         this.coef = coefficients;
         pidFFController = new PIDFFPositionController(coef.getPidCoef());
     }
-    public void init(MotionState currentState) {
-        xRef = currentState.getPosition();
-        vRef = 0.0;
-        aRef = 0.0;
-        pidFFController.reset();
-    }
 
     @Override
     public double updateWithError(double error, MotionState motionState, LoopState loopState) {

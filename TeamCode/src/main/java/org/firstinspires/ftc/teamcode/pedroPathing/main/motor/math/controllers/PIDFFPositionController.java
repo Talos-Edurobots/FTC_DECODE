@@ -6,7 +6,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotionState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
 
-class PIDFFPositionController implements MotorController {
+public class PIDFFPositionController implements MotorController {
     double lastError, integral;
 
     PIDFFCoefficients coef;
@@ -28,10 +28,6 @@ class PIDFFPositionController implements MotorController {
         return  updateWithError(error, motionState, loopState);
     }
 
-    @Override
-    public void init(MotionState currentState) {
-        reset();
-    }
 
     @Override
     public double updateWithError(double error, @NonNull MotionState motionState, LoopState loopState) {
@@ -39,7 +35,7 @@ class PIDFFPositionController implements MotorController {
                 + coef.getKi() * integral
                 + coef.getKd() * (-motionState.getVelocity());
 
-        double ff = coef.getKs() * Math.signum(-error);
+        double ff = coef.getKs() * Math.signum(error);
         double output = pid + ff;
         if (!antiWindup || Math.abs(output) < integralAntiWindupLimit) {
             if (loopState.getDt() == 0) {
