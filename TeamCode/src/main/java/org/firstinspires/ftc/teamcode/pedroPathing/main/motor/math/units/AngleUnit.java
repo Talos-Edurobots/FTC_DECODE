@@ -1,4 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units;
 
-public class AngleUnit {
+public enum AngleUnit {
+    RADIANS,
+    TICKS
 }

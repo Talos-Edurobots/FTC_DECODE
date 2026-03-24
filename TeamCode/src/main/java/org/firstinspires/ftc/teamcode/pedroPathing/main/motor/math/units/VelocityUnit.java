@@ -1,4 +1,8 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units;
 
-public class VelocityUnit {
-}
+
+public enum VelocityUnit {
+        TICKS_PER_SECOND,
+        RPM
+    }
+
