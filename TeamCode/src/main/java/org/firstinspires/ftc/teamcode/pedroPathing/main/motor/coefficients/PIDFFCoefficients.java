@@ -3,31 +3,31 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients;
 public class PIDFFCoefficients {
     private double kp, ki, kd, ks, kv, ka;
 
-    public double getKp() {
+    public double kp() {
         return kp;
     }
 
-    public double getKa() {
+    public double ka() {
         return ka;
     }
 
-    public double getKv() {
+    public double kv() {
         return kv;
     }
 
-    public double getKs() {
+    public double ks() {
         return ks;
     }
 
-    public double getKd() {
+    public double kd() {
         return kd;
     }
 
-    public double getKi() {
+    public double ki() {
         return ki;
     }
 
-    PIDFFCoefficients(double kp, double ki, double kd, double ks, double kv, double ka) {
+    public PIDFFCoefficients(double kp, double ki, double kd, double ks, double kv, double ka) {
         this.kp = kp;
         this.ki = ki;
         this.kd = kd;

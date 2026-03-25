@@ -1,61 +1,74 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.controllers;
 
-import androidx.annotation.NonNull;
-
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotionState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
 
-public class PIDFFPositionController implements MotorController {
-    double lastError, integral;
+public class PIDFFPositionController implements MotorController{
 
-    PIDFFCoefficients coef;
-    boolean antiWindup = false;
-    double integralAntiWindupLimit = Double.POSITIVE_INFINITY;
+    private double integral = 0.0;
 
-    public PIDFFPositionController(PIDFFCoefficients coefficients) {
-        this.coef = coefficients;
+    private PIDFFCoefficients coef;
+
+    private boolean antiWindup;
+    private double integralLimit;
+
+    public PIDFFPositionController(PIDFFCoefficients coef) {
+        this(coef, false, Double.POSITIVE_INFINITY);
     }
-    public PIDFFPositionController(PIDFFCoefficients coefficients, boolean antiWindup, double integralAntiWindupLimit) {
-        this.coef = coefficients;
+
+    public PIDFFPositionController(PIDFFCoefficients coef,
+                                   boolean antiWindup,
+                                   double integralLimit) {
+        this.coef = coef;
         this.antiWindup = antiWindup;
-        this.integralAntiWindupLimit = integralAntiWindupLimit;
+        this.integralLimit = integralLimit;
     }
 
     @Override
-    public double update(double target, @NonNull MotionState motionState, LoopState loopState) {
-        double error = target - motionState.getPosition();
-        return  updateWithError(error, motionState, loopState);
-    }
+    public double update(MotionState ref,
+                         MotionState current,
+                         double dt) {
 
-
-    @Override
-    public double updateWithError(double error, @NonNull MotionState motionState, LoopState loopState) {
-        double pid = coef.getKp() * error
-                + coef.getKi() * integral
-                + coef.getKd() * (-motionState.getVelocity());
-
-        double ff = coef.getKs() * Math.signum(error);
-        double output = pid + ff;
-        if (!antiWindup || Math.abs(output) < integralAntiWindupLimit) {
-            if (loopState.getDt() == 0) {
-                throw new ArithmeticException("LoopState dt cannot be zero for PIDFFVelocityController");
-            }
-            integral += error * loopState.getDt();
+        if (dt == 0) {
+            throw new ArithmeticException("dt cannot be zero");
         }
-        lastError = error;
-        return output;
+
+        // --- Extract physical values ---
+        double xRef = ref.getPosition().toRadians();
+        double vRef = ref.getVelocity().toRadPerSec();
+        double aRef = ref.getAcceleration();
+
+        double x = current.getPosition().toRadians();
+        double v = current.getVelocity().toRadPerSec();
+
+        // --- Errors ---
+        double error = xRef - x;
+        double velError = vRef - v;
+
+        // --- Integral ---
+        integral += error * dt;
+
+        if (antiWindup) {
+            integral = Math.max(-integralLimit,
+                    Math.min(integralLimit, integral));
+        }
+
+        // --- PID ---
+        double pid =
+                coef.kp() * error +
+                        coef.ki() * integral +
+                        coef.kd() * velError;
+
+        // --- Feedforward ---
+        double ff =
+                coef.ks() * Math.signum(error) +
+                        coef.kv() * vRef +
+                        coef.ka() * aRef;
+
+        return pid + ff;
     }
 
     public void reset() {
-        lastError = 0.0;
         integral = 0.0;
-    }
-    public void updateCoefficients(PIDFFCoefficients coefficients) {
-        this.coef = coefficients;
-    }
-
-    public PIDFFCoefficients getCoefficients() {
-        return coef;
     }
 }

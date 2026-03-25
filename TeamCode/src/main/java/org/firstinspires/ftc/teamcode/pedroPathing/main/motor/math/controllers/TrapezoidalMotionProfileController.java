@@ -8,59 +8,63 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotionState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.MotionProfilingCoefficients;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.Angle;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.AngularVelocity;
 
 public class TrapezoidalMotionProfileController implements MotorController{
     MotionProfilingCoefficients coef;
     PIDFFPositionController pidFFController;
-    private double xRef = 0.0, vRef = 0.0, aRef = 0.0;
+    private Angle xRef = Angle.fromRadians(0);
+    private AngularVelocity vRef = AngularVelocity.fromRadPerSec(0);
+    private double aRef = 0.0; // rad/s^2
     public TrapezoidalMotionProfileController(MotionProfilingCoefficients coefficients) {;
         this.coef = coefficients;
         pidFFController = new PIDFFPositionController(coef.getPidCoef());
     }
 
     @Override
-    public double updateWithError(double error, MotionState motionState, LoopState loopState) {
-        return 0;
-    }
+    public double update(MotionState target, @NonNull MotionState motionState, double dt) {
+        double position = motionState.getPosition().toRadians();
+        double velocity = motionState.getVelocity().toRadPerSec();
 
-    @Override
-    public double update(double target, @NonNull MotionState motionState, LoopState loopState) {
-        double position = motionState.getPosition();
-        double velocity = motionState.getVelocity();
+        double targetRad = target.getPosition().toRadians();
+        double xRefRad = xRef.toRadians();
+        double vRefRad = vRef.toRadPerSec();
 
-        double remaining = target - xRef;
+        double remaining = targetRad - xRefRad;
 
         double stoppingDistance =
-                (vRef * vRef) / (2.0 * coef.getMaxAcceleration());
+                (vRefRad * vRefRad) / (2.0 * coef.getMaxAcceleration());
 
-        if (Math.abs(remaining) <= stoppingDistance) {
+        if (Math.signum(vRefRad) == Math.signum(remaining) &&
+                Math.abs(remaining) <= stoppingDistance) {
             aRef = -Math.signum(velocity) * coef.getMaxAcceleration();
         } else {
             aRef = Math.signum(remaining) *coef.getMaxAcceleration();
         }
+        vRefRad += aRef * dt;
+        vRefRad = Range.clip(vRefRad,
+                -coef.getMaxVelocity(),
+                coef.getMaxVelocity());
 
-        vRef += aRef * loopState.getDt();
-        vRef = Range.clip(vRef, -coef.getMaxVelocity(), coef.getMaxVelocity());
+        xRefRad += vRefRad * dt;
 
-        xRef += vRef * loopState.getDt();
-
-        if (Math.signum(target - xRef)
-                != Math.signum(remaining)) {
-            xRef = target;
-            vRef = 0.0;
+        if (Math.signum(targetRad - xRefRad) != Math.signum(remaining)) {
+            xRefRad = targetRad;
+            vRefRad = 0.0;
             aRef = 0.0;
         }
 
+        xRef = Angle.fromRadians(xRefRad);
+        vRef = AngularVelocity.fromRadPerSec(vRefRad);
+        MotionState refState = new MotionState(xRef, vRef, aRef);
+        double pid = pidFFController.update(refState, motionState, dt);
 
-        double pidVolts = pidFFController.update(xRef, motionState, loopState);
+        double ff =
+                coef.getPidCoef().ks() * Math.signum(vRefRad) +
+                        coef.getPidCoef().kv() * vRefRad +
+                        coef.getPidCoef().ka() * aRef;
 
-        double ffVolts =
-                coef.getPidCoef().getKs() * Math.signum(vRef) +
-                        coef.getPidCoef().getKv() * vRef +
-                        coef.getPidCoef().getKa() * aRef;
-
-        double power =
-                (pidVolts + ffVolts) / loopState.getBatteryVoltageFactor();
-        return power;
+        return (pid + ff);
     }
 }

@@ -1,41 +1,72 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.controllers;
 
-import androidx.annotation.NonNull;
-
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotionState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
 
 public class PIDFFVelocityController implements MotorController{
-    double lastError, integral;
-    PIDFFCoefficients coef;
 
-    public PIDFFVelocityController(PIDFFCoefficients coefficients) {
-        this.coef = coefficients;
+    private double integral = 0.0;
+
+    private PIDFFCoefficients coef;
+
+    private boolean antiWindup;
+    private double integralLimit;
+
+    public PIDFFVelocityController(PIDFFCoefficients coef) {
+        this(coef, false, Double.POSITIVE_INFINITY);
+    }
+
+    public PIDFFVelocityController(PIDFFCoefficients coef,
+                                   boolean antiWindup,
+                                   double integralLimit) {
+        this.coef = coef;
+        this.antiWindup = antiWindup;
+        this.integralLimit = integralLimit;
     }
 
     @Override
-    public double update(double target, MotionState motionState, @NonNull LoopState loopState) {
-        double error = target - motionState.getVelocity();
-        return updateWithError(error, motionState, loopState);
-    }
+    public double update(MotionState ref,
+                         MotionState current,
+                         double dt) {
 
-    @Override
-    public double updateWithError(double error, MotionState motionState, LoopState loopState) {
-        if (loopState.getDt() == 0) {
-            throw new ArithmeticException("LoopState dt cannot be zero for PIDFFVelocityController");
+        if (dt == 0) {
+            throw new ArithmeticException("dt cannot be zero");
         }
-        integral += error * loopState.getDt();
-        double derivative = (error - lastError) / loopState.getDt();
-        double pid = coef.getKp() * error
-                + coef.getKi() * integral
-                + coef.getKd() * derivative;
+
+        // --- Extract values ---
+        double vRef = ref.getVelocity().toRadPerSec();
+        double aRef = ref.getAcceleration();
+
+        double v = current.getVelocity().toRadPerSec();
+
+        // --- Error ---
+        double error = vRef - v;
+
+        // --- Integral ---
+        integral += error * dt;
+
+        if (antiWindup) {
+            integral = Math.max(-integralLimit,
+                    Math.min(integralLimit, integral));
+        }
+
+        // --- PID (velocity loop) ---
+        double pid =
+                coef.kp() * error +
+                        coef.ki() * integral;
+        // Kd optional:
+        // + coef.getKd() * (aRef - current.getAcceleration());
+
+        // --- Feedforward ---
         double ff =
-                (coef.getKs() * Math.signum(error)
-                        + coef.getKv() * motionState.getVelocity()
-                        + coef.getKa() * motionState.getAcceleration()) * loopState.getBatteryVoltageFactor();
-        double output = pid + ff;
-        lastError = error;
-        return output;
+                coef.ks() * Math.signum(vRef) +
+                        coef.kv() * vRef +
+                        coef.ka() * aRef;
+
+        return pid + ff;
+    }
+
+    public void reset() {
+        integral = 0.0;
     }
 }
