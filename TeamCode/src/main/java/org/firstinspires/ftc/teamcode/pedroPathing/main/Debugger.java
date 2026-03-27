@@ -555,7 +555,7 @@ class KaTestOpMode extends OpMode {
     public void init() {
 //        voltageSensor.init(hardwareMap);
         kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
-        motor.maxPower = maxPower;
+        maxPower = motor.maxPower;
         maxVel = motor.maxVelocity;
         maxAcc = motor.maxAcceleration;
         Log.d("KaTest", "velocity,applied_voltage,current,power,position,xref,vref,aref,targetPos,time");

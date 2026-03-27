@@ -132,7 +132,6 @@ public class MainBlue extends LinearOpMode {
             dt = newTime - oldTime;
             oldTime = newTime;
             hardwareManager.update();
-            MotorConfig.setDt(dt);
             follower.update();
             if (gamepad1.backWasPressed()) {
                 if (!useHang) {
@@ -164,6 +163,7 @@ public class MainBlue extends LinearOpMode {
                 turret.lookToGoal(follower.getPose(), false);
                 turret.loop();
             }
+            MotorConfig.setDt(dt);
             if (gamepad1.dpadDownWasPressed()) useLimelight ^= true;
             if (gamepad1.xWasPressed()) {
                 isFar ^= true;

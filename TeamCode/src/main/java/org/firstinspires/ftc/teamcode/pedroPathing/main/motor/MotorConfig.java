@@ -299,8 +299,6 @@ public class MotorConfig {
 
     public void updatePositionProfiledPIDF() {
         if (dt <= 0.0) return;
-        MotorController x = new TrapezoidalMotionProfileController(new MotionProfilingCoefficients(kP, kI, kD, kS, kV, kA, maxVelocity, maxAcceleration));
-
         double position = motor.getCurrentPosition();
         double velocity = motor.getVelocity();
 
@@ -350,6 +348,12 @@ public class MotorConfig {
         telemetryM.addData("power", power);
         telemetryM.addData("pid volts", pidVolts);
         telemetryM.addData("ff volts", ffVolts);
+        telemetryM.addData("profiled pidf dt", dt);
+        telemetryM.addData("reset condition", Math.signum(targetPositionTicks - xRef)
+                != Math.signum(remaining));
+        telemetryM.addData("aref", aRef);
+        telemetryM.addData("pos error", remaining);
+        telemetryM.addData("is at deceleration state", Math.abs(remaining) <= stoppingDistance);
     }
 
     public double rampPower(double current, double target, double dt) {
