@@ -14,16 +14,15 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.Velocit
 import org.junit.Test;
 
 public class TestMotor {
-
     @Test
     public void testController() {
         EncoderConverter encoder = new EncoderConverter(GoBILDAMotorTypes.MOTOR_312_RPM);
-        MotionState motionState = new MotionState(encoder.ticksToAngle(10), AngularVelocity.fromRadPerSec(0), 0);
-        MotionState target = new MotionState(encoder.ticksToAngle(0), AngularVelocity.fromRadPerSec(0), 0);
-        MotorController cont = new PIDFFPositionController(new PIDFFCoefficients(0, 0, 0, 1, 0, 0));
+        MotionState motionState = new MotionState(Angle.fromRadians(1), AngularVelocity.fromRadPerSec(0), 0);
+        MotionState target = new MotionState(Angle.fromRadians(0), AngularVelocity.fromRadPerSec(0), 0);
+        MotorController cont = new PIDFFPositionController(new PIDFFCoefficients(1, 0, 0, 1, 0, 0));
         LoopState loopState = new LoopState();
         loopState.set((double) 1 /30, 0);
-        assertEquals(-1, cont.update(target, motionState, loopState.getDt()), 1e-9);
+        assertEquals(-2, cont.update(target, motionState, loopState.getDt()), 1e-9);
     }
     @Test
     public void testVelocityUnitConverter() {
@@ -44,6 +43,13 @@ public class TestMotor {
         GoBILDAMotorTypes motorType = GoBILDAMotorTypes.MOTOR_312_RPM;
         EncoderConverter encoder = new EncoderConverter(motorType);
         Angle angle = encoder.ticksToAngle(537.7);
-        assertEquals(Math.toRadians(360), angle.toRadians(), 0.1);
+        assertEquals(Math.toRadians(360), angle.toRadians(), 1e-3);
+    }
+    @Test
+    public void testVelocityUnitConverter2() {
+        GoBILDAMotorTypes motorType = GoBILDAMotorTypes.MOTOR_312_RPM;
+        EncoderConverter encoder = new EncoderConverter(motorType);
+        AngularVelocity vel = encoder.ticksPerSecondToVelocity(2800);
+        assertEquals(312, vel.toRpm(), 1);
     }
 }
