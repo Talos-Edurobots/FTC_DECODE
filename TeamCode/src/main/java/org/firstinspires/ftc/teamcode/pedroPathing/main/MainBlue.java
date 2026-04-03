@@ -61,6 +61,7 @@ public class MainBlue extends LinearOpMode {
     boolean slowMode = false;
     boolean useLimelight = false;
     boolean useHang = false;
+    boolean activateStop = false;
     static double hoodFarAngle = 0.1, hoodCloseAngle = .28;
 
     @Override
@@ -191,8 +192,9 @@ public class MainBlue extends LinearOpMode {
                 follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
             }
 
+            if (gamepad1.rightBumperWasPressed()) activateStop ^= true;
             flickers.leftFlick(gamepad1.left_bumper);
-            flickers.rightFlick(gamepad1.right_bumper);
+            flickers.rightFlick(activateStop);
 
 //            pinpoint.update();
 //            robotPos = pinpoint.getPosition();
