@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
 
-import android.provider.SyncStateContract;
 import android.util.Log;
 
 import com.bylazar.configurables.PanelsConfigurables;
@@ -13,26 +12,22 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.telemetry.SelectableOpMode;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.sun.tools.javac.code.Attribute;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.Test;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.VoltageSensorReadout;
 
 
 @TeleOp(name = "Debugger", group = "main")
@@ -697,24 +692,29 @@ class RampPowerOpMode extends OpMode {
         TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         Intake intake;
         Shooter shooter;
-        Flickers flickers;
+        Gate gate;
         @Override
         public void init() {
             intake = new Intake(hardwareMap);
             intake.init();
             shooter = new Shooter(hardwareMap);
             shooter.init();
-            flickers = new Flickers();
-            flickers.init(hardwareMap);
+            gate = new Gate();
+            gate.init(hardwareMap);
             telemetryM.addLine("init complete");
             telemetryM.update(telemetry);
-            Log.d("ThroughputTest", "isPIDF,shooter_velocity,shooter_power,time");
+            Log.d("ThroughputTest", "isUsingController,shooter_velocity,shooter_power,time,intake_current,shooter,current");
         }
 
         @Override
         public void loop() {
-            flickers.leftFlick(gamepad1.left_bumper);
-            flickers.rightFlick(gamepad1.right_bumper);
+            boolean trigger = gamepad1.rightTriggerWasPressed();
+            if (trigger && !gate.isActivated()) {
+                gate.activate();
+            }
+            else if (trigger && gate.isActivated()) {
+                gate.deactivate();
+            }
             if (gamepad1.right_bumper || gamepad1.left_bumper) log();
             if (runWIthVel) {
                 Shooter.targetVelocity = velocity;
@@ -732,7 +732,7 @@ class RampPowerOpMode extends OpMode {
             telemetryM.update(telemetry);
         }
         public void log() {
-            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f", runWIthVel, shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime()));
+            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f", runWIthVel, shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent()));
         }
     }
 @Configurable
