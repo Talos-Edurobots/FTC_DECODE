@@ -703,7 +703,7 @@ class RampPowerOpMode extends OpMode {
             gate.init(hardwareMap);
             telemetryM.addLine("init complete");
             telemetryM.update(telemetry);
-            Log.d("ThroughputTest", "isUsingController,shooter_velocity,shooter_power,time,intake_current,shooter,current");
+            Log.d("ThroughputTest", "isUsingController,shooter_velocity,shooter_power,time,intake_current,shooter_current,shooter_target");
         }
 
         @Override
@@ -732,7 +732,7 @@ class RampPowerOpMode extends OpMode {
             telemetryM.update(telemetry);
         }
         public void log() {
-            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f", runWIthVel, shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent()));
+            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWIthVel, shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent(), Shooter.targetVelocity));
         }
     }
 @Configurable
