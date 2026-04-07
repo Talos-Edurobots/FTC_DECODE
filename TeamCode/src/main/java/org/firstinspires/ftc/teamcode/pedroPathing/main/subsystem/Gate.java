@@ -9,7 +9,7 @@ public class Gate {
     private final double GATE_REST_POS = .5;
     Servo gate;
     public void init(HardwareMap hwmap) {
-        gate = hwmap.servo.get("gate");
+        gate = hwmap.servo.get("rightFlicker");
         gate.setDirection(Servo.Direction.FORWARD);
         gate.setPosition(GATE_REST_POS);
     }

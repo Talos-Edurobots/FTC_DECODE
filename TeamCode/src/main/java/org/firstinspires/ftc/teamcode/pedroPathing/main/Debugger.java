@@ -687,7 +687,7 @@ class RampPowerOpMode extends OpMode {
 
     @Configurable
     class TestThoughPut extends OpMode {
-        static double velocity = 2100;
+        static double velocity = 1300;
         static boolean runWIthVel = true;
         TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         Intake intake;
@@ -716,15 +716,18 @@ class RampPowerOpMode extends OpMode {
                 gate.deactivate();
             }
             if (gamepad1.right_bumper || gamepad1.left_bumper) log();
+            if (gamepad1.dpadUpWasPressed()) shooter.changeState();
             if (runWIthVel) {
-                Shooter.targetVelocity = velocity;
-                shooter.run(true);
+//                shooter.run(true);
             }
             else {
-                shooter.setPower(shooter.getInstance().kV * velocity);
+//                shooter.setPower(shooter.getInstance().kV * velocity);
             }
+            Shooter.targetVelocity = velocity;
+            if (gamepad1.yWasPressed()) runWIthVel ^= true;
             if (gamepad1.aWasPressed()) intake.setCurrentState(Intake.IntakeState.INTAKE);
             else if (gamepad1.bWasPressed()) intake.setCurrentState(Intake.IntakeState.STOP);
+            shooter.update();
             intake.update();
             telemetryM.addLine("running with " + (runWIthVel ? "velocity":"open loop power"));
             telemetryM.addData("shooter velocity", shooter.getVelocity());
