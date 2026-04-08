@@ -1,14 +1,14 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main.auto;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.auto.old;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name = "far blue")
-public class FarAutoBlue extends OpMode {
+@Autonomous(name = "far auto red")
+public class FarAutoRed extends OpMode {
     FarAuto auto = new FarAuto();
     @Override
     public void init() {
-        auto.init(hardwareMap, telemetry, true);
+        auto.init(hardwareMap, telemetry, false);
     }
 
     @Override

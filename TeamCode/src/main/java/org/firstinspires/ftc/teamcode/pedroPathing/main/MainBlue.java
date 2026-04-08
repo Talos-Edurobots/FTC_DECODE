@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
@@ -43,7 +44,7 @@ public class MainBlue extends LinearOpMode {
     DriveTrain driveTrain;
     Intake intake;
     Shooter shooter;
-    Flickers flickers;
+    Gate gate = new Gate();
     IMU imu;
     Turret turret;
     Pinpoint pinpoint;
@@ -98,8 +99,7 @@ public class MainBlue extends LinearOpMode {
         driveTrain = new DriveTrain(hardwareMap);
         driveTrain.init();
 
-        flickers = new Flickers();
-        flickers.init(hardwareMap);
+
 
         driveTrain = new DriveTrain(hardwareMap);
         driveTrain.init();
@@ -128,6 +128,10 @@ public class MainBlue extends LinearOpMode {
         }
         waitForStart();
         follower.startTeleopDrive();
+        gate.init(hardwareMap);
+        gate.activate();
+        intake.setCurrentState(Intake.IntakeState.INTAKE);
+
         while (opModeIsActive()){
             newTime = getRuntime();
             dt = newTime - oldTime;
@@ -192,9 +196,8 @@ public class MainBlue extends LinearOpMode {
                 follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
             }
 
-            if (gamepad1.rightBumperWasPressed()) activateStop ^= true;
-            flickers.leftFlick(gamepad1.left_bumper);
-            flickers.rightFlick(activateStop);
+//            flickers.leftFlick(gamepad1.left_bumper);
+//            flickers.rightFlick(activateStop);
 
 //            pinpoint.update();
 //            robotPos = pinpoint.getPosition();
@@ -216,20 +219,32 @@ public class MainBlue extends LinearOpMode {
 //                automatedDrive = false;
 //            }
 
-            boolean aPressed = gamepad1.aWasPressed();
-            if (aPressed && intake.getCurrentState() == Intake.IntakeState.INTAKE) {
+//            boolean aPressed = gamepad1.aWasPressed();
+//            if (aPressed && intake.getCurrentState() == Intake.IntakeState.INTAKE) {
+//                intake.setCurrentState(Intake.IntakeState.STOP);
+//            }
+//            else if (aPressed && intake.getCurrentState() == Intake.IntakeState.STOP) {
+//                intake.setCurrentState(Intake.IntakeState.INTAKE);
+//            }
+//            else if (gamepad1.yWasPressed()) {
+//                intake.setCurrentState(Intake.IntakeState.OUTTAKE);
+//            }
+//            else if (gamepad1.bWasPressed()) {
+//                intake.setCurrentState(Intake.IntakeState.STOP);
+//            }
+            boolean rightBumb = gamepad1.rightBumperWasPressed();
+            if (intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumb) {
                 intake.setCurrentState(Intake.IntakeState.STOP);
-            }
-            else if (aPressed && intake.getCurrentState() == Intake.IntakeState.STOP) {
+                gate.activate();
+            } else if (intake.getCurrentState() == Intake.IntakeState.STOP && rightBumb) {
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
             }
-            else if (gamepad1.yWasPressed()) {
-                intake.setCurrentState(Intake.IntakeState.OUTTAKE);
-            }
-            else if (gamepad1.bWasPressed()) {
-                intake.setCurrentState(Intake.IntakeState.STOP);
-            }
             intake.update();
+            boolean leftBump = gamepad1.leftBumperWasPressed();
+            if (leftBump) {
+                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                gate.deactivate();
+            }
 
             if (gamepad1.leftStickButtonWasPressed() || gamepad1.rightStickButtonWasPressed()) slowMode ^= true;
             double mult = slowMode ? 0.25 : 1;

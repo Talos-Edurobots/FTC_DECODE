@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.main.auto;
+package org.firstinspires.ftc.teamcode.pedroPathing.main.auto.old;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;

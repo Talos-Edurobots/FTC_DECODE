@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -23,6 +24,7 @@ public class Shooter {
     public static double debounceTime = .5;
     public double filteredVelocity = 0;
     private double lastFilteredVel;
+    private final ElapsedTime loopTimer = new ElapsedTime();
 
     public boolean isImpactDetected() {
         return impactDetected;
@@ -49,9 +51,14 @@ public class Shooter {
         hoodServo = hwmap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
         hoodServo.setPosition(.5);
         hoodServo.setDirection(Servo.Direction.FORWARD);
+        loopTimer.reset();
     }
 
     public void update() {
+        dt = loopTimer.seconds();
+        loopTimer.reset();
+        MotorConfig.setDt(dt);
+        MotorConfig.setBatteryVoltage(getBatteryVoltage());
         motor.setVelocityTicksPerSecond(targetVelocity);
         calculateFilteredVelocity();
         setVelocity();
@@ -61,9 +68,14 @@ public class Shooter {
     }
     public void calculateFilteredVelocity() {
         filteredVelocity = alpha * motor.getVelocity() + (1 - alpha) * filteredVelocity;
-        double delta = (filteredVelocity - lastError) / dt;
+        if (dt <= 0) {
+            lastFilteredVel = filteredVelocity;
+            return;
+        }
+
+        double delta = (filteredVelocity - lastFilteredVel) / dt;
         // Detect shot
-        if (!impactDetected && delta > dropThreshold) {
+        if (!impactDetected && -delta > dropThreshold) {
             impactDetected = true;
             impactTimer.reset();
         }
@@ -112,6 +124,17 @@ public class Shooter {
 
     public double getCurrent() {
         return motor.getCurrent();
+    }
+
+    private double getBatteryVoltage() {
+        double minVoltage = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : hwmap.voltageSensor) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) {
+                minVoltage = Math.min(minVoltage, voltage);
+            }
+        }
+        return minVoltage < Double.POSITIVE_INFINITY ? minVoltage : 12.0;
     }
 
 }

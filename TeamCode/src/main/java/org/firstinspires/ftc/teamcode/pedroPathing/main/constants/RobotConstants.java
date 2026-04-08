@@ -52,7 +52,7 @@ public final class RobotConstants {
             "shooter",
             GoBILDAMotorTypes.MOTOR_6000_RPM,
             DcMotorSimple.Direction.REVERSE
-    ).setPIDFCoefficients(.005, 0, 0, .02, 0.005185618555729392, 0)
+    ).setPIDFCoefficients(.005, 0, 0, .02, 0.0052684109772247485 , 0)
             .setMotorMode(MotorMode.VELOCITY_CONTROL);
     public static MotorConfig TURRET_CONFIG = new MotorConfig(
             "turret",
@@ -86,7 +86,7 @@ public final class RobotConstants {
     public static String LED_RIGHT = "led_right";
     public static String LED_LEFT = "led_left";
     public static GoBildaPinpointDriver.EncoderDirection PINPOINT_FORWARD_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD;
-    public static GoBildaPinpointDriver.EncoderDirection PINPOINT_STRAFE_DIRECTION  = GoBildaPinpointDriver.EncoderDirection.REVERSED;
+    public static GoBildaPinpointDriver.EncoderDirection PINPOINT_STRAFE_DIRECTION  = GoBildaPinpointDriver.EncoderDirection.FORWARD;
     public static double PINPOINT_FORWARD_POD_Y = 3.4; // in inches
     public static double PINPOINT_STRAFE_POD_X = 4; // in inches
 

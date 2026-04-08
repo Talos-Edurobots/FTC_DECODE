@@ -717,19 +717,25 @@ class RampPowerOpMode extends OpMode {
             }
             if (gamepad1.right_bumper || gamepad1.left_bumper) log();
             if (gamepad1.dpadUpWasPressed()) shooter.changeState();
-            if (runWIthVel) {
-//                shooter.run(true);
-            }
-            else {
-//                shooter.setPower(shooter.getInstance().kV * velocity);
-            }
-            Shooter.targetVelocity = velocity;
             if (gamepad1.yWasPressed()) runWIthVel ^= true;
             if (gamepad1.aWasPressed()) intake.setCurrentState(Intake.IntakeState.INTAKE);
             else if (gamepad1.bWasPressed()) intake.setCurrentState(Intake.IntakeState.STOP);
-            shooter.update();
+
+            Shooter.targetVelocity = velocity;
+            if (runWIthVel) {
+                shooter.run(true);
+                shooter.update();
+            }
+            else {
+                shooter.run(false);
+                double ffPower = (shooter.getInstance().kS * Math.signum(velocity)
+                        + shooter.getInstance().kV * velocity) / 12.0;
+                shooter.setPower(ffPower);
+            }
+
             intake.update();
             telemetryM.addLine("running with " + (runWIthVel ? "velocity":"open loop power"));
+            telemetryM.addData("shooter enabled", shooter.getRun());
             telemetryM.addData("shooter velocity", shooter.getVelocity());
             telemetryM.addData("shooter power", shooter.getInstance().getPower());
             telemetryM.update(telemetry);
