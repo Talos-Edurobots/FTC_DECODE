@@ -13,6 +13,31 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.controllers.M
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.controllers.TrapezoidalMotionProfileController;
 
 @Deprecated
+/**
+ * Legacy all-in-one motor abstraction.
+ *
+ * <p>This class currently acts as:
+ *
+ * <p>- hardware wrapper around {@code DcMotorEx}
+ * <p>- target container for position/velocity goals
+ * <p>- control-mode switchboard
+ * <p>- PID/PIDF implementation
+ * <p>- trapezoidal motion-profile implementation
+ * <p>- safety/limit holder
+ * <p>- telemetry/debug publisher
+ *
+ * <p>That made it convenient to use across subsystems, but also made it hard to
+ * reason about, test, and evolve. The long-term direction is to replace this
+ * with smaller pieces:
+ *
+ * <p>- {@code MetaMotor} for raw hardware access
+ * <p>- controller classes for control math only
+ * <p>- explicit state objects such as {@code MotionState} / {@code LoopState}
+ * <p>- subsystem or facade-level mode switching
+ *
+ * <p>When touching this class, prefer documentation and stabilization over adding
+ * new responsibilities.
+ */
 public class MotorConfig {
 
     /* ---------------- Telemetry ---------------- */
@@ -68,6 +93,10 @@ public class MotorConfig {
 
     /* ---------------- Shared loop data ---------------- */
 
+    // NOTE: These are static, so every MotorConfig instance shares the same dt and
+    // battery voltage. This is one of the main architectural issues in the class.
+    // In the modular rewrite, loop context should be passed explicitly per update.
+
     private static double batteryVoltage = 12.0;
 
     private static double dt = 0.0;
@@ -103,6 +132,10 @@ public class MotorConfig {
 
     /* ---------------- Motion profile state (TICKS) ---------------- */
 
+    // NOTE: Profile reference state lives inside this legacy facade. In the cleaner
+    // design, profile-internal state should belong to the profile controller itself,
+    // not to the generic motor wrapper.
+
     public double getTargetPositionTicks() {
         return targetPositionTicks;
     }
@@ -137,6 +170,10 @@ public class MotorConfig {
     private double velocityIntegral = 0.0;
 
     /* ---------------- Angle limits (radians, API only) ---------------- */
+
+    // NOTE: These "angle" limits are mechanism-facing semantics layered onto a
+    // generic motor class. For future code, prefer keeping mechanism-space limits
+    // in the subsystem layer and keeping the motor package motor-shaft-centric.
 
     public MotorConfig setMinAngleTicks(double minAngleTicks) {
         this.minAngleTicks = minAngleTicks;
@@ -195,6 +232,10 @@ public class MotorConfig {
 
     /* ---------------- Initialization ---------------- */
 
+    // NOTE: init() currently decides FTC run modes based on the legacy MotorMode
+    // enum. During migration, this logic should gradually move to smaller,
+    // purpose-built motor facades instead of a single universal switch.
+
     public DcMotorEx init(HardwareMap hardwareMap) {
         motor = hardwareMap.get(DcMotorEx.class, hardwareName);
         motor.setDirection(direction);
@@ -221,6 +262,10 @@ public class MotorConfig {
 
     /* ---------------- Basic accessors ---------------- */
 
+    // These methods expose raw motor values directly from the SDK motor. They are
+    // the least controversial part of this class and are good candidates to move
+    // first into MetaMotor / a hardware adapter.
+
     public void setPower(double power) {
         motor.setPower(Range.clip(power, -maxPower, maxPower));
     }
@@ -241,6 +286,10 @@ public class MotorConfig {
     }
 
     /* ---------------- Configuration setters ---------------- */
+
+    // This section mixes physical configuration, controller gains, and output
+    // limits. In the rewrite, these concerns should be split into dedicated data
+    // classes rather than kept as mutable fields on one giant object.
 
     public MotorConfig addExternalGearRatio(double ratio) {
         this.externalGearRatio *= ratio;
@@ -269,6 +318,10 @@ public class MotorConfig {
 
     /* ---------------- Position targets ---------------- */
 
+    // NOTE: This class accepts targets in both ticks and angle units. That is handy,
+    // but it also mixes motor-space and mechanism-space concerns. The rewrite should
+    // make unit boundaries more explicit.
+
     public void setRadianLimit(double minAngle, double maxAngle) {
         this.minAngleTicks = minAngle;
         this.maxAngleTicks = maxAngle;
@@ -292,12 +345,22 @@ public class MotorConfig {
 
     /* ---------------- Profiled position PIDF ---------------- */
     public void updateSimplePositionControl() {
+        // Thin wrapper over FTC RUN_TO_POSITION behavior.
+        // This is useful during transition, but it does not fit especially well with
+        // the rest of the custom-control architecture.
         motor.setTargetPosition((int) targetPositionTicks);
         motor.setVelocity(2500); // 2500
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION); // we finally run the arm motor
     }
 
     public void updatePositionProfiledPIDF() {
+        // Legacy inline implementation of:
+        // target -> trapezoidal profile -> PD/PIDF -> motor power
+        //
+        // Suggested structure:
+        // - profile generation in TrapezoidalMotionProfileController
+        // - control math in a controller class
+        // - power application in a hardware/facade layer
         if (dt <= 0.0) return;
         double position = motor.getCurrentPosition();
         double velocity = motor.getVelocity();
@@ -357,6 +420,8 @@ public class MotorConfig {
     }
 
     public double rampPower(double current, double target, double dt) {
+        // Output slew-rate limiting. If this behavior remains useful, it likely
+        // deserves its own clearly named helper / policy object in the rewrite.
         double maxPowerChange = rampPowerAcceleration * dt;
         double diff = target - current;
         if (Math.abs(diff) > maxPowerChange) {
@@ -365,6 +430,10 @@ public class MotorConfig {
         return current + diff;
     }
     public void manualPositionPIDF(double error) {
+        // Custom closed-loop path used by some mechanisms where the subsystem
+        // computes its own error and delegates only the motor output stage here.
+        // This is another sign that multiple different abstractions were folded
+        // into one class.
         if (dt == 0) {
             throw new ArithmeticException("dt cannot be 0");
         }
@@ -407,6 +476,10 @@ public class MotorConfig {
 
     /* ---------------- Velocity PIDF ---------------- */
 
+    // This path reads measured velocity directly from the SDK motor and computes
+    // output inline. In the rewrite, this should map naturally to:
+    // MetaMotor + PIDFFVelocityController + a small velocity motor facade.
+
     public void setVelocityTicksPerSecond(double ticksPerSecond) {
         targetVelocityTicks = ticksPerSecond;
     }
@@ -439,6 +512,9 @@ public class MotorConfig {
         telemetryM.addData("error", error);
     }
     public void update() {
+        // Legacy mode switch. This central branching is convenient, but it is also
+        // the reason the class keeps accumulating unrelated responsibilities.
+        // Long-term direction: replace with separate use-case-specific motor types.
         if (motorMode == MotorMode.VELOCITY_CONTROL) {
             updateVelocityPIDF();
         } else if (motorMode == MotorMode.PROFILED_PIDF) {
