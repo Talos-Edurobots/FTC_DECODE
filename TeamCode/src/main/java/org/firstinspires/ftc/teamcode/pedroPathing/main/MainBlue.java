@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 @Configurable
 public class MainBlue extends LinearOpMode {
     static int backVel = 1500;
-    static int frontVel = 1200;
+    static int frontVel = 1300;
     HardwareManager hardwareManager;
     DriveTrain driveTrain;
     Intake intake;
@@ -63,7 +63,7 @@ public class MainBlue extends LinearOpMode {
     boolean useLimelight = false;
     boolean useHang = false;
     boolean activateStop = false;
-    static double hoodFarAngle = 0.1, hoodCloseAngle = .28;
+    static double hoodFarAngle = 0.1, hoodCloseAngle = .3;
 
     @Override
     public void runOpMode() throws InterruptedException {

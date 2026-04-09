@@ -62,11 +62,11 @@ public final class RobotConstants {
     ).addExternalGearRatio((double) 2.8 /1)
             .setMotorUse(MotorUse.MECHANICAL_STOP)
             .setMotorMode(MotorMode.PROFILED_PIDF)
-            .setMotionProfileCoefficients(1200, 2800, 1)
-            .setPIDFCoefficients(0.008, 0, 0.002, 0.15, 0.005687094208999908, 0.0002)
+            .setMotionProfileCoefficients(1500, 4000, 1)
+            .setPIDFCoefficients(0.01, 0.000001, 0.002, 0.18, 0.005687094208999908, 0.0002)
 //           .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
-            .setMinAngleRadians(Math.toRadians(-80))
-            .setMaxAngleRadians(Math.toRadians(100));
+            .setMinAngleRadians(Math.toRadians(-160))
+            .setMaxAngleRadians(Math.toRadians(160));
     public static MotorConfig HANG_CONFIG = new MotorConfig(
             "hang",
             GoBILDAMotorTypes.MOTOR_117_RPM,

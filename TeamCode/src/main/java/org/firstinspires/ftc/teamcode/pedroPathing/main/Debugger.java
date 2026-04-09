@@ -518,20 +518,21 @@ class KaTestOpMode extends OpMode {
     MotorConfig motor;
 //    VoltageSensorReadout voltageSensor;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private Iterable<VoltageSensor> voltageSensors;
     static double degreesOffset = 30;
     private double lastTime = 0.0;
     private double timer;
     private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
     private int direction = 1;
-    static double maxPower = .02;
-    static double loopTime = 5;
+    static double maxPower = 1;
+    static double loopTime = 2;
     public KaTestOpMode(MotorConfig motor) {
         this.motor = motor;
     }
     static boolean logPoints = false;
     public void log() {
         double velocity = motor.getVelocity();
-        double appliedVoltage = motor.getPower() * 12;
+        double appliedVoltage = motor.getPower() * getBatteryVoltage();
         double current = motor.getCurrent();
         double power = motor.getPower();
         double position = motor.getCurrentPosition();
@@ -553,6 +554,7 @@ class KaTestOpMode extends OpMode {
         maxPower = motor.maxPower;
         maxVel = motor.maxVelocity;
         maxAcc = motor.maxAcceleration;
+        voltageSensors = hardwareMap.voltageSensor;
         Log.d("KaTest", "velocity,applied_voltage,current,power,position,xref,vref,aref,targetPos,time");
         PanelsConfigurables.INSTANCE.refreshClass(this);
         motor.init(hardwareMap);
@@ -563,10 +565,20 @@ class KaTestOpMode extends OpMode {
     }
 
     @Override
+    public void start() {
+        lastTime = getRuntime();
+        timer = 0.0;
+    }
+
+    @Override
     public void loop() {
         double now = getRuntime();
         double dt = now - lastTime;
         lastTime = now;
+        if (dt <= 0) return;
+
+        timer += dt;
+        MotorConfig.setDt(dt);
         motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
         motor.maxAcceleration = maxAcc;
         motor.maxVelocity = maxVel;
@@ -577,10 +589,6 @@ class KaTestOpMode extends OpMode {
         }
         motor.setPositionInDegrees(degreesOffset * direction);
         motor.updatePositionProfiledPIDF();
-        if (dt <= 0) return;
-
-        timer += dt;
-        MotorConfig.setDt(dt);
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("max power", motor.maxPower);
         telemetryM.addData("velocity", motor.getVelocity());
@@ -596,6 +604,17 @@ class KaTestOpMode extends OpMode {
         telemetryM.addData("ks motor", motor.kS);
         telemetryM.update(telemetry);
         if (logPoints) log();
+    }
+
+    private double getBatteryVoltage() {
+        double minVoltage = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : voltageSensors) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) {
+                minVoltage = Math.min(minVoltage, voltage);
+            }
+        }
+        return minVoltage < Double.POSITIVE_INFINITY ? minVoltage : 12.0;
     }
 }
 
@@ -748,7 +767,8 @@ class RampPowerOpMode extends OpMode {
 class CollectData extends OpMode {
     Pose startPose = new Pose(72, 72, 0);
     Follower follower;
-    Flickers flickers;
+    Gate gate;
+    Intake intake;
     Shooter shooter;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;
@@ -759,8 +779,10 @@ class CollectData extends OpMode {
 
     @Override
     public void init() {
-        flickers = new Flickers();
-        flickers.init(hardwareMap);
+        gate = new Gate();
+        gate.init(hardwareMap);
+        intake = new Intake(hardwareMap);
+        intake.init();
         shooter = new Shooter(hardwareMap);
         shooter.init();
         shooter.run(false);
@@ -774,21 +796,40 @@ class CollectData extends OpMode {
     }
 
     @Override
+    public void start() {
+        oldTime = getRuntime();
+    }
+
+    @Override
     public void loop() {
         newTime = getRuntime();
         dt = newTime - oldTime;
         oldTime = newTime;
-        flickers.leftFlick(gamepad1.left_bumper);
-        flickers.rightFlick(gamepad1.right_bumper);
+        if (dt < 0) {
+            dt = 0;
+        }
+        if (gamepad1.rightBumperWasPressed()) gate.changeState();
         shooter.setHoodAngle(shooter.getHoodAngle() + .5 * dt * (gamepad1.right_trigger-gamepad1.left_trigger));
-        double turretPos = turret.getCurrentPosition()/turret.getMotorType().getTicksPerRadian();
-        double shooterVel =  shooter.getTargetVelocity();
-        double hoodAngle = shooter.getHoodAngle();
-        String followerPose = follower.getPose().toString();
-        String vel = follower.getVelocity().toString();
         if (gamepad1.xWasPressed()) {
             shooter.changeState();
         }
+        if (gamepad1.yWasPressed()) {
+            intake.setCurrentState(
+                    intake.getCurrentState() == Intake.IntakeState.INTAKE
+                            ? Intake.IntakeState.STOP
+                            : Intake.IntakeState.INTAKE
+            );
+        }
+        Shooter.targetVelocity = shooterTarget;
+        intake.update();
+        shooter.update();
+        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
+        follower.update();
+        double turretPos = turret.getCurrentPosition()/turret.getMotorType().getTicksPerRadian();
+        double shooterVel = shooter.getVelocity();
+        double hoodAngle = shooter.getHoodAngle();
+        String followerPose = follower.getPose().toString();
+        String vel = follower.getVelocity().toString();
         if (gamepad1.aWasPressed()) Log.d(
                 tag, String.format(
                         "%b,%s,%f,%f,%f,%s",
@@ -801,13 +842,10 @@ class CollectData extends OpMode {
                         false, followerPose, turretPos, shooterVel, hoodAngle, vel
                 )
         );
-        Shooter.targetVelocity = shooterTarget;
-        shooter.update();
-        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
-        follower.update();
         telemetryM.addData("follower pose", follower.getPose().toString());
         telemetryM.addData("turret angle", turretPos);
         telemetryM.addData("shooter velocity", shooterVel);
+        telemetryM.addData("intake state", intake.getCurrentState());
         telemetryM.update(telemetry);
     }
 }

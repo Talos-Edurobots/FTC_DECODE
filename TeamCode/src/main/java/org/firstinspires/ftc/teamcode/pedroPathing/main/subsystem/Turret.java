@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
 @Configurable
 public class Turret {
     static double maxPower = .5, kp=0.005, kd = .001, ki=0, ks=0, manualMaxPower = .2, ramp = 1;
-    public static double movingShotLeadFactor = 1.0;
+    public static double movingShotLeadFactor = 1.35;
     HardwareMap hwmap;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;
@@ -67,8 +67,8 @@ public class Turret {
          * (pose - a * velocity), which lets us reuse the existing lookToGoal() path.
          */
         Pose compensatedPose = new Pose(
-                pose.getX() - leadFactor * velocity.getXComponent(),
-                pose.getY() - leadFactor * velocity.getYComponent(),
+                pose.getX() + leadFactor * velocity.getXComponent(),
+                pose.getY() + leadFactor * velocity.getYComponent(),
                 pose.getHeading()
         );
 

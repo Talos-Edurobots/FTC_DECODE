@@ -16,4 +16,12 @@ public class Gate {
     public void activate() { gate.setPosition(GATE_ACTIVATION_POS); }
     public void deactivate() { gate.setPosition(GATE_REST_POS); }
     public boolean isActivated() { return gate.getPosition() == GATE_ACTIVATION_POS; }
+    public void changeState() {
+        if (isActivated()) {
+            deactivate();
+        }
+        else {
+            activate();
+        }
+    }
 }
