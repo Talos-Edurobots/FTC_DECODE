@@ -6,6 +6,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -16,6 +17,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
 @Configurable
 public class Turret {
     static double maxPower = .5, kp=0.005, kd = .001, ki=0, ks=0, manualMaxPower = .2, ramp = 1;
+    public static double movingShotLeadFactor = 1.0;
     HardwareMap hwmap;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;
@@ -51,6 +53,29 @@ public class Turret {
         telemetryM.addData("angle to goal", angleToGoal);
         telemetryM.addData("rad", rad);
         telemetryM.addData("atan2", rad);
+    }
+
+    public void lookToGoalWhileMoving(Pose pose, Vector velocity, boolean isRed) {
+        lookToGoalWhileMoving(pose, velocity, movingShotLeadFactor, isRed);
+    }
+
+    public void lookToGoalWhileMoving(Pose pose, Vector velocity, double leadFactor, boolean isRed) {
+        if (pose == null || velocity == null) return;
+
+        /*
+         * Aiming at (goal + a * velocity) is equivalent to aiming from
+         * (pose - a * velocity), which lets us reuse the existing lookToGoal() path.
+         */
+        Pose compensatedPose = new Pose(
+                pose.getX() - leadFactor * velocity.getXComponent(),
+                pose.getY() - leadFactor * velocity.getYComponent(),
+                pose.getHeading()
+        );
+
+        lookToGoal(compensatedPose, isRed);
+        telemetryM.addData("moving shot lead factor", leadFactor);
+        telemetryM.addData("moving shot vx", velocity.getXComponent());
+        telemetryM.addData("moving shot vy", velocity.getYComponent());
     }
     public void init() {
         turret.init(hwmap);

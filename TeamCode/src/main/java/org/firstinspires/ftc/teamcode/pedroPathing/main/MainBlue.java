@@ -165,7 +165,8 @@ public class MainBlue extends LinearOpMode {
             turret.manualControl(gamepad1.left_trigger - gamepad1.right_trigger);
             if (useLimelight) turret.limelightAim(result);
             else {
-                turret.lookToGoal(follower.getPose(), false);
+//                turret.lookToGoal(follower.getPose(), false);
+                turret.lookToGoalWhileMoving(follower.getPose(), follower.getVelocity(), false);
                 turret.loop();
             }
             MotorConfig.setDt(dt);
