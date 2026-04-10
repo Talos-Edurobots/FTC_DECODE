@@ -7,6 +7,12 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MetaMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.config.MotorLimits;
 
+/**
+ * Small facade for direct power control.
+ *
+ * <p>This is the simplest motor wrapper in the package. It owns hardware setup
+ * and power application, but does not own any closed-loop controller state.
+ */
 public class OpenLoopMotor {
     private final MetaMotor hardware;
 

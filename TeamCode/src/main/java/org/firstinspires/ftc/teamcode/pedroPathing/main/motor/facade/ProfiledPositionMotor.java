@@ -17,6 +17,13 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.Angle;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.AngularVelocity;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.EncoderConverter;
 
+/**
+ * Facade for motor-shaft profiled position control.
+ *
+ * <p>This type composes a hardware adapter, encoder conversion, and a
+ * trapezoidal-profile controller. Mechanism-space conversion should happen
+ * outside this class before a target angle is set.
+ */
 public class ProfiledPositionMotor {
     private final MetaMotor hardware;
     private final EncoderConverter encoderConverter;

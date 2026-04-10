@@ -16,6 +16,12 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.Angle;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.AngularVelocity;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.EncoderConverter;
 
+/**
+ * Facade for motor-shaft velocity control.
+ *
+ * <p>This type owns the hardware adapter, encoder conversion, velocity target,
+ * and per-loop state needed to run {@link PIDFFVelocityController}.
+ */
 public class VelocityControlledMotor {
     private final MetaMotor hardware;
     private final EncoderConverter encoderConverter;
