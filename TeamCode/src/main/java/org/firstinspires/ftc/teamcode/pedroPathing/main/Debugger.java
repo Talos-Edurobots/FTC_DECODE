@@ -747,8 +747,8 @@ class RampPowerOpMode extends OpMode {
             }
             else {
                 shooter.run(false);
-                double ffPower = (shooter.getInstance().kS * Math.signum(velocity)
-                        + shooter.getInstance().kV * velocity) / 12.0;
+                double ffPower = (shooter.getKs() * Math.signum(velocity)
+                        + shooter.getKv() * velocity) / 12.0;
                 shooter.setPower(ffPower);
             }
 
@@ -756,11 +756,11 @@ class RampPowerOpMode extends OpMode {
             telemetryM.addLine("running with " + (runWIthVel ? "velocity":"open loop power"));
             telemetryM.addData("shooter enabled", shooter.getRun());
             telemetryM.addData("shooter velocity", shooter.getVelocity());
-            telemetryM.addData("shooter power", shooter.getInstance().getPower());
+            telemetryM.addData("shooter power", shooter.getPower());
             telemetryM.update(telemetry);
         }
         public void log() {
-            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWIthVel, shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent(), Shooter.targetVelocity));
+            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWIthVel, shooter.getVelocity(), shooter.getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent(), Shooter.targetVelocity));
         }
     }
 @Configurable

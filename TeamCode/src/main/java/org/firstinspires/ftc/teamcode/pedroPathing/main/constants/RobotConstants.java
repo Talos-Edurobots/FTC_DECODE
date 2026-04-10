@@ -12,6 +12,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.GoBILDAMotorTypes;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.config.MotorLimits;
 
 public final class RobotConstants {
     private RobotConstants(){}
@@ -48,11 +50,26 @@ public final class RobotConstants {
             DcMotorSimple.Direction.FORWARD
     ).setMotorUse(MotorUse.FREE_SPIN)
             .setMotorMode(MotorMode.OPEN_LOOP);
+
+    public static final String SHOOTER_MOTOR_NAME = "shooter";
+    public static final GoBILDAMotorTypes SHOOTER_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_6000_RPM;
+    public static final DcMotorSimple.Direction SHOOTER_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+    public static final PIDFFCoefficients SHOOTER_VELOCITY_PIDF =
+            new PIDFFCoefficients(.005, 0, 0, .02, 0.0052684109772247485, 0);
+    public static final MotorLimits SHOOTER_LIMITS = MotorLimits.defaults();
+
     public static MotorConfig SHOOTER_CONFIG = new MotorConfig(
-            "shooter",
-            GoBILDAMotorTypes.MOTOR_6000_RPM,
-            DcMotorSimple.Direction.REVERSE
-    ).setPIDFCoefficients(.005, 0, 0, .02, 0.0052684109772247485 , 0)
+            SHOOTER_MOTOR_NAME,
+            SHOOTER_MOTOR_TYPE,
+            SHOOTER_MOTOR_DIRECTION
+    ).setPIDFCoefficients(
+            SHOOTER_VELOCITY_PIDF.kp(),
+            SHOOTER_VELOCITY_PIDF.ki(),
+            SHOOTER_VELOCITY_PIDF.kd(),
+            SHOOTER_VELOCITY_PIDF.ks(),
+            SHOOTER_VELOCITY_PIDF.kv(),
+            SHOOTER_VELOCITY_PIDF.ka()
+    )
             .setMotorMode(MotorMode.VELOCITY_CONTROL);
     public static MotorConfig TURRET_CONFIG = new MotorConfig(
             "turret",

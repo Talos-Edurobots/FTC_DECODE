@@ -23,4 +23,12 @@ public class EncoderConverter {
     public AngularVelocity ticksPerSecondToVelocity(double ticksPerSec) {
         return new AngularVelocity(ticksPerSec * (2 * Math.PI) / motorType.getTicksPerOutputRev());
     }
+
+    public double accelerationToTicksPerSecondSquared(double accelerationRadPerSecSquared) {
+        return accelerationRadPerSecSquared * motorType.getTicksPerOutputRev() / (2 * Math.PI);
+    }
+
+    public double ticksPerSecondSquaredToAcceleration(double ticksPerSecondSquared) {
+        return ticksPerSecondSquared * (2 * Math.PI) / motorType.getTicksPerOutputRev();
+    }
 }
