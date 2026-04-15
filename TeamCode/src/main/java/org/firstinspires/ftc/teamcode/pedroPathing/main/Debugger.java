@@ -57,6 +57,7 @@ public class Debugger extends SelectableOpMode {
             s.folder("position control", pc -> {
                 pc.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
                 pc.add("turret ka test", () -> new KaTestOpMode(RobotConstants.TURRET_CONFIG));
+                pc.add("turret stick teleop", () -> new TurretStickTeleOp(RobotConstants.TURRET_CONFIG));
             });
             s.folder("ke characterization", kect -> {
                 kect.add("shooter ke", () -> new KeCharacterizationOpMode(RobotConstants.SHOOTER_CONFIG));
@@ -615,6 +616,74 @@ class KaTestOpMode extends OpMode {
             }
         }
         return minVoltage < Double.POSITIVE_INFINITY ? minVoltage : 12.0;
+    }
+}
+
+@Configurable
+class TurretStickTeleOp extends OpMode {
+    private final MotorConfig motor;
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private double lastTime = 0.0;
+    private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
+    static double maxPower = 1;
+
+    public TurretStickTeleOp(MotorConfig motor) {
+        this.motor = motor;
+    }
+
+    @Override
+    public void init() {
+        kp = motor.kP;
+        ki = motor.kI;
+        kd = motor.kD;
+        ks = motor.kS;
+        kv = motor.kV;
+        ka = motor.kA;
+        maxPower = motor.maxPower;
+        maxVel = motor.maxVelocity;
+        maxAcc = motor.maxAcceleration;
+        PanelsConfigurables.INSTANCE.refreshClass(this);
+        motor.init(hardwareMap);
+    }
+
+    @Override
+    public void start() {
+        lastTime = getRuntime();
+    }
+
+    @Override
+    public void loop() {
+        double now = getRuntime();
+        double dt = now - lastTime;
+        lastTime = now;
+        if (dt <= 0) return;
+
+        double stick = gamepad1.right_stick_x;
+        double targetTicks = stick >= 0
+                ? stick * motor.getMaxAngleTicks()
+                : stick * Math.abs(motor.getMinAngleTicks());
+//                : stick * motor.getMinAngleTicks();
+
+        MotorConfig.setDt(dt);
+        motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
+        motor.maxAcceleration = maxAcc;
+        motor.maxVelocity = maxVel;
+        motor.maxPower = maxPower;
+        motor.setPositionInTicks(targetTicks);
+        motor.updatePositionProfiledPIDF();
+
+        telemetryM.addLine("Use gamepad1 right stick X to command the turret");
+        telemetryM.addData("stick", stick);
+        telemetryM.addData("target ticks", targetTicks);
+        telemetryM.addData("min ticks", motor.getMinAngleTicks());
+        telemetryM.addData("max ticks", motor.getMaxAngleTicks());
+        telemetryM.addData("power", motor.getPower());
+        telemetryM.addData("velocity", motor.getVelocity());
+        telemetryM.addData("position", motor.getCurrentPosition());
+        telemetryM.addData("ref pos", motor.getxRef());
+        telemetryM.addData("ref vel", motor.getvRef());
+        telemetryM.addData("current", motor.getCurrent());
+        telemetryM.update(telemetry);
     }
 }
 
