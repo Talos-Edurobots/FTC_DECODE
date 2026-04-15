@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
 @Configurable
 public class Turret {
     static double maxPower = .5, kp=0.005, kd = .001, ki=0, ks=0, manualMaxPower = .2, ramp = 1;
-    public static double movingShotLeadFactor = 1.35;
+    public static double movingShotLeadFactor = 0.01;
     HardwareMap hwmap;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;
@@ -66,16 +66,18 @@ public class Turret {
          * Aiming at (goal + a * velocity) is equivalent to aiming from
          * (pose - a * velocity), which lets us reuse the existing lookToGoal() path.
          */
+        Pose target = isRed ? RED_GOAL_POSE : BLUE_GOAL_POSE;
+        double distance = target.distanceFrom(pose);
         Pose compensatedPose = new Pose(
-                pose.getX() + leadFactor * velocity.getXComponent(),
-                pose.getY() + leadFactor * velocity.getYComponent(),
+                pose.getX() + leadFactor * velocity.getXComponent() * distance,
+                pose.getY() + leadFactor * velocity.getYComponent() * distance,
                 pose.getHeading()
         );
 
         lookToGoal(compensatedPose, isRed);
-        telemetryM.addData("moving shot lead factor", leadFactor);
-        telemetryM.addData("moving shot vx", velocity.getXComponent());
-        telemetryM.addData("moving shot vy", velocity.getYComponent());
+//        telemetryM.addData("moving shot lead factor", leadFactor);
+//        telemetryM.addData("moving shot vx", velocity.getXComponent());
+//        telemetryM.addData("moving shot vy", velocity.getYComponent());
     }
     public void init() {
         turret.init(hwmap);
