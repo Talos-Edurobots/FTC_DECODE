@@ -15,14 +15,17 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ColorSensors;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
@@ -67,6 +70,7 @@ public class Debugger extends SelectableOpMode {
             s.folder("high level", hlt -> {
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
                 hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
+                hlt.add("color readout", ColorReadoutOpMode::new);
 //                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
                 hlt.add("hang control", HangControl::new);
                 hlt.add("turret simple pidf with turret", LimelightTurretAlign::new);
@@ -734,6 +738,44 @@ class VoltageSensorReadoutOpMode extends OpMode {
         }
 
         telemetry.update();
+    }
+}
+
+class ColorReadoutOpMode extends OpMode {
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private final MotorConfig intakeMotor = RobotConstants.INTAKE_CONFIG;
+    private Gate gate = new Gate();
+    private ColorSensors colors = new ColorSensors();
+
+    @Override
+    public void init() {
+        gate.init(hardwareMap);
+        intakeMotor.init(hardwareMap);
+        colors.init(hardwareMap);
+
+        telemetryM.addLine("Color readout ready");
+        telemetryM.addLine("Use triggers to control intake");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+        double intakePower = gamepad1.right_trigger - gamepad1.left_trigger;
+        intakeMotor.setPower(colors.isFull() ? 0 : intakePower);
+        colors.update();
+        if (gamepad1.rightBumperWasPressed()) gate.changeState();
+
+        telemetryM.addData("intake power", intakePower);
+        telemetryM.addData("intake current", intakeMotor.getCurrent());
+        telemetryM.addLine("-------------------------");
+        telemetryM.addData("is robot full", colors.isFull());
+        telemetryM.addData("color1 distance (cm)", colors.getColor1());
+        telemetryM.addData("is detected", colors.is1Detected());
+        telemetryM.addData("color2 distance (cm)", colors.getColor2());
+        telemetryM.addData("is detected", colors.is2Detected());
+        telemetryM.addData("color3 distance (cm)", colors.getColor3());
+        telemetryM.addData("is detected", colors.is3Detected());
+        telemetryM.update(telemetry);
     }
 }
 

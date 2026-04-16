@@ -17,13 +17,13 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ColorSensors;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
@@ -42,6 +42,7 @@ public class MainBlue extends LinearOpMode {
     static int frontVel = 1300;
     HardwareManager hardwareManager;
     DriveTrain driveTrain;
+    ColorSensors colors;
     Intake intake;
     Shooter shooter;
     Gate gate = new Gate();
@@ -83,6 +84,9 @@ public class MainBlue extends LinearOpMode {
         telemetry.setMsTransmissionInterval(11);
         limelight.pipelineSwitch(2);
 
+        colors = new ColorSensors();
+        colors.init(hardwareMap);
+
         leds = new Leds();
         leds.init(hardwareMap);
         hang = new Hang();
@@ -98,8 +102,6 @@ public class MainBlue extends LinearOpMode {
 
         driveTrain = new DriveTrain(hardwareMap);
         driveTrain.init();
-
-
 
         driveTrain = new DriveTrain(hardwareMap);
         driveTrain.init();
@@ -233,19 +235,21 @@ public class MainBlue extends LinearOpMode {
 //            else if (gamepad1.bWasPressed()) {
 //                intake.setCurrentState(Intake.IntakeState.STOP);
 //            }
+            colors.update();
+            boolean isFull = colors.isFull();
             boolean rightBumb = gamepad1.rightBumperWasPressed();
-            if (intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumb) {
+            if ((intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumb) || isFull) {
                 intake.setCurrentState(Intake.IntakeState.STOP);
                 gate.activate();
             } else if (intake.getCurrentState() == Intake.IntakeState.STOP && rightBumb) {
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
             }
-            intake.update();
             boolean leftBump = gamepad1.leftBumperWasPressed();
             if (leftBump) {
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
                 gate.deactivate();
             }
+            intake.update();
 
             if (gamepad1.leftStickButtonWasPressed() || gamepad1.rightStickButtonWasPressed()) slowMode ^= true;
             double mult = slowMode ? 0.25 : 1;
@@ -263,6 +267,11 @@ public class MainBlue extends LinearOpMode {
             follower.update();
 
             telemetryM.addData("fps", 1/ dt);
+            telemetryM.addData("color 1", colors.is1Detected());
+            telemetryM.addData("color 2", colors.is2Detected());
+            telemetryM.addData("color 3", colors.is3Detected());
+            telemetryM.addData("is all", colors.isFull());
+            telemetryM.addData("timer", colors.getFullTIme());
             telemetryM.addData("intake status", intake.getCurrentState());
             telemetryM.addData("intake current", intake.getCurrent());
             telemetryM.addData("shooter vel", shooter.getVelocity());
