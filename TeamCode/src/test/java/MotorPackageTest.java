@@ -1,5 +1,6 @@
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -416,7 +417,7 @@ public class MotorPackageTest {
 
         motor.setTargetAngle(Angle.fromRadians(10.0));
         motor.update(loopState);
-        assertFalse(motor.getReferenceState().getPosition().toRadians() == 0.0);
+        assertNotEquals(0.0, motor.getReferenceState().getPosition().toRadians(), 0.0);
 
         motor.setPower(0.25);
 
