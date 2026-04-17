@@ -9,6 +9,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -19,7 +20,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ColorSensors;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
@@ -50,7 +50,9 @@ public class MainBlue extends LinearOpMode {
     Turret turret;
     Pinpoint pinpoint;
     Follower follower;
-//    Hang hang;
+//    int sound = hardwareMap.appContext.getResources().getIdentifier("audio",   "raw", hardwareMap.appContext.getPackageName());
+
+    //    Hang hang;
     private Limelight3A limelight;
     Supplier<PathChain> pathChain;
     Pose startingPose = new Pose(72, 72, Math.toRadians(180));
@@ -185,6 +187,7 @@ public class MainBlue extends LinearOpMode {
             }
             // Shooter control
             if (gamepad1.dpadUpWasPressed()) {
+//                SoundPlayer.getInstance().startPlaying(hardwareMap.appContext, sound);
                 shooter.changeState();
             }
             shooter.update();
