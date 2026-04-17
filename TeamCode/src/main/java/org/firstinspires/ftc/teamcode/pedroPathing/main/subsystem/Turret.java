@@ -22,7 +22,7 @@ public class Turret {
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     MotorConfig turret = RobotConstants.TURRET_CONFIG;
     static final Pose RED_GOAL_POSE = new Pose(144, 137);
-    final Pose BLUE_GOAL_POSE = new Pose(0, 144);
+    final Pose BLUE_GOAL_POSE = new Pose(0, 140);
     public Turret(HardwareMap hwmap) {
         this.hwmap = hwmap;
     }

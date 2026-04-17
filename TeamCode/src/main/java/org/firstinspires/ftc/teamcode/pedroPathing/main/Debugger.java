@@ -15,12 +15,10 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
@@ -31,6 +29,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.tests.TestPanelsTelemetry;
 
 
 @TeleOp(name = "Debugger", group = "main")
@@ -38,6 +37,7 @@ public class Debugger extends SelectableOpMode {
     public Debugger() {
         super("Select a Tuning OpMode", s -> {
             s.folder("Without encoder", ne -> {
+                ne.add("shooter subsystem", ShooterPowerTest::new);
                 ne.add("Run Intake",  () -> new MotorPowerTest(RobotConstants.INTAKE_CONFIG ));
                 ne.add("Run Shooter", () -> new MotorPowerTest(RobotConstants.SHOOTER_CONFIG));
                 ne.add("run turret",  () -> new MotorPowerTest(RobotConstants.TURRET_CONFIG ));
@@ -56,6 +56,7 @@ public class Debugger extends SelectableOpMode {
                 sc.add("left servo", () -> new ServoControl(RobotConstants.LEFT_SERVO_NAME));
                 sc.add("right flicker", () -> new ServoControl(RobotConstants.RIGHT_FLICKER_NAME));
                 sc.add("left flicker", () -> new ServoControl(RobotConstants.LEFT_FLICKER_NAME));
+                sc.add("enable pwm all servos", EnableAllServoPwmOpMode::new);
             });
             s.folder("position control", pc -> {
                 pc.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
@@ -63,9 +64,9 @@ public class Debugger extends SelectableOpMode {
                 pc.add("turret stick teleop", () -> new TurretStickTeleOp(RobotConstants.TURRET_CONFIG));
             });
             s.folder("ke characterization", kect -> {
-                kect.add("shooter ke", () -> new KeCharacterizationOpMode(RobotConstants.SHOOTER_CONFIG));
-                kect.add("intake ke", () -> new KeCharacterizationOpMode(RobotConstants.INTAKE_CONFIG));
-                kect.add("turret ke", () -> new KeCharacterizationOpMode(RobotConstants.TURRET_CONFIG));
+                kect.add("shooter ke", KeCharacterizationOpMode::new);
+//                kect.add("intake ke", () -> new KeCharacterizationOpMode(RobotConstants.INTAKE_CONFIG));
+//                kect.add("turret ke", () -> new KeCharacterizationOpMode(RobotConstants.TURRET_CONFIG));
             });
             s.folder("high level", hlt -> {
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
@@ -142,6 +143,28 @@ class MotorPowerTest extends OpMode {
     }
 }
 
+class ShooterPowerTest extends OpMode {
+    Shooter shooter;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    @Override
+    public void init() {
+        shooter = new Shooter(hardwareMap);
+        shooter.init();
+        telemetryM.addLine("init");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+        double power = gamepad1.right_trigger - gamepad1.left_trigger;
+        shooter.setPower(power);
+        telemetryM.addData("power", power);
+        telemetryM.addData("current 1", shooter.getCurrent1());
+        telemetryM.addData("current 2", shooter.getCurrent2());
+        telemetryM.addData("velocity", shooter.getVelocity());
+        telemetryM.update(telemetry);
+    }
+}
 @Configurable
 class MotorPositionTest extends OpMode {
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -377,6 +400,33 @@ class ServoControl extends OpMode{
     }
 }
 
+
+class EnableAllServoPwmOpMode extends OpMode {
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private int servoCount = 0;
+
+    @Override
+    public void init() {
+        servoCount = 0;
+
+        for (Servo servo : hardwareMap.getAll(Servo.class)) {
+            servo.setPosition(0.5);
+            servoCount++;
+        }
+
+        telemetryM.addLine("Set every servo to position 0.5");
+        telemetryM.addData("servos updated", servoCount);
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+        telemetryM.addLine("All servos were commanded to 0.5 during init");
+        telemetryM.addData("servos updated", servoCount);
+        telemetryM.update(telemetry);
+    }
+}
+
 class FlickerAnalogControl extends OpMode{
     Flickers flickers = new Flickers();
     @Override
@@ -415,13 +465,10 @@ class HangControl extends OpMode {
 
 @Configurable
 class KeCharacterizationOpMode extends OpMode {
-    public KeCharacterizationOpMode(MotorConfig motor) {
-        this.motor = motor;
-    }
-    MotorConfig motor;
+    Shooter shooter;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     static int SAMPLES = 10;
-    static double maxPower = .5;
+    static double maxPower = 1;
     double[] powerLevels = new double[SAMPLES];
     {
         for (int i = 1; i <= SAMPLES; i++) {
@@ -437,14 +484,15 @@ class KeCharacterizationOpMode extends OpMode {
 
     @Override
     public void init() {
-        motor.init(hardwareMap);
         Log.d(TAG, "velocity,applied_voltage");
+        shooter = new Shooter(hardwareMap);
+        shooter.init();
     }
     @Override
     public void init_loop() {
         telemetryM.addLine("Ke Characterization Ready");
-        telemetryM.addLine((motor.getMotorUse() == MotorUse.DRIVETRAIN) ? "WARNING: RUN THIS ONLY IF THE ROBOT IS ELEVATED OFF THE GROUND, OR PLACED SIDEWAYS":"");
-        telemetryM.addLine((motor.getMotorUse() == MotorUse.MECHANICAL_STOP) ? "WARNING: THIS MOTOR RUNS WITHOUT ENCODER FEEDBACK AND IT MAY DAMAGE MECHANICAL PARTS IF MISUSED":"");
+//        telemetryM.addLine((shooter.getMotorUse() == MotorUse.DRIVETRAIN) ? "WARNING: RUN THIS ONLY IF THE ROBOT IS ELEVATED OFF THE GROUND, OR PLACED SIDEWAYS":"");
+//        telemetryM.addLine((shooter.getMotorUse() == MotorUse.MECHANICAL_STOP) ? "WARNING: THIS MOTOR RUNS WITHOUT ENCODER FEEDBACK AND IT MAY DAMAGE MECHANICAL PARTS IF MISUSED":"");
         telemetryM.update(telemetry);
     }
 
@@ -452,7 +500,7 @@ class KeCharacterizationOpMode extends OpMode {
     public void start() {
         index = 0;
         applyPower();
-        lastVelocity = motor.getVelocity();
+        lastVelocity = shooter.getVelocity();
         stableStartTime = System.currentTimeMillis();
         timer.reset();
     }
@@ -460,13 +508,13 @@ class KeCharacterizationOpMode extends OpMode {
     @Override
     public void loop() {
         if (index >= powerLevels.length) {
-            motor.setPower(0);
+            shooter.setPower(0);
             telemetryM.addLine("Done");
             telemetryM.addData("LogCat tag", TAG);
             return;
         }
 
-        double currentVelocity = motor.getVelocity();
+        double currentVelocity = shooter.getVelocity();
         double accel = (currentVelocity - lastVelocity) / timer.seconds(); // ~20ms loop
 
         if (gamepad1.yWasPressed()) {
@@ -487,12 +535,12 @@ class KeCharacterizationOpMode extends OpMode {
 
     private void applyPower() {
         if (index < powerLevels.length) {
-            motor.setPower(powerLevels[index]);
+            shooter.setPower(powerLevels[index]);
         }
     }
 
     private void logPoint() {
-        double velocity = motor.getVelocity();
+        double velocity = shooter.getVelocity();
         double batteryVoltage = getBatteryVoltage();
         double appliedVoltage = powerLevels[index] * batteryVoltage;
 
@@ -858,20 +906,20 @@ class RampPowerOpMode extends OpMode {
             }
             else {
                 shooter.run(false);
-                double ffPower = (shooter.getInstance().kS * Math.signum(velocity)
-                        + shooter.getInstance().kV * velocity) / 12.0;
-                shooter.setPower(ffPower);
+//                double ffPower = (RobotConstants.SHOOTER_CONFIG.kS * Math.signum(velocity)
+//                        + RobotConstants.SHOOTER_CONFIG.kV * velocity) / 12.0;
+//                shooter.setPower(ffPower);
             }
 
             intake.update();
             telemetryM.addLine("running with " + (runWIthVel ? "velocity":"open loop power"));
             telemetryM.addData("shooter enabled", shooter.getRun());
             telemetryM.addData("shooter velocity", shooter.getVelocity());
-            telemetryM.addData("shooter power", shooter.getInstance().getPower());
+            telemetryM.addData("shooter power", shooter.getPower());
             telemetryM.update(telemetry);
         }
         public void log() {
-            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWIthVel, shooter.getVelocity(), shooter.getInstance().getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent(), Shooter.targetVelocity));
+            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWIthVel, shooter.getVelocity(), shooter.getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent1(), Shooter.targetVelocity));
         }
     }
 @Configurable

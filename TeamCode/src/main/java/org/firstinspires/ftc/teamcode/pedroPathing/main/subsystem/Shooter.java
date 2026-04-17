@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 @Configurable
 public class Shooter {
     private HardwareMap hwmap;
-    private MotorConfig motor;
+    private MotorConfig motor1, motor2;
     private Servo hoodServo;
     private double integralSum = 0;
     private double lastError = 0;
@@ -45,8 +45,10 @@ public class Shooter {
         this.hwmap = hwmap;
     }
     public void init(){
-        motor = RobotConstants.SHOOTER_CONFIG;
-        motor.init(hwmap);
+        motor1 = RobotConstants.SHOOTER_CONFIG;
+        motor1.init(hwmap);
+        motor2 = RobotConstants.SHOOTER2_CONFIG;
+        motor2.init(hwmap);
 
         hoodServo = hwmap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
         hoodServo.setPosition(.5);
@@ -59,7 +61,7 @@ public class Shooter {
         loopTimer.reset();
         MotorConfig.setDt(dt);
         MotorConfig.setBatteryVoltage(getBatteryVoltage());
-        motor.setVelocityTicksPerSecond(targetVelocity);
+        motor1.setVelocityTicksPerSecond(targetVelocity);
         calculateFilteredVelocity();
         setVelocity();
     }
@@ -67,7 +69,7 @@ public class Shooter {
         return impactTimer.seconds();
     }
     public void calculateFilteredVelocity() {
-        filteredVelocity = alpha * motor.getVelocity() + (1 - alpha) * filteredVelocity;
+        filteredVelocity = alpha * motor1.getVelocity() + (1 - alpha) * filteredVelocity;
         if (dt <= 0) {
             lastFilteredVel = filteredVelocity;
             return;
@@ -102,28 +104,41 @@ public class Shooter {
         return hoodServo.getPosition();
     }
     public boolean isBusy () {
-        return Math.abs(targetVelocity - motor.getVelocity()) > 70;
+        return Math.abs(targetVelocity - motor1.getVelocity()) > 70;
     }
     public void setVelocity() {
-        if (isRunning) motor.updateVelocityPIDF();
+        if (isRunning) {
+            motor1.updateVelocityPIDF();
+            syncSecondaryMotorPower();
+        }
         else floatShooter();
     }
     public void setPower(double power) {
-        motor.setPower(power);
+        motor1.setPower(power);
+        syncSecondaryMotorPower();
     }
     public void floatShooter() {
-        motor.setPower(0);
+        motor1.setPower(0);
+        syncSecondaryMotorPower();
     }
-    public MotorConfig getInstance() {
-        return motor;
+
+    private void syncSecondaryMotorPower() {
+        motor2.setPower(motor1.getPower());
     }
 
     public double getVelocity() {
-        return motor.getVelocity();
+        return motor1.getVelocity();
     }
 
-    public double getCurrent() {
-        return motor.getCurrent();
+    public double getPower() {
+        return motor1.getPower();
+    }
+
+    public double getCurrent1() {
+        return motor1.getCurrent();
+    }
+    public double getCurrent2() {
+        return motor2.getCurrent();
     }
 
     private double getBatteryVoltage() {

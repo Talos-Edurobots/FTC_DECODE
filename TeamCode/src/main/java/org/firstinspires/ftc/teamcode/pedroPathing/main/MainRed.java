@@ -247,7 +247,7 @@ public class MainRed extends LinearOpMode {
             telemetryM.addData("fps", 1/ dt);
             telemetryM.addData("intake status", intake.getCurrentState());
             telemetryM.addData("shooter vel", shooter.getVelocity());
-            telemetryM.addData("shooter current", shooter.getCurrent());
+            telemetryM.addData("shooter current", shooter.getCurrent1());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
             telemetryM.addData("shooter shooter running", shooter.getRun());
             telemetryM.addData("shooter filtered vel", shooter.filteredVelocity);

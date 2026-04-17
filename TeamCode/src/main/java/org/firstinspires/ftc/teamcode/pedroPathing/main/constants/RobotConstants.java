@@ -52,8 +52,13 @@ public final class RobotConstants {
             "shooter",
             GoBILDAMotorTypes.MOTOR_6000_RPM,
             DcMotorSimple.Direction.REVERSE
-    ).setPIDFCoefficients(.005, 0, 0, .02, 0.0052684109772247485 , 0)
+    ).setPIDFCoefficients(.005, 0, 0, .02, 0.0051534761660499044 , 0)
             .setMotorMode(MotorMode.VELOCITY_CONTROL);
+    public static MotorConfig SHOOTER2_CONFIG = new MotorConfig(
+            "shooter2",
+            GoBILDAMotorTypes.MOTOR_6000_RPM,
+            DcMotorSimple.Direction.FORWARD
+    );
     public static MotorConfig TURRET_CONFIG = new MotorConfig(
             "turret",
             GoBILDAMotorTypes.MOTOR_312_RPM,

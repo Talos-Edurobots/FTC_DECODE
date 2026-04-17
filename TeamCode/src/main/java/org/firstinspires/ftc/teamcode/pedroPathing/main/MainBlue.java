@@ -50,7 +50,7 @@ public class MainBlue extends LinearOpMode {
     Turret turret;
     Pinpoint pinpoint;
     Follower follower;
-    Hang hang;
+//    Hang hang;
     private Limelight3A limelight;
     Supplier<PathChain> pathChain;
     Pose startingPose = new Pose(72, 72, Math.toRadians(180));
@@ -89,8 +89,8 @@ public class MainBlue extends LinearOpMode {
 
         leds = new Leds();
         leds.init(hardwareMap);
-        hang = new Hang();
-        hang.init(hardwareMap);
+//        hang = new Hang();
+//        hang.init(hardwareMap);
         shooter = new Shooter(hardwareMap);
         shooter.init();
         shooter.run(true);
@@ -147,7 +147,7 @@ public class MainBlue extends LinearOpMode {
                 }
                 useHang ^= true;
             };
-            hang.update(1, useHang?90:0);
+//            hang.update(1, useHang?90:0);
             LLResult result = limelight.getLatestResult();
             boolean isTurretTarget = Math.abs(result.getTx())<3 && result.getTx() != 0;
             double color1 = shooter.isBusy() ? .28 : isTurretTarget ? .5 : .333;
@@ -275,7 +275,7 @@ public class MainBlue extends LinearOpMode {
             telemetryM.addData("intake status", intake.getCurrentState());
             telemetryM.addData("intake current", intake.getCurrent());
             telemetryM.addData("shooter vel", shooter.getVelocity());
-            telemetryM.addData("shooter current", shooter.getCurrent());
+            telemetryM.addData("shooter current", shooter.getCurrent1());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
             telemetryM.addData("shooter shooter running", shooter.getRun());
             telemetryM.addData("shooter filtered vel", shooter.filteredVelocity);
