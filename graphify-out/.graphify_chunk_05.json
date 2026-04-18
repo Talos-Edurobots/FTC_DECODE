@@ -1,0 +1,86 @@
+{
+  "nodes": [
+    {
+      "id": "pull_request_header",
+      "label": "GitHub pull request header",
+      "file_type": "image",
+      "source_file": "doc/media/PullRequest.PNG",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "create_pull_request_button",
+      "label": "Create pull request",
+      "file_type": "image",
+      "source_file": "doc/media/PullRequest.PNG",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "discuss_and_review_tab",
+      "label": "Discuss and review",
+      "file_type": "image",
+      "source_file": "doc/media/PullRequest.PNG",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "create_pull_request_button",
+      "target": "pull_request_header",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "doc/media/PullRequest.PNG",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "discuss_and_review_tab",
+      "target": "pull_request_header",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "doc/media/PullRequest.PNG",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "create_pull_request_button",
+      "target": "discuss_and_review_tab",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "doc/media/PullRequest.PNG",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "github_pull_request_ui",
+      "label": "GitHub pull request UI",
+      "nodes": [
+        "pull_request_header",
+        "create_pull_request_button",
+        "discuss_and_review_tab"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.92,
+      "source_file": "doc/media/PullRequest.PNG"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

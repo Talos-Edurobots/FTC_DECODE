@@ -1,0 +1,694 @@
+{
+  "nodes": [
+    {
+      "id": "readme",
+      "label": "README",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "sample_opmodes_folder",
+      "label": "Sample OpModes Folder",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "teamcode_folder",
+      "label": "TeamCode Folder",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ftc_blocks_tutorial",
+      "label": "FTC Blocks Tutorial",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ftc_javadoc_documentation",
+      "label": "FTC SDK Javadoc Documentation",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ftc_community_forum",
+      "label": "FTC Tech Challenge Community",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "basic_omni_opmode_linear",
+      "label": "Basic Omni Linear OpMode",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/BasicOmniOpMode_Linear.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "basic_opmode_iterative",
+      "label": "Basic Iterative OpMode",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/BasicOpMode_Iterative.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "basic_opmode_linear",
+      "label": "Basic Linear OpMode",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/BasicOpMode_Linear.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_apriltag",
+      "label": "Concept AprilTag",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTag.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_apriltag_easy",
+      "label": "Concept AprilTag Easy",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagEasy.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_apriltag_localization",
+      "label": "Concept AprilTag Localization",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagLocalization.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_apriltag_multi_portal",
+      "label": "Concept AprilTag Multi Portal",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagMultiPortal.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_apriltag_optimize_exposure",
+      "label": "Optimize AprilTag Exposure",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagOptimizeExposure.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_apriltag_switchable_cameras",
+      "label": "Concept AprilTag Switchable Cameras",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagSwitchableCameras.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_blackboard",
+      "label": "Concept Blackboard",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptBlackboard.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_exploring_imu_orientation",
+      "label": "Concept IMU Orientation",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptExploringIMUOrientation.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_gamepad_edge_detection",
+      "label": "Concept Gamepad Edge Detection",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadEdgeDetection.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_gamepad_rumble",
+      "label": "Concept Gamepad Rumble",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadRumble.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_gamepad_touchpad",
+      "label": "Concept Gamepad Touchpad",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadTouchpad.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_led_stick",
+      "label": "Concept LED Stick",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptLEDStick.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_motor_bulk_read",
+      "label": "Concept Motor Bulk Read",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptMotorBulkRead.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_null_op",
+      "label": "Concept NullOp",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptNullOp.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_ramp_motor_speed",
+      "label": "Concept Ramp Motor Speed",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptRampMotorSpeed.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_rev_led",
+      "label": "Concept RevLED",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptRevLED.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_rev_sparkmini",
+      "label": "REV SPARKmini Simple Drive Example",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptRevSPARKMini.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_scan_servo",
+      "label": "Concept Scan Servo",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptScanServo.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "basic_drive_templates",
+      "label": "Basic Drive Templates",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/BasicOpMode_Linear.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "apriltag_vision_samples",
+      "label": "AprilTag Vision Samples",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTag.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "gamepad_feature_samples",
+      "label": "Gamepad Feature Samples",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadEdgeDetection.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "hardware_control_samples",
+      "label": "Hardware Control Samples",
+      "file_type": "code",
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptLEDStick.java",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "readme",
+      "target": "sample_opmodes_folder",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme",
+      "target": "teamcode_folder",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme",
+      "target": "ftc_blocks_tutorial",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme",
+      "target": "ftc_javadoc_documentation",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme",
+      "target": "ftc_community_forum",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "basic_omni_opmode_linear",
+      "target": "basic_drive_templates",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.84,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/BasicOmniOpMode_Linear.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "basic_opmode_iterative",
+      "target": "basic_drive_templates",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.87,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/BasicOpMode_Iterative.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "basic_opmode_linear",
+      "target": "basic_drive_templates",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.87,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/BasicOpMode_Linear.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "basic_opmode_linear",
+      "target": "basic_opmode_iterative",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/BasicOpMode_Linear.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_apriltag",
+      "target": "apriltag_vision_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTag.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_apriltag_easy",
+      "target": "apriltag_vision_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagEasy.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_apriltag_localization",
+      "target": "apriltag_vision_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.86,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagLocalization.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_apriltag_multi_portal",
+      "target": "apriltag_vision_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.86,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagMultiPortal.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_apriltag_optimize_exposure",
+      "target": "apriltag_vision_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.84,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagOptimizeExposure.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_apriltag_switchable_cameras",
+      "target": "apriltag_vision_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.84,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagSwitchableCameras.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_apriltag_easy",
+      "target": "concept_apriltag",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagEasy.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_blackboard",
+      "target": "hardware_control_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.62,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptBlackboard.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_exploring_imu_orientation",
+      "target": "hardware_control_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptExploringIMUOrientation.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_gamepad_edge_detection",
+      "target": "gamepad_feature_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadEdgeDetection.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_gamepad_rumble",
+      "target": "gamepad_feature_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadRumble.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_gamepad_touchpad",
+      "target": "gamepad_feature_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadTouchpad.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_gamepad_edge_detection",
+      "target": "concept_gamepad_rumble",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.66,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadEdgeDetection.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_gamepad_rumble",
+      "target": "concept_gamepad_touchpad",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.64,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadRumble.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_led_stick",
+      "target": "hardware_control_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptLEDStick.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_motor_bulk_read",
+      "target": "hardware_control_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptMotorBulkRead.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_null_op",
+      "target": "hardware_control_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.55,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptNullOp.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_ramp_motor_speed",
+      "target": "hardware_control_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.78,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptRampMotorSpeed.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_rev_led",
+      "target": "hardware_control_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.78,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptRevLED.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_rev_sparkmini",
+      "target": "basic_drive_templates",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.76,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptRevSPARKMini.java",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_scan_servo",
+      "target": "hardware_control_samples",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptScanServo.java",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "apriltag_samples",
+      "label": "AprilTag Vision Samples",
+      "nodes": [
+        "concept_apriltag",
+        "concept_apriltag_easy",
+        "concept_apriltag_localization",
+        "concept_apriltag_multi_portal",
+        "concept_apriltag_optimize_exposure",
+        "concept_apriltag_switchable_cameras"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTag.java"
+    },
+    {
+      "id": "basic_drive_samples",
+      "label": "Basic Drive OpMode Templates",
+      "nodes": [
+        "basic_omni_opmode_linear",
+        "basic_opmode_iterative",
+        "basic_opmode_linear",
+        "concept_rev_sparkmini"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.86,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/BasicOpMode_Linear.java"
+    },
+    {
+      "id": "gamepad_feature_samples",
+      "label": "Gamepad Interaction Samples",
+      "nodes": [
+        "concept_gamepad_edge_detection",
+        "concept_gamepad_rumble",
+        "concept_gamepad_touchpad"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptGamepadEdgeDetection.java"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

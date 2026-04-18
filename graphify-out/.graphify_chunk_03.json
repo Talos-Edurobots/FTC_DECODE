@@ -1,0 +1,254 @@
+{
+  "nodes": [
+    {
+      "id": "bilda_product_insight_4",
+      "label": "3118-0808-0002 Product Insight #4",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "rgb_indicator_light",
+      "label": "RGB Indicator Light",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "standard_servo_pwm_signals",
+      "label": "standard Servo PWM signals",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "color_gradient_transitions",
+      "label": "Smooth color gradient transitions",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "off_below_1100_usec",
+      "label": "Off below 1100 usec",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "solid_white_above_1900_usec",
+      "label": "Solid white above 1900 usec",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "setposition_command",
+      "label": "setPosition command",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ftc_controller",
+      "label": "FTC Controller",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "zero_to_one_input_scale",
+      "label": "0-1 input scale",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "microsecond_signal_length",
+      "label": "Microsecond signal length",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "color_mapping_table",
+      "label": "Color mapping table",
+      "file_type": "image",
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "bilda_product_insight_4",
+      "target": "rgb_indicator_light",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "rgb_indicator_light",
+      "target": "standard_servo_pwm_signals",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "rgb_indicator_light",
+      "target": "color_gradient_transitions",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "rgb_indicator_light",
+      "target": "off_below_1100_usec",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "rgb_indicator_light",
+      "target": "solid_white_above_1900_usec",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "setposition_command",
+      "target": "zero_to_one_input_scale",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "setposition_command",
+      "target": "ftc_controller",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ftc_controller",
+      "target": "microsecond_signal_length",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ftc_controller",
+      "target": "standard_servo_pwm_signals",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "color_mapping_table",
+      "target": "rgb_indicator_light",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "color_mapping_table",
+      "target": "zero_to_one_input_scale",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "ftc_rgb_pwm_control",
+      "label": "FTC RGB PWM control",
+      "nodes": [
+        "rgb_indicator_light",
+        "standard_servo_pwm_signals",
+        "ftc_controller"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.9,
+      "source_file": "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/main/3118-0808-0002-Product-Insight-4__88285.webp"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
