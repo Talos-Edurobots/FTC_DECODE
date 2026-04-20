@@ -50,6 +50,7 @@ public class MainBlue extends LinearOpMode {
     Turret turret;
     Pinpoint pinpoint;
     Follower follower;
+    boolean shooting = false;
 //    int sound = hardwareMap.appContext.getResources().getIdentifier("audio",   "raw", hardwareMap.appContext.getPackageName());
 
     //    Hang hang;
@@ -241,7 +242,8 @@ public class MainBlue extends LinearOpMode {
             colors.update();
             boolean isFull = colors.isFull();
             boolean rightBumb = gamepad1.rightBumperWasPressed();
-            if ((intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumb) || isFull) {
+            shooting = gamepad1.left_bumper;
+            if ((intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumb) || (isFull && !shooting)) {
                 intake.setCurrentState(Intake.IntakeState.STOP);
                 gate.activate();
             } else if (intake.getCurrentState() == Intake.IntakeState.STOP && rightBumb) {
@@ -275,6 +277,7 @@ public class MainBlue extends LinearOpMode {
             telemetryM.addData("color 3", colors.is3Detected());
             telemetryM.addData("is all", colors.isFull());
             telemetryM.addData("timer", colors.getFullTIme());
+            telemetryM.addData("isShooting", shooting);
             telemetryM.addData("intake status", intake.getCurrentState());
             telemetryM.addData("intake current", intake.getCurrent());
             telemetryM.addData("shooter vel", shooter.getVelocity());

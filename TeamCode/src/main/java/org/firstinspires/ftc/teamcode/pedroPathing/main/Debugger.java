@@ -789,11 +789,13 @@ class VoltageSensorReadoutOpMode extends OpMode {
     }
 }
 
+@Configurable
 class ColorReadoutOpMode extends OpMode {
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private final MotorConfig intakeMotor = RobotConstants.INTAKE_CONFIG;
     private Gate gate = new Gate();
     private ColorSensors colors = new ColorSensors();
+    static boolean stopIntakeWhenFull = true;
 
     @Override
     public void init() {
@@ -809,7 +811,7 @@ class ColorReadoutOpMode extends OpMode {
     @Override
     public void loop() {
         double intakePower = gamepad1.right_trigger - gamepad1.left_trigger;
-        intakeMotor.setPower(colors.isFull() ? 0 : intakePower);
+        intakeMotor.setPower(colors.isFull()&&stopIntakeWhenFull ? 0 : intakePower);
         colors.update();
         if (gamepad1.rightBumperWasPressed()) gate.changeState();
 
