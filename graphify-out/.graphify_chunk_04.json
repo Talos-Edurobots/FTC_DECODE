@@ -1,0 +1,164 @@
+{
+  "nodes": [
+    {
+      "id": "image_prototypical_brushed_dc_motor_chart",
+      "label": "Prototypical Brushed DC Motor chart",
+      "file_type": "image",
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_brushed_dc_motor",
+      "label": "Brushed DC motor",
+      "file_type": "image",
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_torque_percent",
+      "label": "Torque (% of torque)",
+      "file_type": "image",
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_current_stall_current",
+      "label": "Current (% of stall current)",
+      "file_type": "image",
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_angular_velocity_no_load_rpm",
+      "label": "Angular velocity (% of no load RPM)",
+      "file_type": "image",
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_power_peak_power",
+      "label": "Power (% of peak power)",
+      "file_type": "image",
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_efficiency_electrical_to_mechanical_power",
+      "label": "Efficiency (% of electrical power being converted to mechanical power)",
+      "file_type": "image",
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "image_prototypical_brushed_dc_motor_chart",
+      "target": "concept_brushed_dc_motor",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "image_prototypical_brushed_dc_motor_chart",
+      "target": "concept_torque_percent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "image_prototypical_brushed_dc_motor_chart",
+      "target": "concept_current_stall_current",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "image_prototypical_brushed_dc_motor_chart",
+      "target": "concept_angular_velocity_no_load_rpm",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "image_prototypical_brushed_dc_motor_chart",
+      "target": "concept_power_peak_power",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "image_prototypical_brushed_dc_motor_chart",
+      "target": "concept_efficiency_electrical_to_mechanical_power",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "brushed_dc_motor_performance_curves",
+      "label": "Brushed DC motor performance curves",
+      "nodes": [
+        "image_prototypical_brushed_dc_motor_chart",
+        "concept_brushed_dc_motor",
+        "concept_torque_percent",
+        "concept_current_stall_current",
+        "concept_angular_velocity_no_load_rpm",
+        "concept_power_peak_power",
+        "concept_efficiency_electrical_to_mechanical_power"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "TeamCode\\src\\main\\java\\org\\firstinspires\\ftc\\teamcode\\pedroPathing\\main\\motor\\image.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
