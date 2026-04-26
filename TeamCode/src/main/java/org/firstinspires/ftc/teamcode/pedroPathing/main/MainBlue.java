@@ -9,6 +9,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -17,13 +18,12 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ColorSensors;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
@@ -42,6 +42,7 @@ public class MainBlue extends LinearOpMode {
     static int frontVel = 1300;
     HardwareManager hardwareManager;
     DriveTrain driveTrain;
+    ColorSensors colors;
     Intake intake;
     Shooter shooter;
     Gate gate = new Gate();
@@ -49,7 +50,10 @@ public class MainBlue extends LinearOpMode {
     Turret turret;
     Pinpoint pinpoint;
     Follower follower;
-    Hang hang;
+    boolean shooting = false;
+//    int sound = hardwareMap.appContext.getResources().getIdentifier("audio",   "raw", hardwareMap.appContext.getPackageName());
+
+    //    Hang hang;
     private Limelight3A limelight;
     Supplier<PathChain> pathChain;
     Pose startingPose = new Pose(72, 72, Math.toRadians(180));
@@ -83,10 +87,13 @@ public class MainBlue extends LinearOpMode {
         telemetry.setMsTransmissionInterval(11);
         limelight.pipelineSwitch(2);
 
+        colors = new ColorSensors();
+        colors.init(hardwareMap);
+
         leds = new Leds();
         leds.init(hardwareMap);
-        hang = new Hang();
-        hang.init(hardwareMap);
+//        hang = new Hang();
+//        hang.init(hardwareMap);
         shooter = new Shooter(hardwareMap);
         shooter.init();
         shooter.run(true);
@@ -98,8 +105,6 @@ public class MainBlue extends LinearOpMode {
 
         driveTrain = new DriveTrain(hardwareMap);
         driveTrain.init();
-
-
 
         driveTrain = new DriveTrain(hardwareMap);
         driveTrain.init();
@@ -145,7 +150,7 @@ public class MainBlue extends LinearOpMode {
                 }
                 useHang ^= true;
             };
-            hang.update(1, useHang?90:0);
+//            hang.update(1, useHang?90:0);
             LLResult result = limelight.getLatestResult();
             boolean isTurretTarget = Math.abs(result.getTx())<3 && result.getTx() != 0;
             double color1 = shooter.isBusy() ? .28 : isTurretTarget ? .5 : .333;
@@ -183,6 +188,7 @@ public class MainBlue extends LinearOpMode {
             }
             // Shooter control
             if (gamepad1.dpadUpWasPressed()) {
+//                SoundPlayer.getInstance().startPlaying(hardwareMap.appContext, sound);
                 shooter.changeState();
             }
             shooter.update();
@@ -233,19 +239,22 @@ public class MainBlue extends LinearOpMode {
 //            else if (gamepad1.bWasPressed()) {
 //                intake.setCurrentState(Intake.IntakeState.STOP);
 //            }
+            colors.update();
+            boolean isFull = colors.isFull();
             boolean rightBumb = gamepad1.rightBumperWasPressed();
-            if (intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumb) {
+            shooting = gamepad1.left_bumper;
+            if ((intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumb) || (isFull && !shooting)) {
                 intake.setCurrentState(Intake.IntakeState.STOP);
                 gate.activate();
             } else if (intake.getCurrentState() == Intake.IntakeState.STOP && rightBumb) {
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
             }
-            intake.update();
             boolean leftBump = gamepad1.leftBumperWasPressed();
             if (leftBump) {
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
                 gate.deactivate();
             }
+            intake.update();
 
             if (gamepad1.leftStickButtonWasPressed() || gamepad1.rightStickButtonWasPressed()) slowMode ^= true;
             double mult = slowMode ? 0.25 : 1;
@@ -263,10 +272,16 @@ public class MainBlue extends LinearOpMode {
             follower.update();
 
             telemetryM.addData("fps", 1/ dt);
+            telemetryM.addData("color 1", colors.is1Detected());
+            telemetryM.addData("color 2", colors.is2Detected());
+            telemetryM.addData("color 3", colors.is3Detected());
+            telemetryM.addData("is all", colors.isFull());
+            telemetryM.addData("timer", colors.getFullTIme());
+            telemetryM.addData("isShooting", shooting);
             telemetryM.addData("intake status", intake.getCurrentState());
             telemetryM.addData("intake current", intake.getCurrent());
             telemetryM.addData("shooter vel", shooter.getVelocity());
-            telemetryM.addData("shooter current", shooter.getCurrent());
+            telemetryM.addData("shooter current", shooter.getCurrent1());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
             telemetryM.addData("shooter shooter running", shooter.getRun());
             telemetryM.addData("shooter filtered vel", shooter.filteredVelocity);

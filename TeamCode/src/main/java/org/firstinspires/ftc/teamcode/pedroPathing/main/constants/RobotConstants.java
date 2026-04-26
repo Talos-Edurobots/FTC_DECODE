@@ -71,6 +71,11 @@ public final class RobotConstants {
             SHOOTER_VELOCITY_PIDF.ka()
     )
             .setMotorMode(MotorMode.VELOCITY_CONTROL);
+    public static MotorConfig SHOOTER2_CONFIG = new MotorConfig(
+            "shooter2",
+            GoBILDAMotorTypes.MOTOR_6000_RPM,
+            DcMotorSimple.Direction.FORWARD
+    );
     public static MotorConfig TURRET_CONFIG = new MotorConfig(
             "turret",
             GoBILDAMotorTypes.MOTOR_312_RPM,
@@ -79,11 +84,11 @@ public final class RobotConstants {
     ).addExternalGearRatio((double) 2.8 /1)
             .setMotorUse(MotorUse.MECHANICAL_STOP)
             .setMotorMode(MotorMode.PROFILED_PIDF)
-            .setMotionProfileCoefficients(1500, 4000, 1)
-            .setPIDFCoefficients(0.01, 0.000001, 0.002, 0.18, 0.005687094208999908, 0.0002)
+            .setMotionProfileCoefficients(1500, 3000, 1)
+            .setPIDFCoefficients(0.068, 0, 0.001, 0.4, 0.005687094208999908, 0.0001)
 //           .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
-            .setMinAngleRadians(Math.toRadians(-160))
-            .setMaxAngleRadians(Math.toRadians(160));
+            .setMinAngleRadians(Math.toRadians(-87))
+            .setMaxAngleRadians(Math.toRadians(87));
     public static MotorConfig HANG_CONFIG = new MotorConfig(
             "hang",
             GoBILDAMotorTypes.MOTOR_117_RPM,

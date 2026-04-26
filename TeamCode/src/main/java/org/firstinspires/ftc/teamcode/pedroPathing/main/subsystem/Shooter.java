@@ -57,6 +57,7 @@ public class Shooter {
         );
         motor.init(hwmap);
 
+
         hoodServo = hwmap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
         hoodServo.setPosition(.5);
         hoodServo.setDirection(Servo.Direction.FORWARD);
@@ -66,8 +67,10 @@ public class Shooter {
     public void update() {
         dt = loopTimer.seconds();
         loopTimer.reset();
+
         loopState.set(dt, 1.0 / getBatteryVoltage());
         motor.setTargetVelocityTicksPerSecond(targetVelocity);
+
         calculateFilteredVelocity();
         setVelocity();
     }
@@ -75,8 +78,11 @@ public class Shooter {
         return impactTimer.seconds();
     }
     public void calculateFilteredVelocity() {
+
         filteredVelocity = alpha * motor.getMeasuredVelocityTicksPerSecond()
                 + (1 - alpha) * filteredVelocity;
+
+
         if (dt <= 0) {
             lastFilteredVel = filteredVelocity;
             return;
@@ -111,17 +117,21 @@ public class Shooter {
         return hoodServo.getPosition();
     }
     public boolean isBusy () {
+
         return Math.abs(targetVelocity - motor.getMeasuredVelocityTicksPerSecond()) > 70;
     }
     public void setVelocity() {
         if (isRunning) motor.update(loopState);
+
         else floatShooter();
     }
     public void setPower(double power) {
-        motor.setPower(power);
+        motor1.setPower(power);
+        syncSecondaryMotorPower();
     }
     public void floatShooter() {
-        motor.setPower(0);
+        motor1.setPower(0);
+        syncSecondaryMotorPower();
     }
     public double getVelocity() {
         return motor.getMeasuredVelocityTicksPerSecond();
