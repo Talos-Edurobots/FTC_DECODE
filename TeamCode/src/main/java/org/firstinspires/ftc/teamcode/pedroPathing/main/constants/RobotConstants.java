@@ -76,6 +76,10 @@ public final class RobotConstants {
             GoBILDAMotorTypes.MOTOR_6000_RPM,
             DcMotorSimple.Direction.FORWARD
     );
+    public static final MotorConfig[] SHOOTER_MOTOR_CONFIGS = new MotorConfig[]{
+            SHOOTER_CONFIG,
+            SHOOTER2_CONFIG
+    };
     public static MotorConfig TURRET_CONFIG = new MotorConfig(
             "turret",
             GoBILDAMotorTypes.MOTOR_312_RPM,

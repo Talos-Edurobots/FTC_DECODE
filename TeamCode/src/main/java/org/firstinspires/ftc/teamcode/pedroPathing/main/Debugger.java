@@ -160,7 +160,7 @@ class ShooterPowerTest extends OpMode {
         shooter.setPower(power);
         telemetryM.addData("power", power);
         telemetryM.addData("current 1", shooter.getCurrent1());
-        telemetryM.addData("current 2", shooter.getCurrent2());
+//        telemetryM.addData("current 2", shooter.getCurrent2());
         telemetryM.addData("velocity", shooter.getVelocity());
         telemetryM.update(telemetry);
     }

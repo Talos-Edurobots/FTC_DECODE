@@ -4,6 +4,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.GoBILDAMotorTypes;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotionState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorCoefficientScaler;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorGroup;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.controllers.MotorController;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.controllers.PIDFFPositionController;
@@ -54,6 +56,7 @@ public class TestMotor {
         AngularVelocity vel = encoder.ticksPerSecondToVelocity(2800);
         assertEquals(312, vel.toRpm(), 1);
     }
+
     @Test
     public void testVelocityFacadeMathPreservesLegacyTickTuning() {
         EncoderConverter encoder = new EncoderConverter(GoBILDAMotorTypes.MOTOR_6000_RPM);
