@@ -3,14 +3,8 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.motor;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
-
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.MotionProfilingCoefficients;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.controllers.MotorController;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.controllers.TrapezoidalMotionProfileController;
 
 @Deprecated
 /**
@@ -78,7 +72,7 @@ public class MotorConfig {
 
     private MotorMode motorMode = MotorMode.OPEN_LOOP;
 
-    private DcMotorEx motor;
+    private final MetaMotor motor = new MetaMotor();
 
     public MotorUse getMotorUse() {
         return motorUse;
@@ -118,6 +112,7 @@ public class MotorConfig {
 
     public void setCurrentAlert(double currentAlert) {
         this.currentAlert = currentAlert;
+        motor.setCurrentAlert(currentAlert);
     }
 
     double currentAlert = 0;
@@ -236,14 +231,19 @@ public class MotorConfig {
     // enum. During migration, this logic should gradually move to smaller,
     // purpose-built motor facades instead of a single universal switch.
 
-    public DcMotorEx init(HardwareMap hardwareMap) {
-        motor = hardwareMap.get(DcMotorEx.class, hardwareName);
+    public com.qualcomm.robotcore.hardware.DcMotorEx init(HardwareMap hardwareMap) {
+        motor.hwName(hardwareName);
         motor.setDirection(direction);
         motor.setZeroPowerBehavior(zeroPowerBehavior);
+        motor.maxPower(maxPower);
+        if (currentAlert != 0) {
+            motor.setCurrentAlert(currentAlert);
+        }
+        motor.init(hardwareMap);
         if (motorMode == MotorMode.SIMPLE_POSITION) {
             motor.setTargetPosition(0);
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
         else if (motorMode == MotorMode.VELOCITY_CONTROL ||
                 motorMode == MotorMode.PROFILED_PIDF) {
@@ -254,10 +254,7 @@ public class MotorConfig {
         else {
             motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
-        if (currentAlert != 0) {
-            motor.setCurrentAlert(currentAlert, CurrentUnit.AMPS);
-        }
-        return motor;
+        return motor.getMotor();
     }
 
     /* ---------------- Basic accessors ---------------- */
@@ -267,22 +264,23 @@ public class MotorConfig {
     // first into MetaMotor / a hardware adapter.
 
     public void setPower(double power) {
-        motor.setPower(Range.clip(power, -maxPower, maxPower));
+        motor.maxPower(maxPower);
+        motor.setPower(power);
     }
 
     public double getPower() {
         return motor.getPower();
     }
     public double getVelocity() {
-        return motor.getVelocity();
+        return motor.getVelocityTicksPerSecond();
     }
 
     public int getCurrentPosition() {
-        return motor.getCurrentPosition();
+        return motor.getCurrentPositionTicks();
     }
 
     public double getCurrent() {
-        return motor.getCurrent(CurrentUnit.AMPS);
+        return motor.getCurrentAmps();
     }
 
     /* ---------------- Configuration setters ---------------- */
@@ -323,8 +321,8 @@ public class MotorConfig {
     // make unit boundaries more explicit.
 
     public void setRadianLimit(double minAngle, double maxAngle) {
-        this.minAngleTicks = minAngle;
-        this.maxAngleTicks = maxAngle;
+        setMinAngleRadians(minAngle);
+        setMaxAngleRadians(maxAngle);
     }
 
     public void setPositionInRadians(double radians) {
@@ -362,8 +360,8 @@ public class MotorConfig {
         // - control math in a controller class
         // - power application in a hardware/facade layer
         if (dt <= 0.0) return;
-        double position = motor.getCurrentPosition();
-        double velocity = motor.getVelocity();
+        double position = motor.getCurrentPositionTicks();
+        double velocity = motor.getVelocityTicksPerSecond();
 
         double remaining = targetPositionTicks - xRef;
 
@@ -403,9 +401,8 @@ public class MotorConfig {
         double power =
                 (pidVolts + ffVolts) / batteryVoltage;
 
-        motor.setPower(
-                Range.clip(power, -maxPower, maxPower)
-        );
+        motor.maxPower(maxPower);
+        motor.setPower(power);
         telemetryM.addData("Ks", kS);
         telemetryM.addData("battery", batteryVoltage);
         telemetryM.addData("power", power);
@@ -446,7 +443,7 @@ public class MotorConfig {
                         kI * velocityIntegral +
                         kD * derivative + kS * Math.signum(error),
                 dt);
-        int pos = motor.getCurrentPosition();
+        int pos = motor.getCurrentPositionTicks();
         boolean motorTooLowPos = pos < minAngleTicks;
         boolean motorTooHighPos = pos > maxAngleTicks;
         if (Math.abs(error) < 1) {
@@ -469,9 +466,8 @@ public class MotorConfig {
         telemetryM.addData("pos", pos);
         telemetryM.addData("too low", motorTooLowPos);
         telemetryM.addData("too high", motorTooHighPos);
-        motor.setPower(
-                Range.clip(output, -maxPower, maxPower)
-        );
+        motor.maxPower(maxPower);
+        motor.setPower(output);
     }
 
     /* ---------------- Velocity PIDF ---------------- */
@@ -487,7 +483,7 @@ public class MotorConfig {
     public void updateVelocityPIDF() {
         if (dt <= 0.0) return;
 
-        double velocity = motor.getVelocity();
+        double velocity = motor.getVelocityTicksPerSecond();
         double error = targetVelocityTicks - velocity;
 
         velocityIntegral += error * dt;
@@ -503,9 +499,8 @@ public class MotorConfig {
                                 + kV * targetVelocityTicks)
                                 / batteryVoltage;
 
-        motor.setPower(
-                Range.clip(output, 0, maxPower)
-        );
+        motor.maxPower(maxPower);
+        motor.setPower(Range.clip(output, 0, maxPower));
         telemetryM.addData("shooter output from update", output);
         telemetryM.addData("kp", kP);
         telemetryM.addData("max power", maxPower);

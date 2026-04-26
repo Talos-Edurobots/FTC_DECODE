@@ -6,6 +6,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFF
 public class PIDFFVelocityController implements MotorController{
 
     private double integral = 0.0;
+    private double lastError = 0.0;
+    private boolean hasLastError = false;
 
     private PIDFFCoefficients coef;
 
@@ -28,7 +30,13 @@ public class PIDFFVelocityController implements MotorController{
     public double update(MotionState ref,
                          MotionState current,
                          double dt) {
+        return update(ref, current, dt, 1.0);
+    }
 
+    public double update(MotionState ref,
+                         MotionState current,
+                         double dt,
+                         double feedforwardScale) {
         if (dt == 0) {
             throw new ArithmeticException("dt cannot be zero");
         }
@@ -50,12 +58,18 @@ public class PIDFFVelocityController implements MotorController{
                     Math.min(integralLimit, integral));
         }
 
+        double derivative = 0.0;
+        if (hasLastError) {
+            derivative = (error - lastError) / dt;
+        }
+        lastError = error;
+        hasLastError = true;
+
         // --- PID (velocity loop) ---
         double pid =
                 coef.kp() * error +
-                        coef.ki() * integral;
-        // Kd optional:
-        // + coef.getKd() * (aRef - current.getAcceleration());
+                        coef.ki() * integral +
+                        coef.kd() * derivative;
 
         // --- Feedforward ---
         double ff =
@@ -63,10 +77,12 @@ public class PIDFFVelocityController implements MotorController{
                         coef.kv() * vRef +
                         coef.ka() * aRef;
 
-        return pid + ff;
+        return pid + ff * feedforwardScale;
     }
 
     public void reset() {
         integral = 0.0;
+        lastError = 0.0;
+        hasLastError = false;
     }
 }

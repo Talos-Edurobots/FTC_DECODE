@@ -24,8 +24,23 @@ public class MetaMotor {
     public void direction(DcMotorSimple.Direction direction) {
         this.direction = direction;
     }
+
+    public void setDirection(DcMotorSimple.Direction direction) {
+        this.direction = direction;
+        if (motor != null) {
+            motor.setDirection(direction);
+        }
+    }
+
     public void zeroPowerBehavior(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
         this.zeroPowerBehavior = zeroPowerBehavior;
+    }
+
+    public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
+        this.zeroPowerBehavior = zeroPowerBehavior;
+        if (motor != null) {
+            motor.setZeroPowerBehavior(zeroPowerBehavior);
+        }
     }
 
     public void currentAlert(double currentAlert) {
@@ -60,6 +75,21 @@ public class MetaMotor {
     public double getPower() {
         requireInitialized();
         return motor.getPower();
+    }
+
+    public void setVelocity(double ticksPerSecond) {
+        requireInitialized();
+        motor.setVelocity(ticksPerSecond);
+    }
+
+    public void setTargetPosition(int targetPositionTicks) {
+        requireInitialized();
+        motor.setTargetPosition(targetPositionTicks);
+    }
+
+    public int getTargetPosition() {
+        requireInitialized();
+        return motor.getTargetPosition();
     }
 
     public void setMode(RunMode runMode) {

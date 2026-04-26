@@ -28,7 +28,16 @@ public class PIDFFPositionController implements MotorController{
     public double update(MotionState ref,
                          MotionState current,
                          double dt) {
+        double positionError = ref.getPosition().toRadians()
+                - current.getPosition().toRadians();
+        return update(ref, current, dt, 1.0, Math.signum(positionError));
+    }
 
+    public double update(MotionState ref,
+                         MotionState current,
+                         double dt,
+                         double feedforwardScale,
+                         double staticFeedforwardSign) {
         if (dt == 0) {
             throw new ArithmeticException("dt cannot be zero");
         }
@@ -61,11 +70,11 @@ public class PIDFFPositionController implements MotorController{
 
         // --- Feedforward ---
         double ff =
-                coef.ks() * Math.signum(error) +
+                coef.ks() * staticFeedforwardSign +
                         coef.kv() * vRef +
                         coef.ka() * aRef;
 
-        return pid + ff;
+        return pid + ff * feedforwardScale;
     }
 
     public void reset() {
