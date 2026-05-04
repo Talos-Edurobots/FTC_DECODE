@@ -47,7 +47,7 @@ public class Shooter {
     public Shooter(HardwareMap hwmap) {
         this.hwmap = hwmap;
     }
-    public void init(){
+    public void init() {
         shooterMotors = new MotorGroup(0, RobotConstants.SHOOTER_MOTOR_CONFIGS);
         shooterMotors.init(hwmap);
 
