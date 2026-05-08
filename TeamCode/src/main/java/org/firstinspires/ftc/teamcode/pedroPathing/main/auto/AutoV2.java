@@ -18,7 +18,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
@@ -26,10 +25,10 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
 import java.util.HashMap;
 
-public class NewAuto {
-    boolean flickersBusy = false, isBlue;
-    int flickerState, pathState;
-//    Hang hang;
+public class AutoV2 {
+    boolean transferBusy = false, isBlue;
+    int transferState, pathState;
+    //    Hang hang;
     static Follower follower;
     HardwareMap hwMap;
     Telemetry telemetry;
@@ -39,10 +38,10 @@ public class NewAuto {
     private Gate gate;
     private Turret turret;
     private Shooter shooter;
-    private Timer pathTimer, actionTimer, opmodeTimer, flickerTimer;
+    private Timer pathTimer, actionTimer, opmodeTimer, transferTimer;
     private SoloShortAuto auto;
     private  Pose startPose = new Pose(23, 136, Math.toRadians(233)); // Start Pose of our robot.
-    private  Pose scorePose = new Pose(48, 85, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private  Pose scorePose = new Pose(48, 85, Math.toRadians(225)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private  Pose gatePose = new Pose(19, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private  Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
@@ -68,7 +67,8 @@ public class NewAuto {
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup2 = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, pickup2Pose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
+//                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
+                .setTangentHeadingInterpolation()
                 .addPath(new BezierLine(pickup2Pose, pickupIntake2Pose))
                 .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickupIntake2Pose.getHeading())
                 .setGlobalDeceleration()
@@ -80,13 +80,15 @@ public class NewAuto {
 
         scorePickup2 = follower.pathBuilder()
                 .addPath(new BezierLine(pickupIntake2Pose, score2ndPose))
-                .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), scorePose.getHeading())
+//                .setLinearHeadingInterpolation(pickupIntake2Pose.getHeading(), scorePose.getHeading())
+                .setTangentHeadingInterpolation()
                 .setGlobalDeceleration()
                 .build();
 
         grabPickup1 = follower.pathBuilder()
                 .addPath(new BezierLine(scorePose, pickup1IntakePose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1IntakePose.getHeading())
+//                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1IntakePose.getHeading())
+                .setTangentHeadingInterpolation()
                 .setGlobalDeceleration()
                 .build();
 
@@ -95,6 +97,7 @@ public class NewAuto {
         scorePickup1 = follower.pathBuilder()
                 .addPath(new BezierLine(gatePose, scorePose))
                 .setLinearHeadingInterpolation(pickup1IntakePose.getHeading(), scorePose.getHeading())
+//                .setTangentHeadingInterpolation()
                 .setGlobalDeceleration()
                 .build();
 
@@ -105,7 +108,8 @@ public class NewAuto {
         /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup3 = follower.pathBuilder()
                 .addPath(new BezierLine(score2ndPose, pickup3Pose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
+//                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
+                .setTangentHeadingInterpolation()
                 .addPath(new BezierLine(pickup3Pose, pickupIntake3Pose))
                 .setLinearHeadingInterpolation(pickup3Pose.getHeading(), pickupIntake3Pose.getHeading())
                 .setGlobalDeceleration()
@@ -121,27 +125,21 @@ public class NewAuto {
         park = new Path(new BezierLine(pickupIntake3Pose, parkingPose));
         park.setLinearHeadingInterpolation(pickupIntake3Pose.getHeading(), parkingPose.getHeading());
     }
-    //    public SoloShortAuto get() {
-//        if (auto == null) {
-//            auto = new SoloShortAuto();
-//        }
-//        return auto;
-//    }
     private void shootArtifacts() {
-        flickersBusy = true;
-        switch (flickerState) {
+        transferBusy = true;
+        switch (transferState) {
             case 0:
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
                 gate.deactivate();
-                setFlickerState(1);
+                setTransferState(1);
                 break;
             case 1:
-                if (flickerTimer.getElapsedTimeSeconds() > 1.5) {
+                if (transferTimer.getElapsedTimeSeconds() > 1.5) {
                     intake.setCurrentState(Intake.IntakeState.STOP);
                     gate.activate();
-                    flickersBusy = false;
-                    setFlickerState(0);
-            }
+                    transferBusy = false;
+                    setTransferState(0);
+                }
         }
     }
     private void setAlliance(boolean isBlue) {
@@ -186,7 +184,7 @@ public class NewAuto {
             case 2:
                 if (pathTimer.getElapsedTimeSeconds() > 1) {
                     shootArtifacts();
-                    if (!flickersBusy) {
+                    if (!transferBusy) {
                         setPathState(3);
                     }
                 }
@@ -215,7 +213,7 @@ public class NewAuto {
             case 7:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
                     shootArtifacts();
-                    if (!flickersBusy) {
+                    if (!transferBusy) {
                         setPathState(8);
                     }
                 }
@@ -238,7 +236,7 @@ public class NewAuto {
             case 10:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 3) {
                     shootArtifacts();
-                    if (!flickersBusy) {
+                    if (!transferBusy) {
                         setPathState(11);
                     }
                 }
@@ -265,7 +263,7 @@ public class NewAuto {
             case 14:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 4) {
                     shootArtifacts();
-                    if (!flickersBusy) {
+                    if (!transferBusy) {
                         setPathState(15);
                     }
                 }
@@ -285,9 +283,9 @@ public class NewAuto {
         pathState = pState;
         pathTimer.resetTimer();
     }
-    public void setFlickerState(int fState) {
-        flickerState = fState;
-        flickerTimer.resetTimer();
+    public void setTransferState(int fState) {
+        transferState = fState;
+        transferTimer.resetTimer();
     }
 
     /** This is the main loop of the OpMode, it will run repeatedly after clicking "Play". **/
@@ -309,8 +307,8 @@ public class NewAuto {
         // Feedback to Driver Hub for debugging
         telemetryM.addData("is alliance blue", isBlue);
         telemetryM.addData("path state", pathState);
-        telemetryM.addData("flicker state", flickerState);
-        telemetryM.addData("flicker busy", flickersBusy);
+        telemetryM.addData("flicker state", transferState);
+        telemetryM.addData("flicker busy", transferBusy);
         telemetryM.addData("x", follower.getPose().getX());
         telemetryM.addData("y", follower.getPose().getY());
         telemetryM.addData("heading", follower.getPose().getHeading());
@@ -319,7 +317,7 @@ public class NewAuto {
         telemetryM.addData("Shooter vel", shooter.getVelocity());
         telemetryM.addData("Shooter target", shooter.getTargetVelocity());
         telemetryM.addData("path timer", pathTimer.getElapsedTime());
-        telemetryM.addData("flicker timer", flickerTimer.getElapsedTime());
+        telemetryM.addData("flicker timer", transferTimer.getElapsedTime());
         telemetryM.update(telemetry);
     }
 
@@ -330,7 +328,7 @@ public class NewAuto {
         this.isBlue = isBlue;
 
         pathTimer = new Timer();
-        flickerTimer = new Timer();
+        transferTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 

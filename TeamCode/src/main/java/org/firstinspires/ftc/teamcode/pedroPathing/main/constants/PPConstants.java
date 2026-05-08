@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.constants;
 
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.PredictiveBrakingCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
@@ -15,12 +16,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class PPConstants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .forwardZeroPowerAcceleration(-26.64)
-            .lateralZeroPowerAcceleration(-55.48) // to check
-            .translationalPIDFCoefficients(new PIDFCoefficients(.1, 0, 0.01, 0.03))
+            .forwardZeroPowerAcceleration(-23.739580125906762)
+            .lateralZeroPowerAcceleration(-63.39827798387032)
+            .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(0.1, 0.025278453672773423, 0.0021575944378939543)) // (kP, kLinear, kQuadratic)
+//            .translationalPIDFCoefficients(new PIDFCoefficients(.1, 0, 0.01, 0.03))
             .headingPIDFCoefficients(new PIDFCoefficients(2, 0, 0.17, 0.02))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.03))
-            .centripetalScaling(0.00035)
+//            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.03))
+            .centripetalScaling(0) // 0.00035
             .mass(9.7);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
@@ -33,8 +35,8 @@ public class PPConstants {
             .leftRearMotorDirection(RobotConstants.LEFT_BACK_CONFIG.getDirection())
             .rightFrontMotorDirection(RobotConstants.RIGHT_FRONT_CONFIG.getDirection())
             .rightRearMotorDirection(RobotConstants.RIGHT_BACK_CONFIG.getDirection())
-            .xVelocity(67.56)
-            .yVelocity(56.21);
+            .xVelocity(66.92134346548967)
+            .yVelocity(50.80548432117372);
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(5.5) // check
             .strafePodX(2.7) // check

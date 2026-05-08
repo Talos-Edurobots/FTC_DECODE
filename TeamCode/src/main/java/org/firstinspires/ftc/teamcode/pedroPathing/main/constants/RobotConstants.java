@@ -88,8 +88,8 @@ public final class RobotConstants {
     ).addExternalGearRatio((double) 2.8 /1)
             .setMotorUse(MotorUse.MECHANICAL_STOP)
             .setMotorMode(MotorMode.PROFILED_PIDF)
-            .setMotionProfileCoefficients(1500, 3000, 1)
-            .setPIDFCoefficients(0.068, 0, 0.001, 0.4, 0.005687094208999908, 0.0001)
+            .setMotionProfileCoefficients(1800, 4500, 1)
+            .setPIDFCoefficients(0.068, 0, 0.002, 1.2, 0.005687094208999908, 0.0004)
 //           .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
             .setMinAngleRadians(Math.toRadians(-87))
             .setMaxAngleRadians(Math.toRadians(87));

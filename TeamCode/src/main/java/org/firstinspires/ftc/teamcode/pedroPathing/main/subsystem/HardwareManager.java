@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import java.util.List;
 
@@ -24,6 +24,14 @@ public final class HardwareManager {
             hub.clearBulkCache();
         }
 
+    }
+
+    public double getTotalCurrentDrawAmps() {
+        double totalCurrent = 0;
+        for (LynxModule hub : hubs) {
+            totalCurrent += hub.getCurrent(CurrentUnit.AMPS);
+        }
+        return totalCurrent;
     }
 }
 

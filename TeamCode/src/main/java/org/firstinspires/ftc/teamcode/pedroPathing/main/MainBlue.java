@@ -280,6 +280,7 @@ public class MainBlue extends LinearOpMode {
             telemetryM.addData("isShooting", shooting);
             telemetryM.addData("intake status", intake.getCurrentState());
             telemetryM.addData("intake current", intake.getCurrent());
+            telemetryM.addData("total current", hardwareManager.getTotalCurrentDrawAmps());
             telemetryM.addData("shooter vel", shooter.getVelocity());
             telemetryM.addData("shooter current", shooter.getCurrent1());
             telemetryM.addData("shooter target", shooter.getTargetVelocity());
