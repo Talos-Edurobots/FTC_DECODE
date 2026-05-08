@@ -29,6 +29,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 import org.firstinspires.ftc.teamcode.pedroPathing.tests.TestPanelsTelemetry;
 
 
@@ -74,6 +75,7 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("color readout", ColorReadoutOpMode::new);
 //                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
                 hlt.add("hang control", HangControl::new);
+                hlt.add("robot mechanism demo", RobotMechanismDemo::new);
                 hlt.add("turret simple pidf with turret", LimelightTurretAlign::new);
                 hlt.add("through put test", TestThoughPut::new);
                 hlt.add("collect data", CollectData::new);
@@ -83,6 +85,111 @@ public class Debugger extends SelectableOpMode {
 
     @Override
     public void onSelect() {}
+}
+
+@Configurable
+class RobotMechanismDemo extends OpMode {
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private static final double HOOD_STEP = 0.02;
+    private static final double TURRET_STEP_DEGREES = 2;
+    private Intake intake;
+    private Shooter shooter;
+    private Turret turret;
+
+    public static boolean intakeEnabled = false;
+    public static boolean intakeReverse = false;
+    public static boolean shooterEnabled = false;
+    public static double shooterTargetVelocity = 2400;
+    public static double turretTargetDegrees = 0;
+    public static double hoodAngle = 0.5;
+
+    @Override
+    public void init() {
+        intake = new Intake(hardwareMap);
+        intake.init();
+
+        shooter = new Shooter(hardwareMap);
+        shooter.init();
+        shooter.run(false);
+        shooter.setHoodAngle(hoodAngle);
+
+        turret = new Turret(hardwareMap);
+        turret.init();
+
+        PanelsConfigurables.INSTANCE.refreshClass(this);
+
+        telemetryM.addLine("Robot mechanism demo ready");
+        telemetryM.addLine("Use Panels to toggle intake/shooter and set turret + shooter targets");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+        if (gamepad1.aWasPressed()) {
+            intakeEnabled = !intakeEnabled;
+            if (intakeEnabled && intakeReverse) intakeReverse = false;
+        }
+        if (gamepad1.bWasPressed()) {
+            intakeEnabled = true;
+            intakeReverse = !intakeReverse;
+        }
+        if (gamepad1.xWasPressed()) {
+            shooterEnabled = !shooterEnabled;
+        }
+        if (gamepad1.dpadUpWasPressed()) {
+            shooterTargetVelocity += 100;
+        }
+        if (gamepad1.dpadDownWasPressed()) {
+            shooterTargetVelocity = Math.max(0, shooterTargetVelocity - 100);
+        }
+        if (gamepad1.dpadLeftWasPressed()) {
+            turretTargetDegrees -= TURRET_STEP_DEGREES;
+        }
+        if (gamepad1.dpadRightWasPressed()) {
+            turretTargetDegrees += TURRET_STEP_DEGREES;
+        }
+        if (gamepad1.leftBumperWasPressed()) {
+            hoodAngle -= HOOD_STEP;
+        }
+        if (gamepad1.rightBumperWasPressed()) {
+            hoodAngle += HOOD_STEP;
+        }
+        hoodAngle = Math.max(0, Math.min(0.5, hoodAngle));
+
+        intake.setCurrentState(
+                intakeEnabled
+                        ? (intakeReverse ? Intake.IntakeState.OUTTAKE : Intake.IntakeState.INTAKE)
+                        : Intake.IntakeState.STOP
+        );
+        intake.update();
+
+        Shooter.setTargetVelocity(shooterTargetVelocity);
+        shooter.run(shooterEnabled);
+        shooter.setHoodAngle(hoodAngle);
+        shooter.update();
+
+        turret.setAngleRadians(Math.toRadians(turretTargetDegrees));
+        turret.loop();
+
+        telemetryM.addLine("Controls: A intake toggle, B reverse intake, X shooter toggle");
+        telemetryM.addLine("Dpad up/down shooter velocity, dpad left/right turret, bumpers hood");
+        telemetryM.addLine("-------------------------");
+        telemetryM.addData("intake enabled", intakeEnabled);
+        telemetryM.addData("intake reverse", intakeReverse);
+        telemetryM.addData("intake state", intake.getCurrentState());
+        telemetryM.addData("intake velocity", intake.getVelocity());
+        telemetryM.addData("intake current", intake.getCurrent());
+        telemetryM.addLine("-------------------------");
+        telemetryM.addData("shooter enabled", shooterEnabled);
+        telemetryM.addData("shooter target velocity", shooterTargetVelocity);
+        telemetryM.addData("shooter velocity", shooter.getVelocity());
+        telemetryM.addData("shooter power", shooter.getPower());
+        telemetryM.addData("shooter current", shooter.getCurrent1());
+        telemetryM.addData("hood angle", shooter.getHoodAngle());
+        telemetryM.addLine("-------------------------");
+        telemetryM.addData("turret target degrees", turretTargetDegrees);
+        telemetryM.update(telemetry);
+    }
 }
 
 // ===================================================
