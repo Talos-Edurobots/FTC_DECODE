@@ -15,6 +15,10 @@ public final class MotorGroup {
     private final MotorConfig[] motors;
     private final int primaryIndex;
 
+    public MotorGroup(MotorConfig... motors) {
+        this(0, motors);
+    }
+
     public MotorGroup(int primaryIndex, MotorConfig... motors) {
         if (motors == null || motors.length == 0) {
             throw new IllegalArgumentException("MotorGroup requires at least one motor");

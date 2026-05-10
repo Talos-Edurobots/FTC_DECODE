@@ -976,10 +976,12 @@ class RampPowerOpMode extends OpMode {
     class TestThoughPut extends OpMode {
         static double velocity = 1300;
         static boolean runWIthVel = true;
+        private static final double TRIGGER_PRESS_THRESHOLD = 0.25;
         TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         Intake intake;
         Shooter shooter;
         Gate gate;
+        boolean lastRightTriggerPressed;
         @Override
         public void init() {
             intake = new Intake(hardwareMap);
@@ -995,7 +997,9 @@ class RampPowerOpMode extends OpMode {
 
         @Override
         public void loop() {
-            boolean trigger = gamepad1.rightTriggerWasPressed();
+            boolean rightTriggerPressed = gamepad1.right_trigger > TRIGGER_PRESS_THRESHOLD;
+            boolean trigger = rightTriggerPressed && !lastRightTriggerPressed;
+            lastRightTriggerPressed = rightTriggerPressed;
             if (trigger && !gate.isActivated()) {
                 gate.activate();
             }
