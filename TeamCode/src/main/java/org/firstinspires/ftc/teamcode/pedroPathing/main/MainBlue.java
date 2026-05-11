@@ -67,15 +67,16 @@ public class MainBlue extends LinearOpMode {
     boolean useLimelight = false;
     boolean useHang = false;
     boolean activateStop = false;
-    static double hoodFarAngle = 0.1, hoodCloseAngle = .3;
+    static double hoodFarAngle = 0.1, hoodCloseAngle = .1;
 
     @Override
     public void runOpMode() throws InterruptedException {
         double oldTime = 0, newTime, dt;
+        Pose teleOpStartPose = RobotPoseStorage.hasPose() ? RobotPoseStorage.getPose() : startingPose;
 
         follower = (Follower) blackboard.get(RobotConstants.FOLLOWER_KEY);
         if (follower == null) follower = PPConstants.createFollower(hardwareMap);
-        follower.setStartingPose(startingPose);
+        follower.setStartingPose(teleOpStartPose);
         follower.update();
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
                 .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))

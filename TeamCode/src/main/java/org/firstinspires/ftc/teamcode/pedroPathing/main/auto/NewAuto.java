@@ -51,7 +51,7 @@ public class NewAuto {
     private  Pose pickupIntake2Pose = new Pose(15, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private  Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake3Pose = new Pose(14, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private  Pose parkingPose = new Pose(50, 70, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
 
@@ -163,7 +163,7 @@ public class NewAuto {
             case 0:
                 follower.followPath(scorePreload);
                 shooter.run(true);
-                shooter.setHoodAngle(.4);
+                shooter.setHoodAngle(.1);
                 turret.setAngleRadians(Math.toRadians(isBlue ? -49: 49));
                 setPathState(1);
                 break;
@@ -184,7 +184,7 @@ public class NewAuto {
                 }
                 break;
             case 2:
-                if (pathTimer.getElapsedTimeSeconds() > 1) {
+                if (pathTimer.getElapsedTimeSeconds() > 0.1) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(3);
@@ -213,7 +213,7 @@ public class NewAuto {
                 }
                 break;
             case 7:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.3) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(8);
@@ -224,7 +224,7 @@ public class NewAuto {
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
                 follower.followPath(grabPickup2);
                 Shooter.targetVelocity = 1350;
-                shooter.setHoodAngle(.3);
+                shooter.setHoodAngle(.1);
                 setPathState(9);
                 break;
             case 9:
@@ -236,7 +236,7 @@ public class NewAuto {
                 }
                 break;
             case 10:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 3) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.3) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(11);
@@ -263,7 +263,7 @@ public class NewAuto {
                 }
                 break;
             case 14:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 4) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.4) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(15);

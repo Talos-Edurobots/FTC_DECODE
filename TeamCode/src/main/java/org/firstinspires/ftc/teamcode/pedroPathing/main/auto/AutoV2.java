@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.auto.old.SoloShortAuto;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.RobotPoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
@@ -42,11 +43,11 @@ public class AutoV2 {
     private SoloShortAuto auto;
     private  Pose startPose = new Pose(25, 129, Math.toRadians(233)); // Start Pose of our robot.
     private  Pose scorePreloadPose = new Pose(48, 100, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private Pose gateWithoutGrabPose = new Pose(16, 63, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private Pose gateWithoutGrabPose = new Pose(20, 62, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateWithoutGrabPoseControl1 = new Pose(48, 60); // Position of the gate that we need to open to access the artifacts.
     private Pose gateWithoutGrabPoseControl2 = new Pose(42, 60); // Position of the gate that we need to open to access the artifacts.
     private  Pose scorePose = new Pose(60, 78, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private Pose gateGrabPose = new Pose(12, 60, Math.toRadians(155)); // Position of the gate that we need to open to access the artifacts.
+    private Pose gateGrabPose = new Pose(14, 56, Math.toRadians(155)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediatePose = new Pose(40, 60, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediateControlPose = new Pose(54, 66, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
@@ -293,6 +294,8 @@ public class AutoV2 {
         telemetryM.addData("path timer", pathTimer.getElapsedTime());
         telemetryM.addData("flicker timer", transferTimer.getElapsedTime());
         telemetryM.update(telemetry);
+
+        RobotPoseStorage.setPose(follower.getPose());
     }
 
     /** This method is called once at the init of the OpMode. **/
@@ -329,6 +332,7 @@ public class AutoV2 {
     }
 
     public void stop(HashMap blackboard) {
+        RobotPoseStorage.setPose(follower.getPose());
         blackboard.put(RobotConstants.ALLIANCE_KEY, isBlue);
         blackboard.put(RobotConstants.FOLLOWER_KEY, follower);
     }
