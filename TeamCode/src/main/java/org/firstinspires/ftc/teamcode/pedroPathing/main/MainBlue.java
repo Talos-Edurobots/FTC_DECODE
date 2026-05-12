@@ -9,7 +9,6 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
-import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -23,7 +22,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
@@ -41,7 +39,6 @@ public class MainBlue extends LinearOpMode {
     static int backVel = 1500;
     static int frontVel = 1300;
     HardwareManager hardwareManager;
-    DriveTrain driveTrain;
     ColorSensors colors;
     Intake intake;
     Shooter shooter;
@@ -104,11 +101,6 @@ public class MainBlue extends LinearOpMode {
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(RobotConstants.IMU_PARAMETERS);
 
-        driveTrain = new DriveTrain(hardwareMap);
-        driveTrain.init();
-
-        driveTrain = new DriveTrain(hardwareMap);
-        driveTrain.init();
 
         intake = new Intake(hardwareMap);
         intake.init();

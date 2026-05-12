@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.facade.OpenLoopMotor;
 
 public class Intake {
     public enum IntakeState {
@@ -22,17 +22,21 @@ public class Intake {
         this.currentState = currentState;
     }
     HardwareMap hwMap;
-    MotorConfig motor = RobotConstants.INTAKE_CONFIG;
+    OpenLoopMotor motor = new OpenLoopMotor(
+            RobotConstants.INTAKE_MOTOR_NAME,
+            RobotConstants.INTAKE_MOTOR_DIRECTION,
+            RobotConstants.INTAKE_ZERO_POWER_BEHAVIOR,
+            RobotConstants.INTAKE_LIMITS
+    );
     public Intake(HardwareMap hwMap) {
         this.hwMap = hwMap;
     }
 
     public void init() {
         motor.init(hwMap);
-        motor.setCurrentAlert(6);
     }
     public boolean isOverCurrent() {
-        return motor.isOverCurrent();
+        return motor.getHardware().isOverCurrent();
     }
     public void update(){
         switch (currentState){
@@ -50,9 +54,9 @@ public class Intake {
         }
     }
     public double getVelocity(){
-        return motor.getVelocity();
+        return motor.getHardware().getVelocityTicksPerSecond();
     }
     public double getCurrent(){
-        return motor.getCurrent();
+        return motor.getCurrentAmps();
     }
 }

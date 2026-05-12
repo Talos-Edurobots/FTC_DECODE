@@ -9,16 +9,15 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorGroup;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.facade.OpenLoopMotor;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.facade.VelocityControlledMotor;
 
 @Configurable
 public class Shooter {
-    private HardwareMap hwmap;
-    private MotorGroup shooterMotors;
+    private final HardwareMap hwmap;
+    private VelocityControlledMotor shooterMotor;
+    private OpenLoopMotor shooterFollowerMotor;
     private Servo hoodServo;
-    private double integralSum = 0;
-    private double lastError = 0;
     private double dt = 0;
     private boolean isRunning = true;
     public static double alpha = .2;
@@ -48,8 +47,22 @@ public class Shooter {
         this.hwmap = hwmap;
     }
     public void init() {
-        shooterMotors = new MotorGroup(0, RobotConstants.SHOOTER_MOTOR_CONFIGS);
-        shooterMotors.init(hwmap);
+        shooterMotor = VelocityControlledMotor.fromLegacyTickCoefficients(
+                RobotConstants.SHOOTER_MOTOR_NAME,
+                RobotConstants.SHOOTER_MOTOR_TYPE,
+                RobotConstants.SHOOTER_MOTOR_DIRECTION,
+                RobotConstants.SHOOTER_ZERO_POWER_BEHAVIOR,
+                RobotConstants.SHOOTER_VELOCITY_PIDF,
+                RobotConstants.SHOOTER_LIMITS
+        );
+        shooterMotor.init(hwmap);
+        shooterFollowerMotor = new OpenLoopMotor(
+                RobotConstants.SHOOTER_FOLLOWER_MOTOR_NAME,
+                RobotConstants.SHOOTER_FOLLOWER_DIRECTION,
+                RobotConstants.SHOOTER_FOLLOWER_ZERO_POWER_BEHAVIOR,
+                RobotConstants.SHOOTER_LIMITS
+        );
+        shooterFollowerMotor.init(hwmap);
 
         hoodServo = hwmap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
         hoodServo.setPosition(.5);
@@ -60,9 +73,8 @@ public class Shooter {
     public void update() {
         dt = loopTimer.seconds();
         loopTimer.reset();
-        MotorConfig.setDt(dt);
-        MotorConfig.setBatteryVoltage(getBatteryVoltage());
-        shooterMotors.setVelocityTicksPerSecond(targetVelocity);
+        loopState.set(dt, 1.0 / getBatteryVoltage());
+        shooterMotor.setTargetVelocityTicksPerSecond(targetVelocity);
         calculateFilteredVelocity();
         setVelocity();
     }
@@ -70,20 +82,18 @@ public class Shooter {
         return impactTimer.seconds();
     }
     public void calculateFilteredVelocity() {
-        filteredVelocity = alpha * shooterMotors.getPrimaryMotor().getVelocity() + (1 - alpha) * filteredVelocity;
+        filteredVelocity = alpha * shooterMotor.getMeasuredVelocityTicksPerSecond() + (1 - alpha) * filteredVelocity;
         if (dt <= 0) {
             lastFilteredVel = filteredVelocity;
             return;
         }
 
         double delta = (filteredVelocity - lastFilteredVel) / dt;
-        // Detect shot
         if (!impactDetected && -delta > dropThreshold) {
             impactDetected = true;
             impactTimer.reset();
         }
 
-        // Debounce reset
         if (impactDetected && impactTimer.seconds() > debounceTime) {
             impactDetected = false;
         }
@@ -105,31 +115,33 @@ public class Shooter {
         return hoodServo.getPosition();
     }
     public boolean isBusy () {
-        return Math.abs(targetVelocity - shooterMotors.getPrimaryMotor().getVelocity()) > 70;
+        return Math.abs(targetVelocity - shooterMotor.getMeasuredVelocityTicksPerSecond()) > 70;
     }
     public void setVelocity() {
         if (isRunning) {
-            shooterMotors.updateVelocityPIDF();
+            shooterMotor.update(loopState);
+            shooterFollowerMotor.setPower(shooterMotor.getPower());
         }
         else floatShooter();
     }
     public void setPower(double power) {
-        shooterMotors.setPower(power);
+        shooterMotor.setPower(power);
+        shooterFollowerMotor.setPower(power);
     }
     public void floatShooter() {
-        shooterMotors.stop();
+        setPower(0);
     }
 
     public double getVelocity() {
-        return shooterMotors.getPrimaryMotor().getVelocity();
+        return shooterMotor.getMeasuredVelocityTicksPerSecond();
     }
 
     public double getPower() {
-        return shooterMotors.getPrimaryMotor().getPower();
+        return shooterMotor.getPower();
     }
 
     public double getCurrent1() {
-        return shooterMotors.getMotor(0).getCurrent();
+        return shooterMotor.getCurrentAmps();
     }
 
     private double getBatteryVoltage() {

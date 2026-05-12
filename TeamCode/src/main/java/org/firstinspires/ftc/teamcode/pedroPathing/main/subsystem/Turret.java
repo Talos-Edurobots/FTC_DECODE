@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -9,34 +7,83 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MetaMotor;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorCoefficientScaler;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.MotionProfilingCoefficients;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.facade.ProfiledPositionMotor;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.Angle;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.EncoderConverter;
 
 @Configurable
 public class Turret {
-    static double maxPower = .5, kp=0.005, kd = .001, ki=0, ks=0, manualMaxPower = .2, ramp = 1;
+    private enum ControlMode {
+        PROFILED,
+        MANUAL_PID
+    }
+
+    static double maxPower = .5, kp = 0.005, kd = .001, ki = 0, ks = 0, manualMaxPower = .2, ramp = 1;
     public static double movingShotLeadFactor = 0.01;
-    HardwareMap hwmap;
-    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    MotorConfig turret = RobotConstants.TURRET_CONFIG;
+    private final HardwareMap hwmap;
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private final MetaMotor turretHardware = new MetaMotor();
+    private final MotionProfilingCoefficients turretProfileCoefficients =
+            MotorCoefficientScaler.fromLegacyTickSpace(
+                    RobotConstants.TURRET_PROFILE_COEFFICIENTS,
+                    new EncoderConverter(RobotConstants.TURRET_MOTOR_TYPE)
+            );
+    private final ProfiledPositionMotor turret = new ProfiledPositionMotor(
+            turretHardware,
+            RobotConstants.TURRET_MOTOR_TYPE,
+            turretProfileCoefficients,
+            RobotConstants.TURRET_LIMITS.getMaxPower()
+    );
     static final Pose RED_GOAL_POSE = new Pose(144, 137);
     final Pose BLUE_GOAL_POSE = new Pose(0, 140);
+    private final ElapsedTime loopTimer = new ElapsedTime();
+    private final LoopState loopState = new LoopState();
+
+    private ControlMode controlMode = ControlMode.PROFILED;
+    private double angleToGoal;
+    private double targetMechanismAngleRadians = 0.0;
+    private double manualExtraPower = 0.0;
+    private double manualIntegral = 0.0;
+    private double lastManualError = 0.0;
+
     public Turret(HardwareMap hwmap) {
         this.hwmap = hwmap;
+        turretHardware.hwName(RobotConstants.TURRET_MOTOR_NAME);
+        turretHardware.direction(RobotConstants.TURRET_MOTOR_DIRECTION);
+        turretHardware.zeroPowerBehavior(RobotConstants.TURRET_ZERO_POWER_BEHAVIOR);
+        turretHardware.maxPower(RobotConstants.TURRET_LIMITS.getMaxPower());
+        turretHardware.currentAlert(RobotConstants.TURRET_LIMITS.getCurrentAlertAmps());
     }
-    double angleToGoal;
+
     public void faceForward() {
-        turret.setPositionInRadians(0);
+        setAngleRadians(0);
     }
+
     public void setAngleRadians(double angleRadians) {
-        turret.setPositionInRadians(angleRadians);
-        turret.setMotorMode(MotorMode.PROFILED_PIDF);
+        targetMechanismAngleRadians = Range.clip(
+                angleRadians,
+                RobotConstants.TURRET_MIN_ANGLE_RADIANS,
+                RobotConstants.TURRET_MAX_ANGLE_RADIANS
+        );
+        turret.setTargetAngle(Angle.fromRadians(toMotorRadians(targetMechanismAngleRadians)));
+        if (controlMode != ControlMode.PROFILED) {
+            turret.resetController();
+            controlMode = ControlMode.PROFILED;
+        }
     }
+
     public double getAngleToGoal(){
         return angleToGoal;
     }
+
     public void lookToGoal(Pose pose, boolean isRed) {
         double atan2;
         if (isRed) {
@@ -44,12 +91,10 @@ public class Turret {
         } else {
             atan2 = Math.atan2(BLUE_GOAL_POSE.getY()-pose.getY(), BLUE_GOAL_POSE.getX()-pose.getX());
         }
-        // robot angle must be -180 degrees to 180 degrees
         double rad = (atan2 - pose.getHeading());
         rad = (rad > Math.PI) ? rad - 2 * Math.PI : rad;
         angleToGoal = rad;
         setAngleRadians(angleToGoal);
-        turret.setMotorMode(MotorMode.PROFILED_PIDF);
         telemetryM.addData("angle to goal", angleToGoal);
         telemetryM.addData("rad", rad);
         telemetryM.addData("atan2", rad);
@@ -62,10 +107,6 @@ public class Turret {
     public void lookToGoalWhileMoving(Pose pose, Vector velocity, double leadFactor, boolean isRed) {
         if (pose == null || velocity == null) return;
 
-        /*
-         * Aiming at (goal + a * velocity) is equivalent to aiming from
-         * (pose - a * velocity), which lets us reuse the existing lookToGoal() path.
-         */
         Pose target = isRed ? RED_GOAL_POSE : BLUE_GOAL_POSE;
         double distance = target.distanceFrom(pose);
         Pose compensatedPose = new Pose(
@@ -75,61 +116,163 @@ public class Turret {
         );
 
         lookToGoal(compensatedPose, isRed);
-//        telemetryM.addData("moving shot lead factor", leadFactor);
-//        telemetryM.addData("moving shot vx", velocity.getXComponent());
-//        telemetryM.addData("moving shot vy", velocity.getYComponent());
     }
     public void init() {
         turret.init(hwmap);
+        turret.setAngleLimits(
+                Angle.fromRadians(toMotorRadians(RobotConstants.TURRET_MIN_ANGLE_RADIANS)),
+                Angle.fromRadians(toMotorRadians(RobotConstants.TURRET_MAX_ANGLE_RADIANS))
+        );
         faceForward();
+        loopTimer.reset();
     }
     public void limelightAim(LLResult result) {
-        turret.maxPower = maxPower;
-        turret.kP = kp; turret.kD = kd; turret.kI = ki; turret.kS = ks;
+        updateLoopState();
+        if (controlMode != ControlMode.MANUAL_PID) {
+            turret.resetController();
+            manualIntegral = 0.0;
+            lastManualError = 0.0;
+            controlMode = ControlMode.MANUAL_PID;
+        }
+
         if (result != null) {
             if (result.isValid()) {
                 telemetryM.addLine("valid result");
                 if (result.getTx() == 0) {
-                    turret.manualPositionPIDF(0);
+                    applyManualPositionPid(0);
                     telemetryM.addLine("0 power");
                 }
                 else {
-                    turret.manualPositionPIDF(-result.getTx());
+                    applyManualPositionPid(-result.getTx());
                     telemetryM.addLine("running turret");
                 }
             }
             else {
-                turret.manualPositionPIDF(0);
+                applyManualPositionPid(0);
                 telemetryM.addLine("invalid result");
             }
         }
         else {
+            applyManualPositionPid(0);
             telemetryM.addLine("null result");
         }
-        telemetryM.addData("kp", turret.kP);
-        telemetryM.addData("kd", turret.kD);
-        telemetryM.addData("tx", result.getTx());
-        telemetryM.addData("max power", turret.maxPower);
+        telemetryM.addData("kp", kp);
+        telemetryM.addData("kd", kd);
+        telemetryM.addData("tx", result == null ? 0 : result.getTx());
+        telemetryM.addData("max power", maxPower);
         telemetryM.addData("power", turret.getPower());
     }
     public void manualControl(double input) {
-        turret.extraPower = manualMaxPower * input;
-        telemetryM.addData("turret extra power", turret.extraPower);
+        manualExtraPower = manualMaxPower * input;
+        telemetryM.addData("turret extra power", manualExtraPower);
     }
     public void loop() {
-        turret.maxPower = maxPower;
-        turret.update();
-        telemetryM.addData("turret mode", turret.getMotorMode());
+        updateLoopState();
+        if (controlMode != ControlMode.PROFILED) {
+            turret.resetController();
+            controlMode = ControlMode.PROFILED;
+        }
+        turret.update(loopState);
+        telemetryM.addData("turret mode", controlMode);
         telemetryM.addData("power", turret.getPower());
-        telemetryM.addData("velocity", turret.getVelocity());
-        telemetryM.addData("ref vel", turret.getvRef());
-        telemetryM.addData("position", turret.getCurrentPosition());
-        telemetryM.addData("min pos", turret.getMinAngleTicks());
-        telemetryM.addData("max pos", turret.getMaxAngleTicks());
-        telemetryM.addData("ref pos", turret.getxRef());
-        telemetryM.addData("ref a", turret.getaRef());
-        telemetryM.addData("current", turret.getCurrent());
-        telemetryM.addData("ks motor", turret.kS);
-        telemetryM.addData("target", turret.getTargetPositionTicks());
+        telemetryM.addData("velocity", turretHardware.getVelocityTicksPerSecond());
+        telemetryM.addData("ref vel", turret.getReferenceState().getVelocity().toRadPerSec());
+        telemetryM.addData("position", turretHardware.getCurrentPositionTicks());
+        telemetryM.addData("min pos", getMinAngleTicks());
+        telemetryM.addData("max pos", getMaxAngleTicks());
+        telemetryM.addData("ref pos", turret.getReferenceState().getPosition().toRadians());
+        telemetryM.addData("ref a", turret.getReferenceState().getAcceleration());
+        telemetryM.addData("current", turret.getCurrentAmps());
+        telemetryM.addData("ks motor", RobotConstants.TURRET_PROFILE_COEFFICIENTS.getPidCoef().ks());
+        telemetryM.addData("target", getTargetPositionTicks());
+    }
+
+    private void updateLoopState() {
+        double dt = loopTimer.seconds();
+        loopTimer.reset();
+        loopState.set(dt, 1.0 / getBatteryVoltage());
+    }
+
+    private void applyManualPositionPid(double error) {
+        double dt = loopState.getDt();
+        if (dt <= 0) {
+            return;
+        }
+
+        double derivative = (error - lastManualError) / dt;
+        lastManualError = error;
+
+        double output = rampPower(
+                turretHardware.getPower(),
+                kp * error + ki * manualIntegral + kd * derivative + ks * Math.signum(error),
+                dt
+        );
+        int positionTicks = turretHardware.getCurrentPositionTicks();
+        boolean motorTooLowPos = positionTicks < getMinAngleTicks();
+        boolean motorTooHighPos = positionTicks > getMaxAngleTicks();
+        if (Math.abs(error) < 1) {
+            output = manualExtraPower;
+        }
+        if (output < maxPower) {
+            manualIntegral += error;
+        }
+        if (motorTooLowPos && output < 0) {
+            output = 0;
+            telemetryM.addLine("turret motor pos too low");
+        }
+        if (motorTooHighPos && output > 0) {
+            output = 0;
+            telemetryM.addLine("turret motor pos too high");
+        }
+        telemetryM.addData("output", output);
+        telemetryM.addData("extra power 2", manualExtraPower);
+        telemetryM.addData("error", error);
+        telemetryM.addData("pos", positionTicks);
+        telemetryM.addData("too low", motorTooLowPos);
+        telemetryM.addData("too high", motorTooHighPos);
+        turretHardware.maxPower(maxPower);
+        turretHardware.setPower(output);
+    }
+
+    private double getTargetPositionTicks() {
+        return targetMechanismAngleRadians
+                * RobotConstants.TURRET_MOTOR_TYPE.getTicksPerRadian()
+                * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
+    }
+
+    private double getMinAngleTicks() {
+        return RobotConstants.TURRET_MIN_ANGLE_RADIANS
+                * RobotConstants.TURRET_MOTOR_TYPE.getTicksPerRadian()
+                * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
+    }
+
+    private double getMaxAngleTicks() {
+        return RobotConstants.TURRET_MAX_ANGLE_RADIANS
+                * RobotConstants.TURRET_MOTOR_TYPE.getTicksPerRadian()
+                * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
+    }
+
+    private double toMotorRadians(double mechanismRadians) {
+        return mechanismRadians * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
+    }
+
+    private double rampPower(double current, double target, double dt) {
+        double maxPowerChange = ramp * dt;
+        double diff = target - current;
+        if (Math.abs(diff) > maxPowerChange) {
+            diff = Math.signum(diff) * maxPowerChange;
+        }
+        return current + diff;
+    }
+
+    private double getBatteryVoltage() {
+        double minVoltage = Double.POSITIVE_INFINITY;
+        for (com.qualcomm.robotcore.hardware.VoltageSensor sensor : hwmap.voltageSensor) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) {
+                minVoltage = Math.min(minVoltage, voltage);
+            }
+        }
+        return minVoltage < Double.POSITIVE_INFINITY ? minVoltage : 12.0;
     }
 }

@@ -21,7 +21,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
@@ -40,7 +39,6 @@ public class MainRed extends LinearOpMode {
     static int backVel = 1500;
     static int frontVel = 1200;
     HardwareManager hardwareManager;
-    DriveTrain driveTrain;
     Intake intake;
     Shooter shooter;
     Flickers flickers;
@@ -94,14 +92,10 @@ public class MainRed extends LinearOpMode {
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(RobotConstants.IMU_PARAMETERS);
 
-        driveTrain = new DriveTrain(hardwareMap);
-        driveTrain.init();
 
         flickers = new Flickers();
         flickers.init(hardwareMap);
 
-        driveTrain = new DriveTrain(hardwareMap);
-        driveTrain.init();
 
         intake = new Intake(hardwareMap);
         intake.init();
