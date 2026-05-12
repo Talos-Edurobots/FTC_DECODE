@@ -294,6 +294,35 @@ public class MotorConfig {
         return this;
     }
 
+    public MotorConfig copy() {
+        MotorConfig copy = new MotorConfig(hardwareName, motorType, direction, zeroPowerBehavior);
+        copy.motorUse = motorUse;
+        copy.motorMode = motorMode;
+        copy.externalGearRatio = externalGearRatio;
+        copy.extraPower = extraPower;
+        copy.currentAlert = currentAlert;
+        copy.kP = kP;
+        copy.kI = kI;
+        copy.kD = kD;
+        copy.kS = kS;
+        copy.kV = kV;
+        copy.kA = kA;
+        copy.targetPositionTicks = targetPositionTicks;
+        copy.xRef = xRef;
+        copy.vRef = vRef;
+        copy.aRef = aRef;
+        copy.maxVelocity = maxVelocity;
+        copy.maxAcceleration = maxAcceleration;
+        copy.maxPower = maxPower;
+        copy.rampPowerAcceleration = rampPowerAcceleration;
+        copy.targetVelocityTicks = targetVelocityTicks;
+        copy.lastVelocityError = lastVelocityError;
+        copy.velocityIntegral = velocityIntegral;
+        copy.minAngleTicks = minAngleTicks;
+        copy.maxAngleTicks = maxAngleTicks;
+        return copy;
+    }
+
     public MotorConfig setPIDFCoefficients(double kP, double kI, double kD,
                                            double kS, double kV, double kA) {
         this.kP = kP;

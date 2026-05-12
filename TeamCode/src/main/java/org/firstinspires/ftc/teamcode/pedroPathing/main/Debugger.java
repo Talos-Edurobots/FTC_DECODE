@@ -15,6 +15,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -30,7 +31,6 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
-import org.firstinspires.ftc.teamcode.pedroPathing.tests.TestPanelsTelemetry;
 
 
 @TeleOp(name = "Debugger", group = "main")
@@ -39,18 +39,18 @@ public class Debugger extends SelectableOpMode {
         super("Select a Tuning OpMode", s -> {
             s.folder("Without encoder", ne -> {
                 ne.add("shooter subsystem", ShooterPowerTest::new);
-                ne.add("Run Intake",  () -> new MotorPowerTest(RobotConstants.INTAKE_CONFIG ));
-                ne.add("Run Shooter", () -> new MotorPowerTest(RobotConstants.SHOOTER_CONFIG));
-                ne.add("run turret",  () -> new MotorPowerTest(RobotConstants.TURRET_CONFIG ));
-                ne.add("run hang", () -> new MotorPowerTest(RobotConstants.HANG_CONFIG));
-                ne.add("Run Left Front Drive",  () -> new MotorPowerTest(RobotConstants.LEFT_FRONT_CONFIG ));
-                ne.add("Run Right Front Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_FRONT_CONFIG));
-                ne.add("Run Left Back Drive",   () -> new MotorPowerTest(RobotConstants.LEFT_BACK_CONFIG  ));
-                ne.add("Run Right Back Drive",  () -> new MotorPowerTest(RobotConstants.RIGHT_BACK_CONFIG ));
+                ne.add("Run Intake",  () -> new MotorPowerTest(RobotConstants.INTAKE_CONFIG.copy()));
+                ne.add("Run Shooter", () -> new MotorPowerTest(RobotConstants.SHOOTER_CONFIG.copy()));
+                ne.add("Run Turret",  () -> new MotorPowerTest(RobotConstants.TURRET_CONFIG.copy()));
+                ne.add("Run Hang", () -> new MotorPowerTest(RobotConstants.HANG_CONFIG.copy()));
+                ne.add("Run Left Front Drive",  () -> new MotorPowerTest(RobotConstants.LEFT_FRONT_CONFIG.copy()));
+                ne.add("Run Right Front Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_FRONT_CONFIG.copy()));
+                ne.add("Run Left Back Drive",   () -> new MotorPowerTest(RobotConstants.LEFT_BACK_CONFIG.copy()));
+                ne.add("Run Right Back Drive",  () -> new MotorPowerTest(RobotConstants.RIGHT_BACK_CONFIG.copy()));
             });
             s.folder("Velocity Control", vc -> {
-                vc.add("Run Shooter Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.SHOOTER_CONFIG));
-                vc.add("Run Intake Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.INTAKE_CONFIG));
+                vc.add("Run Shooter Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.SHOOTER_CONFIG.copy()));
+                vc.add("Run Intake Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.INTAKE_CONFIG.copy()));
             });
             s.folder("servo control", sc -> {
                 sc.add("right servo", () -> new ServoControl(RobotConstants.RIGHT_SERVO_NAME));
@@ -60,9 +60,9 @@ public class Debugger extends SelectableOpMode {
                 sc.add("enable pwm all servos", EnableAllServoPwmOpMode::new);
             });
             s.folder("position control", pc -> {
-                pc.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
-                pc.add("turret ka test", () -> new KaTestOpMode(RobotConstants.TURRET_CONFIG));
-                pc.add("turret stick teleop", () -> new TurretStickTeleOp(RobotConstants.TURRET_CONFIG));
+                pc.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG.copy()));
+                pc.add("turret ka test", () -> new KaTestOpMode(RobotConstants.TURRET_CONFIG.copy()));
+                pc.add("turret stick teleop", () -> new TurretStickTeleOp(RobotConstants.TURRET_CONFIG.copy()));
             });
             s.folder("ke characterization", kect -> {
                 kect.add("shooter ke", KeCharacterizationOpMode::new);
@@ -77,7 +77,7 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("hang control", HangControl::new);
                 hlt.add("robot mechanism demo", RobotMechanismDemo::new);
                 hlt.add("turret simple pidf with turret", LimelightTurretAlign::new);
-                hlt.add("through put test", TestThoughPut::new);
+                hlt.add("throughput test", TestThroughput::new);
                 hlt.add("collect data", CollectData::new);
             });
         });
@@ -105,6 +105,13 @@ class RobotMechanismDemo extends OpMode {
 
     @Override
     public void init() {
+        intakeEnabled = false;
+        intakeReverse = false;
+        shooterEnabled = false;
+        shooterTargetVelocity = 2400;
+        turretTargetDegrees = 0;
+        hoodAngle = 0.5;
+
         intake = new Intake(hardwareMap);
         intake.init();
 
@@ -313,14 +320,14 @@ class MotorPositionTest extends OpMode {
 
     @Override
     public void loop() {
-        MotorConfig.setDt(timer.seconds());
-        timer.reset();
+        double dt = DebuggerSupport.updateLegacyLoopState(this, timer);
         motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
         motor.setPositionInTicks(targetPosition * motor.getMotorType().getTicksPerDegree());
         motor.updateSimplePositionControl();
         telemetryM.addData("current pos", motor.getCurrentPosition());
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("kp", kp);
+        telemetryM.addData("dt", dt);
         telemetryM.addData("target pos", targetPosition);
         telemetryM.update(telemetry);
     }
@@ -328,7 +335,7 @@ class MotorPositionTest extends OpMode {
 @Configurable
 class LimelightTurretAlign extends OpMode {
     ElapsedTime timer = new ElapsedTime();
-    MotorConfig motor = RobotConstants.TURRET_CONFIG;
+    MotorConfig motor = RobotConstants.TURRET_CONFIG.copy();
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Limelight3A limelight;
     public static double maxPower = .2;
@@ -344,7 +351,7 @@ class LimelightTurretAlign extends OpMode {
         ki = motor.kI;
         kd = motor.kD;
         ks = motor.kS;
-        PanelsConfigurables.INSTANCE.refreshClass(MotorPositionTest.class);
+        PanelsConfigurables.INSTANCE.refreshClass(LimelightTurretAlign.class);
     }
     @Override
     public void start() {
@@ -353,13 +360,13 @@ class LimelightTurretAlign extends OpMode {
         Log.d("LimelightTurretAlign", "tx,power,time");
     }
     void log() {
+        LLResult result = limelight.getLatestResult();
         Log.d("LimelightTurretAlign", String.format("%.2f,%.2f,%.2f",
-                limelight.getLatestResult().getTx(), motor.getPower(), getRuntime()));
+                result == null ? 0.0 : result.getTx(), motor.getPower(), getRuntime()));
     }
     @Override
     public void loop() {
-        MotorConfig.setDt(timer.seconds());
-        timer.reset();
+        double dt = DebuggerSupport.updateLegacyLoopState(this, timer);
         motor.maxPower = maxPower;
         motor.kP = kp; motor.kD = kd;
         LLResult result = limelight.getLatestResult();
@@ -385,9 +392,10 @@ class LimelightTurretAlign extends OpMode {
         }
         telemetryM.addData("kp", motor.kP);
         telemetryM.addData("kd", motor.kD);
-        telemetryM.addData("tx", result.getTx());
+        telemetryM.addData("tx", result == null ? 0.0 : result.getTx());
         telemetryM.addData("max power", motor.maxPower);
         telemetryM.addData("power", motor.getPower());
+        telemetryM.addData("dt", dt);
         telemetryM.update(telemetry);
     }
 }
@@ -429,9 +437,7 @@ class MotorPIDFVelocityTest extends OpMode {
 
     @Override
     public void loop() {
-        MotorConfig.setDt(timer.seconds());
-        MotorConfig.setBatteryVoltage(12);
-        timer.reset();
+        double dt = DebuggerSupport.updateLegacyLoopState(this, timer);
         motor.setVelocityTicksPerSecond(targetVelocity);
         motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
         // Set velocity via triggers
@@ -451,7 +457,7 @@ class MotorPIDFVelocityTest extends OpMode {
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("current", motor.getCurrent());
         telemetryM.addData("target vel", targetVelocity);
-        telemetryM.addData("dt", timer.seconds());
+        telemetryM.addData("dt", dt);
         telemetryM.addData("kp", kp);
         telemetryM.addData("motor kp", motor.kP);
         telemetryM.addData("target vel", targetVelocity);
@@ -472,6 +478,7 @@ class ServoControl extends OpMode{
     @Override
     public void init() {
         servo = hardwareMap.servo.get(servoName);
+        servoTargetPos = servo.getPosition();
         telemetryM.addLine("init");
         telemetryM.update(telemetry);
     }
@@ -493,13 +500,11 @@ class ServoControl extends OpMode{
             } else if (gamepad1.dpadRightWasPressed()) {
                 servoTargetPos = servo.getPosition() + .1;
             }
-            servo.setPosition(servoTargetPos);
         }
         else {
-            servo.setPosition(analogInput);
+            servoTargetPos = (analogInput + 1.0) / 2.0;
         }
-//        servoTargetPos = Math.min(1.0, Math.max(0.0, servoTargetPos));
-//        servoTargetPos = gamepad1.right_trigger - gamepad1.left_trigger;
+        servoTargetPos = Math.max(0.0, Math.min(1.0, servoTargetPos));
         servo.setPosition(servoTargetPos);
         telemetryM.addData("servo direction", servo.getDirection());
         telemetryM.addData("servo pos", servo.getPosition());
@@ -608,7 +613,6 @@ class KeCharacterizationOpMode extends OpMode {
         index = 0;
         applyPower();
         lastVelocity = shooter.getVelocity();
-        stableStartTime = System.currentTimeMillis();
         timer.reset();
     }
 
@@ -622,7 +626,8 @@ class KeCharacterizationOpMode extends OpMode {
         }
 
         double currentVelocity = shooter.getVelocity();
-        double accel = (currentVelocity - lastVelocity) / timer.seconds(); // ~20ms loop
+        double dt = Math.max(timer.seconds(), 1e-6);
+        double accel = (currentVelocity - lastVelocity) / dt; // ~20ms loop
 
         if (gamepad1.yWasPressed()) {
             logPoint();
@@ -664,12 +669,7 @@ class KeCharacterizationOpMode extends OpMode {
     }
 
     private double getBatteryVoltage() {
-        double minVoltage = Double.POSITIVE_INFINITY;
-        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
-            double v = sensor.getVoltage();
-            if (v > 0) minVoltage = Math.min(minVoltage, v);
-        }
-        return minVoltage;
+        return DebuggerSupport.getBatteryVoltage(hardwareMap);
     }
 }
 
@@ -899,7 +899,7 @@ class VoltageSensorReadoutOpMode extends OpMode {
 @Configurable
 class ColorReadoutOpMode extends OpMode {
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    private final MotorConfig intakeMotor = RobotConstants.INTAKE_CONFIG;
+    private Intake intake;
     private Gate gate = new Gate();
     private ColorSensors colors = new ColorSensors();
     static boolean stopIntakeWhenFull = true;
@@ -907,7 +907,8 @@ class ColorReadoutOpMode extends OpMode {
     @Override
     public void init() {
         gate.init(hardwareMap);
-        intakeMotor.init(hardwareMap);
+        intake = new Intake(hardwareMap);
+        intake.init();
         colors.init(hardwareMap);
 
         telemetryM.addLine("Color readout ready");
@@ -918,20 +919,29 @@ class ColorReadoutOpMode extends OpMode {
     @Override
     public void loop() {
         double intakePower = gamepad1.right_trigger - gamepad1.left_trigger;
-        intakeMotor.setPower(colors.isFull()&&stopIntakeWhenFull ? 0 : intakePower);
         colors.update();
+        intake.setCurrentState(
+                colors.isFull() && stopIntakeWhenFull
+                        ? Intake.IntakeState.STOP
+                        : Math.abs(intakePower) < 0.05
+                        ? Intake.IntakeState.STOP
+                        : intakePower > 0
+                        ? Intake.IntakeState.INTAKE
+                        : Intake.IntakeState.OUTTAKE
+        );
+        intake.update();
         if (gamepad1.rightBumperWasPressed()) gate.changeState();
 
         telemetryM.addData("intake power", intakePower);
-        telemetryM.addData("intake current", intakeMotor.getCurrent());
+        telemetryM.addData("intake current", intake.getCurrent());
         telemetryM.addLine("-------------------------");
         telemetryM.addData("is robot full", colors.isFull());
         telemetryM.addData("color1 distance (cm)", colors.getColor1());
-        telemetryM.addData("is detected", colors.is1Detected());
+        telemetryM.addData("color1 detected", colors.is1Detected());
         telemetryM.addData("color2 distance (cm)", colors.getColor2());
-        telemetryM.addData("is detected", colors.is2Detected());
+        telemetryM.addData("color2 detected", colors.is2Detected());
         telemetryM.addData("color3 distance (cm)", colors.getColor3());
-        telemetryM.addData("is detected", colors.is3Detected());
+        telemetryM.addData("color3 detected", colors.is3Detected());
         telemetryM.update(telemetry);
     }
 }
@@ -946,7 +956,7 @@ class RampPowerOpMode extends OpMode {
     double lastTime = 0;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private double rampPower(double current, double target, double dt) {
-        double maxPowerChange = RobotConstants.DrivetrainMaxAcceleration * dt;
+        double maxPowerChange = acceleration * dt;
         double diff = target - current;
         if (Math.abs(diff) > maxPowerChange) {
             diff = Math.signum(diff) * maxPowerChange;
@@ -956,6 +966,7 @@ class RampPowerOpMode extends OpMode {
     @Override
     public void init() {
         motor.init(hardwareMap);
+        lastTime = getRuntime();
     }
 
     @Override
@@ -973,9 +984,9 @@ class RampPowerOpMode extends OpMode {
 }
 
     @Configurable
-    class TestThoughPut extends OpMode {
+    class TestThroughput extends OpMode {
         static double velocity = 1300;
-        static boolean runWIthVel = true;
+        static boolean runWithVel = true;
         private static final double TRIGGER_PRESS_THRESHOLD = 0.25;
         TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
         Intake intake;
@@ -984,6 +995,7 @@ class RampPowerOpMode extends OpMode {
         boolean lastRightTriggerPressed;
         @Override
         public void init() {
+            runWithVel = true;
             intake = new Intake(hardwareMap);
             intake.init();
             shooter = new Shooter(hardwareMap);
@@ -1008,12 +1020,12 @@ class RampPowerOpMode extends OpMode {
             }
             if (gamepad1.right_bumper || gamepad1.left_bumper) log();
             if (gamepad1.dpadUpWasPressed()) shooter.changeState();
-            if (gamepad1.yWasPressed()) runWIthVel ^= true;
+            if (gamepad1.yWasPressed()) runWithVel ^= true;
             if (gamepad1.aWasPressed()) intake.setCurrentState(Intake.IntakeState.INTAKE);
             else if (gamepad1.bWasPressed()) intake.setCurrentState(Intake.IntakeState.STOP);
 
             Shooter.targetVelocity = velocity;
-            if (runWIthVel) {
+            if (runWithVel) {
                 shooter.run(true);
                 shooter.update();
             }
@@ -1025,14 +1037,14 @@ class RampPowerOpMode extends OpMode {
             }
 
             intake.update();
-            telemetryM.addLine("running with " + (runWIthVel ? "velocity":"open loop power"));
+            telemetryM.addLine("running with " + (runWithVel ? "velocity":"open loop power"));
             telemetryM.addData("shooter enabled", shooter.getRun());
             telemetryM.addData("shooter velocity", shooter.getVelocity());
             telemetryM.addData("shooter power", shooter.getPower());
             telemetryM.update(telemetry);
         }
         public void log() {
-            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWIthVel, shooter.getVelocity(), shooter.getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent1(), Shooter.targetVelocity));
+            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWithVel, shooter.getVelocity(), shooter.getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent1(), Shooter.targetVelocity));
         }
     }
 @Configurable
@@ -1042,8 +1054,8 @@ class CollectData extends OpMode {
     Gate gate;
     Intake intake;
     Shooter shooter;
+    Turret turret;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    MotorConfig turret = RobotConstants.TURRET_CONFIG;
     final String tag = "collectData";
     boolean runShooter = true;
     static double shooterTarget = 1000;
@@ -1051,6 +1063,7 @@ class CollectData extends OpMode {
 
     @Override
     public void init() {
+        shooterTarget = 1000;
         gate = new Gate();
         gate.init(hardwareMap);
         intake = new Intake(hardwareMap);
@@ -1058,9 +1071,10 @@ class CollectData extends OpMode {
         shooter = new Shooter(hardwareMap);
         shooter.init();
         shooter.run(false);
+        turret = new Turret(hardwareMap);
+        turret.init();
         follower = PPConstants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
-        turret.init(hardwareMap);
         follower.startTeleopDrive();
         telemetryM.addLine("init complete");
         telemetryM.update(telemetry);
@@ -1097,7 +1111,9 @@ class CollectData extends OpMode {
         shooter.update();
         follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
         follower.update();
-        double turretPos = turret.getCurrentPosition()/turret.getMotorType().getTicksPerRadian();
+        turret.lookToGoal(follower.getPose(), false);
+        turret.loop();
+        double turretPos = turret.getAngleToGoal();
         double shooterVel = shooter.getVelocity();
         double hoodAngle = shooter.getHoodAngle();
         String followerPose = follower.getPose().toString();
@@ -1119,6 +1135,33 @@ class CollectData extends OpMode {
         telemetryM.addData("shooter velocity", shooterVel);
         telemetryM.addData("intake state", intake.getCurrentState());
         telemetryM.update(telemetry);
+    }
+}
+
+final class DebuggerSupport {
+    private DebuggerSupport() {}
+
+    static double getBatteryVoltage(OpMode opMode) {
+        return getBatteryVoltage(opMode.hardwareMap);
+    }
+
+    static double getBatteryVoltage(HardwareMap hardwareMap) {
+        double minVoltage = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) {
+                minVoltage = Math.min(minVoltage, voltage);
+            }
+        }
+        return minVoltage < Double.POSITIVE_INFINITY ? minVoltage : 12.0;
+    }
+
+    static double updateLegacyLoopState(OpMode opMode, ElapsedTime timer) {
+        double dt = timer.seconds();
+        MotorConfig.setDt(dt);
+        MotorConfig.setBatteryVoltage(getBatteryVoltage(opMode));
+        timer.reset();
+        return dt;
     }
 }
 
