@@ -138,7 +138,6 @@ public class MainTeleOp {
         lastLoopTime = newTime;
 
         hardwareManager.update();
-        follower.update();
 
         if (opMode.gamepad1.backWasPressed()) {
             if (!useHang) {

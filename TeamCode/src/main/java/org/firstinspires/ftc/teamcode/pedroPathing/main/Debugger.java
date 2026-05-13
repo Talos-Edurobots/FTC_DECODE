@@ -29,6 +29,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
@@ -73,6 +74,7 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
                 hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
                 hlt.add("color readout", ColorReadoutOpMode::new);
+                hlt.add("led subsystem demo", LedsSubsystemDemo::new);
 //                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
                 hlt.add("hang control", HangControl::new);
                 hlt.add("robot mechanism demo", RobotMechanismDemo::new);
@@ -195,6 +197,126 @@ class RobotMechanismDemo extends OpMode {
         telemetryM.addData("hood angle", shooter.getHoodAngle());
         telemetryM.addLine("-------------------------");
         telemetryM.addData("turret target degrees", turretTargetDegrees);
+        telemetryM.update(telemetry);
+    }
+}
+
+@Configurable
+class LedsSubsystemDemo extends OpMode {
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+
+    private Leds leds;
+    private double lastLoopTime = 0.0;
+
+    public static double leftBaseColor = 0.333;
+    public static double rightBaseColor = 0.722;
+    public static double alertColor = 1.0;
+    public static double targetLockColor = 0.5;
+    public static double intakeStoppedColor = 0.0;
+    public static double blinkInterval = 0.2;
+    public static double holdDuration = 1.0;
+    public static int blinkCount = 3;
+    public static boolean useRgbIdle = false;
+
+    @Override
+    public void init() {
+        leds = new Leds();
+        leds.init(hardwareMap);
+
+        leftBaseColor = 0.333;
+        rightBaseColor = 0.722;
+        alertColor = 1.0;
+        targetLockColor = 0.5;
+        intakeStoppedColor = 0.0;
+        blinkInterval = 0.2;
+        holdDuration = 1.0;
+        blinkCount = 3;
+        useRgbIdle = false;
+
+        leds.setBase(Leds.Side.LEFT, leftBaseColor);
+        leds.setBase(Leds.Side.RIGHT, rightBaseColor);
+
+        PanelsConfigurables.INSTANCE.refreshClass(this);
+
+        telemetryM.addLine("LED subsystem demo ready");
+        telemetryM.addLine("A finite blink, B pulse right, X timed hold, Y clear");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void start() {
+        lastLoopTime = getRuntime();
+    }
+
+    @Override
+    public void loop() {
+        double now = getRuntime();
+        double dt = now - lastLoopTime;
+        lastLoopTime = now;
+        if (dt < 0) {
+            dt = 0;
+        }
+
+        leds.setBase(Leds.Side.LEFT, leftBaseColor);
+        leds.setBase(Leds.Side.RIGHT, rightBaseColor);
+
+        if (gamepad1.aWasPressed()) {
+            leds.blink(Leds.Side.BOTH, alertColor, blinkCount, blinkInterval);
+        }
+        if (gamepad1.bWasPressed()) {
+            leds.pulse(Leds.Side.RIGHT, rightBaseColor, alertColor, blinkInterval);
+        }
+        if (gamepad1.xWasPressed()) {
+            leds.showColorFor(Leds.Side.LEFT, targetLockColor, holdDuration);
+        }
+        if (gamepad1.yWasPressed()) {
+            leds.clearEffects();
+        }
+        if (gamepad1.leftBumperWasPressed()) {
+            leds.alertLeft(alertColor, blinkCount, blinkInterval);
+        }
+        if (gamepad1.rightBumperWasPressed()) {
+            leds.alertRight(alertColor, blinkCount, blinkInterval);
+        }
+        if (gamepad1.dpadLeftWasPressed()) {
+            leds.showColorFor(Leds.Side.BOTH, intakeStoppedColor, holdDuration);
+        }
+        if (gamepad1.dpadRightWasPressed()) {
+            leds.pulse(Leds.Side.BOTH, leftBaseColor, rightBaseColor, blinkInterval);
+        }
+        if (gamepad1.dpadUpWasPressed()) {
+            useRgbIdle = !useRgbIdle;
+        }
+        if (gamepad1.dpadDownWasPressed()) {
+            leds.blink(Leds.Side.LEFT, alertColor, intakeStoppedColor, blinkInterval, blinkCount, false);
+        }
+
+        if (!leds.isBusy()) {
+            if (useRgbIdle) {
+                leds.rgb(dt);
+            } else {
+                leds.setBase(Leds.Side.LEFT, leftBaseColor);
+                leds.setBase(Leds.Side.RIGHT, rightBaseColor);
+            }
+        }
+
+        leds.update(dt);
+
+        telemetryM.addLine("LED demo controls");
+        telemetryM.addLine("A both blink, B right pulse, X left timed hold, Y clear");
+        telemetryM.addLine("LB left alert, RB right alert, Dpad left both off hold");
+        telemetryM.addLine("Dpad right both pulse, Dpad up toggle RGB idle, Dpad down left no-restore blink");
+        telemetryM.addLine("-------------------------");
+        telemetryM.addData("dt", dt);
+        telemetryM.addData("leds busy", leds.isBusy());
+        telemetryM.addData("rgb idle", useRgbIdle);
+        telemetryM.addData("left current", leds.getLeft());
+        telemetryM.addData("right current", leds.getRight());
+        telemetryM.addData("left base", leds.getBaseLeft());
+        telemetryM.addData("right base", leds.getBaseRight());
+        telemetryM.addData("blink count", blinkCount);
+        telemetryM.addData("blink interval", blinkInterval);
+        telemetryM.addData("hold duration", holdDuration);
         telemetryM.update(telemetry);
     }
 }
