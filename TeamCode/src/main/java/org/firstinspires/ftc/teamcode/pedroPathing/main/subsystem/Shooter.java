@@ -11,9 +11,15 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.facade.OpenLoopMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.facade.VelocityControlledMotor;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ShooterTelemetrySnapshot;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCollector;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCostClass;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryMode;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryProvider;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue;
 
 @Configurable
-public class Shooter {
+public class Shooter implements TelemetryProvider {
     private final HardwareMap hwmap;
     private VelocityControlledMotor shooterMotor;
     private OpenLoopMotor shooterFollowerMotor;
@@ -27,6 +33,7 @@ public class Shooter {
     private double lastFilteredVel;
     private final ElapsedTime loopTimer = new ElapsedTime();
     private final LoopState loopState = new LoopState();
+    private final ThrottledValue<Double> currentSampler = new ThrottledValue<>(0.1);
 
     public boolean isImpactDetected() {
         return impactDetected;
@@ -142,6 +149,50 @@ public class Shooter {
 
     public double getCurrent1() {
         return shooterMotor.getCurrentAmps();
+    }
+
+    public ShooterTelemetrySnapshot getTelemetrySnapshot(TelemetryMode mode, double nowSeconds) {
+        Double currentAmps = mode.includes(TelemetryMode.DEBUG)
+                ? currentSampler.get(nowSeconds, shooterMotor::getCurrentAmps)
+                : null;
+        return new ShooterTelemetrySnapshot(
+                targetVelocity,
+                shooterMotor.getMeasuredVelocityTicksPerSecond(),
+                filteredVelocity,
+                shooterMotor.getPower(),
+                getHoodAngle(),
+                isRunning,
+                isBusy(),
+                impactDetected,
+                shooterMotor.getHardware().isOverCurrent(),
+                currentAmps
+        );
+    }
+
+    @Override
+    public void collectTelemetry(TelemetryCollector collector, TelemetryMode mode) {
+        ShooterTelemetrySnapshot snapshot = getTelemetrySnapshot(mode, collector.getNowSeconds());
+
+        collector.add("shooter", "running", snapshot.running, TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("shooter", "busy", snapshot.busy, TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("shooter", "impact_detected", snapshot.impactDetected,
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("shooter", "over_current", snapshot.overCurrent,
+                TelemetryMode.COMPETITION, TelemetryCostClass.BULK_CACHED);
+        collector.add("shooter", "target_tps", snapshot.targetVelocityTicksPerSecond,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("shooter", "measured_tps", snapshot.measuredVelocityTicksPerSecond,
+                TelemetryMode.DEBUG, TelemetryCostClass.BULK_CACHED);
+        collector.add("shooter", "filtered_tps", snapshot.filteredVelocityTicksPerSecond,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("shooter", "power", snapshot.appliedPower,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("shooter", "hood", snapshot.hoodAngle,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("shooter", "current_amps", snapshot.currentAmps,
+                TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);
     }
 
     private double getBatteryVoltage() {

@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -18,9 +16,16 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.Motio
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.facade.ProfiledPositionMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.Angle;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.EncoderConverter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCollector;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCostClass;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryMode;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryPublishPolicy;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryProvider;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TurretTelemetrySnapshot;
 
 @Configurable
-public class Turret {
+public class Turret implements TelemetryProvider {
     private static final double MAX_REASONABLE_LOOP_DT_SECONDS = 0.25;
 
     private enum ControlMode {
@@ -41,7 +46,6 @@ public class Turret {
     static double manualMaxPower = .2, ramp = 1;
     public static double movingShotLeadFactor = 0.01;
     private final HardwareMap hwmap;
-    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private final MetaMotor turretHardware = new MetaMotor();
     private final EncoderConverter encoderConverter =
             new EncoderConverter(RobotConstants.TURRET_MOTOR_TYPE);
@@ -60,6 +64,7 @@ public class Turret {
     final Pose BLUE_GOAL_POSE = new Pose(0, 140);
     private final ElapsedTime loopTimer = new ElapsedTime();
     private final LoopState loopState = new LoopState();
+    private final ThrottledValue<Double> currentSampler = new ThrottledValue<>(0.1);
 
     private ControlMode controlMode = ControlMode.PROFILED;
     private double angleToGoal;
@@ -109,9 +114,6 @@ public class Turret {
         rad = (rad > Math.PI) ? rad - 2 * Math.PI : rad;
         angleToGoal = rad;
         setAngleRadians(angleToGoal);
-        telemetryM.addData("angle to goal", angleToGoal);
-        telemetryM.addData("rad", rad);
-        telemetryM.addData("atan2", rad);
     }
 
     public void lookToGoalWhileMoving(Pose pose, Vector velocity, boolean isRed) {
@@ -160,34 +162,23 @@ public class Turret {
 
         if (result != null) {
             if (result.isValid()) {
-                telemetryM.addLine("valid result");
                 if (result.getTx() == 0) {
                     applyManualPositionPid(0);
-                    telemetryM.addLine("0 power");
                 }
                 else {
                     applyManualPositionPid(-result.getTx());
-                    telemetryM.addLine("running turret");
                 }
             }
             else {
                 applyManualPositionPid(0);
-                telemetryM.addLine("invalid result");
             }
         }
         else {
             applyManualPositionPid(0);
-            telemetryM.addLine("null result");
         }
-        telemetryM.addData("kp", kp);
-        telemetryM.addData("kd", kd);
-        telemetryM.addData("tx", result == null ? 0 : result.getTx());
-        telemetryM.addData("max power", maxPower);
-        telemetryM.addData("power", turret.getPower());
     }
     public void manualControl(double input) {
         manualExtraPower = manualMaxPower * input;
-        telemetryM.addData("turret extra power", manualExtraPower);
     }
     public void loop() {
         updateLoopState();
@@ -197,37 +188,6 @@ public class Turret {
             controlMode = ControlMode.PROFILED;
         }
         turret.update(loopState);
-        telemetryM.addData("turret mode", controlMode);
-        telemetryM.addData("power", turret.getPower());
-        telemetryM.addData("velocity", turretHardware.getVelocityTicksPerSecond());
-        telemetryM.addData(
-                "ref vel",
-                encoderConverter.velocityToTicksPerSecond(turret.getReferenceState().getVelocity())
-        );
-        telemetryM.addData("position", turretHardware.getCurrentPositionTicks());
-        telemetryM.addData("min pos", getMinAngleTicks());
-        telemetryM.addData("max pos", getMaxAngleTicks());
-        telemetryM.addData(
-                "ref pos",
-                encoderConverter.angleToTicks(turret.getReferenceState().getPosition())
-        );
-        telemetryM.addData(
-                "ref a",
-                encoderConverter.accelerationToTicksPerSecondSquared(
-                        turret.getReferenceState().getAcceleration()
-                )
-        );
-        telemetryM.addData("current", turret.getCurrentAmps());
-        telemetryM.addData("kp profile", kp);
-        telemetryM.addData("ki profile", ki);
-        telemetryM.addData("kd profile", kd);
-        telemetryM.addData("ks profile", ks);
-        telemetryM.addData("kv profile", kv);
-        telemetryM.addData("ka profile", ka);
-        telemetryM.addData("max vel profile", maxVel);
-        telemetryM.addData("max acc profile", maxAcc);
-        telemetryM.addData("max dec profile", maxDec);
-        telemetryM.addData("target", getTargetPositionTicks());
     }
 
     private void applyProfileConfigurables() {
@@ -287,20 +247,84 @@ public class Turret {
         }
         if (motorTooLowPos && output < 0) {
             output = 0;
-            telemetryM.addLine("turret motor pos too low");
         }
         if (motorTooHighPos && output > 0) {
             output = 0;
-            telemetryM.addLine("turret motor pos too high");
         }
-        telemetryM.addData("output", output);
-        telemetryM.addData("extra power 2", manualExtraPower);
-        telemetryM.addData("error", error);
-        telemetryM.addData("pos", positionTicks);
-        telemetryM.addData("too low", motorTooLowPos);
-        telemetryM.addData("too high", motorTooHighPos);
         turretHardware.maxPower(maxPower);
         turretHardware.setPower(output);
+    }
+
+    public TurretTelemetrySnapshot getTelemetrySnapshot(TelemetryMode mode, double nowSeconds) {
+        Double currentAmps = mode.includes(TelemetryMode.DEBUG)
+                ? currentSampler.get(nowSeconds, turret::getCurrentAmps)
+                : null;
+        int positionTicks = turretHardware.getCurrentPositionTicks();
+        return new TurretTelemetrySnapshot(
+                controlMode.name(),
+                angleToGoal,
+                targetMechanismAngleRadians,
+                turret.getMeasuredAngle().toRadians() / RobotConstants.TURRET_EXTERNAL_GEAR_RATIO,
+                turretHardware.getVelocityTicksPerSecond(),
+                turret.getPower(),
+                encoderConverter.velocityToTicksPerSecond(turret.getReferenceState().getVelocity()),
+                encoderConverter.accelerationToTicksPerSecondSquared(
+                        turret.getReferenceState().getAcceleration()
+                ),
+                turretHardware.isOverCurrent(),
+                positionTicks < getMinAngleTicks(),
+                positionTicks > getMaxAngleTicks(),
+                currentAmps
+        );
+    }
+
+    @Override
+    public void collectTelemetry(TelemetryCollector collector, TelemetryMode mode) {
+        TurretTelemetrySnapshot snapshot = getTelemetrySnapshot(mode, collector.getNowSeconds());
+
+        collector.add("turret", "mode", snapshot.controlMode, TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("turret", "over_current", snapshot.overCurrent,
+                TelemetryMode.COMPETITION, TelemetryCostClass.BULK_CACHED);
+        collector.add("turret", "target_rad", snapshot.targetAngleRadians,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "measured_rad", snapshot.measuredAngleRadians,
+                TelemetryMode.DEBUG, TelemetryCostClass.BULK_CACHED);
+        collector.add("turret", "angle_to_goal_rad", snapshot.angleToGoalRadians,
+                TelemetryMode.DEBUG, TelemetryCostClass.FORMATTED);
+        collector.add("turret", "velocity_tps", snapshot.measuredVelocityTicksPerSecond,
+                TelemetryMode.DEBUG, TelemetryCostClass.BULK_CACHED);
+        collector.add("turret", "power", snapshot.appliedPower,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "reference_velocity_tps", snapshot.referenceVelocityTicksPerSecond,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "reference_accel_tps2",
+                snapshot.referenceAccelerationTicksPerSecondSquared,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "at_lower_limit", snapshot.atLowerLimit,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "at_upper_limit", snapshot.atUpperLimit,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "current_amps", snapshot.currentAmps,
+                TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);
+        collector.add("turret", "kp", kp, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
+                TelemetryPublishPolicy.ON_MODE_ENTRY);
+        collector.add("turret", "ki", ki, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
+                TelemetryPublishPolicy.ON_MODE_ENTRY);
+        collector.add("turret", "kd", kd, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
+                TelemetryPublishPolicy.ON_MODE_ENTRY);
+        collector.add("turret", "ks", ks, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
+                TelemetryPublishPolicy.ON_MODE_ENTRY);
+        collector.add("turret", "kv", kv, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
+                TelemetryPublishPolicy.ON_MODE_ENTRY);
+        collector.add("turret", "ka", ka, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
+                TelemetryPublishPolicy.ON_MODE_ENTRY);
+        collector.add("turret", "max_vel", maxVel, TelemetryMode.TRACE,
+                TelemetryCostClass.STATIC, TelemetryPublishPolicy.ON_MODE_ENTRY);
+        collector.add("turret", "max_acc", maxAcc, TelemetryMode.TRACE,
+                TelemetryCostClass.STATIC, TelemetryPublishPolicy.ON_MODE_ENTRY);
+        collector.add("turret", "max_dec", maxDec, TelemetryMode.TRACE,
+                TelemetryCostClass.STATIC, TelemetryPublishPolicy.ON_MODE_ENTRY);
     }
 
     private double getTargetPositionTicks() {

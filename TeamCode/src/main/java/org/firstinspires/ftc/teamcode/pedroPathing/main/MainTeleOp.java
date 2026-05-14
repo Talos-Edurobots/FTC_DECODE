@@ -22,10 +22,16 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCollector;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCostClass;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryHub;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryMode;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryProvider;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue;
 
 import java.util.HashMap;
 
-public class MainTeleOp {
+public class MainTeleOp implements TelemetryProvider {
     public static int backVel = 1500;
     public static int frontVel = 1300;
     public static double hoodFarAngle = 0.1;
@@ -33,6 +39,9 @@ public class MainTeleOp {
     public static boolean defaultUseLimelight = false;
 
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private final TelemetryHub telemetryHub = new TelemetryHub();
+    private final ThrottledValue<Double> intakeCurrentSampler = new ThrottledValue<>(0.1);
+    private final ThrottledValue<Double> totalCurrentSampler = new ThrottledValue<>(0.2);
     private final Pose startingPose = new Pose(72, 72, Math.toRadians(180));
 
     private HardwareMap hardwareMap;
@@ -58,6 +67,10 @@ public class MainTeleOp {
     private boolean useHang = false;
     private boolean shooting = false;
     private double lastLoopTime = 0.0;
+    private double lastLoopDt = 0.0;
+    private double lastHeadingRadians = 0.0;
+    private double lastVisionTx = 0.0;
+    private boolean lastTurretTargetLock = false;
 
     public void init(OpMode opMode, boolean isBlue) {
         this.opMode = opMode;
@@ -111,6 +124,16 @@ public class MainTeleOp {
         useHang = false;
         shooting = false;
         lastLoopTime = 0.0;
+        lastLoopDt = 0.0;
+        lastHeadingRadians = 0.0;
+        lastVisionTx = 0.0;
+        lastTurretTargetLock = false;
+
+        telemetryHub.clearProviders();
+        telemetryHub.setMode(TelemetryMode.COMPETITION);
+        telemetryHub.register(this);
+        telemetryHub.register(shooter);
+        telemetryHub.register(turret);
     }
 
     public void init_loop() {
@@ -137,8 +160,13 @@ public class MainTeleOp {
         double newTime = opMode.getRuntime();
         double dt = newTime - lastLoopTime;
         lastLoopTime = newTime;
+        lastLoopDt = dt;
 
         hardwareManager.update();
+
+        if (opMode.gamepad2.backWasPressed()) {
+            telemetryHub.cycleMode();
+        }
 
         if (opMode.gamepad1.backWasPressed()) {
             if (!useHang) {
@@ -150,6 +178,8 @@ public class MainTeleOp {
 
         LLResult result = limelight.getLatestResult();
         boolean isTurretTarget = result != null && result.getTx() != 0 && Math.abs(result.getTx()) < 3;
+        lastTurretTargetLock = isTurretTarget;
+        lastVisionTx = result == null ? 0.0 : result.getTx();
         double color1 = shooter.isBusy() ? .28 : isTurretTarget ? .5 : .333;
         double color2 = isFar ? .555 : .722;
         if (isTurretTarget && shooter.isBusy()) {
@@ -233,38 +263,80 @@ public class MainTeleOp {
         double strafe = opMode.gamepad1.left_stick_x * mult;
         double rotate = -opMode.gamepad1.right_stick_x * mult;
         double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        lastHeadingRadians = heading;
 
         if (!automatedDrive) {
             follower.setTeleOpDrive(forward, strafe, rotate, false);
         }
         follower.update();
-
-        telemetryM.addData("fps", dt > 0 ? 1 / dt : 0);
-        telemetryM.addData("color 1", colors.is1Detected());
-        telemetryM.addData("color 2", colors.is2Detected());
-        telemetryM.addData("color 3", colors.is3Detected());
-        telemetryM.addData("is all", colors.isFull());
-        telemetryM.addData("timer", colors.getFullTIme());
-        telemetryM.addData("isShooting", shooting);
-        telemetryM.addData("intake status", intake.getCurrentState());
-        telemetryM.addData("intake current", intake.getCurrent());
-        telemetryM.addData("total current", hardwareManager.getTotalCurrentDrawAmps());
-        telemetryM.addData("shooter vel", shooter.getVelocity());
-        telemetryM.addData("shooter current", shooter.getCurrent1());
-        telemetryM.addData("shooter target", shooter.getTargetVelocity());
-        telemetryM.addData("shooter shooter running", shooter.getRun());
-        telemetryM.addData("shooter filtered vel", shooter.filteredVelocity);
-        telemetryM.addData("is impact detected", shooter.isImpactDetected());
-        telemetryM.addData("Heading", heading);
-        telemetryM.addData("dt", dt);
-        telemetryM.addData("pinpoint pos", follower.getPose());
-        telemetryM.addData("follower x", follower.getPose().getX());
-        telemetryM.addData("pinpoint heading", follower.getHeading());
-        telemetryM.update(telemetry);
+        telemetryHub.publish(telemetryM, telemetry, newTime);
     }
 
     public void stop(HashMap blackboard) {
         blackboard.put(RobotConstants.FOLLOWER_KEY, null);
         blackboard.put(RobotConstants.ALLIANCE_KEY, null);
+    }
+
+    @Override
+    public void collectTelemetry(TelemetryCollector collector, TelemetryMode mode) {
+        collector.add("system", "telemetry_mode", mode, TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("system", "loop_hz", lastLoopDt > 0 ? 1 / lastLoopDt : 0.0,
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "dt", lastLoopDt, TelemetryMode.DEBUG,
+                TelemetryCostClass.CHEAP);
+
+        collector.add("drive", "heading_rad", lastHeadingRadians, TelemetryMode.COMPETITION,
+                TelemetryCostClass.BULK_CACHED);
+        collector.add("drive", "pose", follower.getPose(), TelemetryMode.DEBUG,
+                TelemetryCostClass.FORMATTED);
+        collector.add("drive", "x", follower.getPose().getX(), TelemetryMode.DEBUG,
+                TelemetryCostClass.CHEAP);
+        collector.add("drive", "robot_heading", follower.getHeading(), TelemetryMode.DEBUG,
+                TelemetryCostClass.CHEAP);
+
+        collector.add("vision", "using_limelight", useLimelight, TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("vision", "locked", lastTurretTargetLock, TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("vision", "tx", lastVisionTx, TelemetryMode.DEBUG,
+                TelemetryCostClass.CHEAP);
+
+        collector.add("intake", "state", intake.getCurrentState(), TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("intake", "full", colors.isFull(), TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("intake", "over_current", intake.isOverCurrent(), TelemetryMode.COMPETITION,
+                TelemetryCostClass.BULK_CACHED);
+        collector.add("intake", "shooting", shooting, TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("intake", "color_1_detected", colors.is1Detected(), TelemetryMode.DEBUG,
+                TelemetryCostClass.CHEAP);
+        collector.add("intake", "color_2_detected", colors.is2Detected(), TelemetryMode.DEBUG,
+                TelemetryCostClass.CHEAP);
+        collector.add("intake", "color_3_detected", colors.is3Detected(), TelemetryMode.DEBUG,
+                TelemetryCostClass.CHEAP);
+        collector.add("intake", "full_time", colors.getFullTIme(), TelemetryMode.DEBUG,
+                TelemetryCostClass.CHEAP);
+        collector.add("intake", "current_amps",
+                mode.includes(TelemetryMode.DEBUG)
+                        ? intakeCurrentSampler.get(collector.getNowSeconds(), intake::getCurrent)
+                        : null,
+                TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);
+
+        collector.add("robot", "shot_preset", isFar ? "far" : "close",
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("robot", "slow_mode", slowMode, TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("robot", "hang_mode", useHang, TelemetryMode.COMPETITION,
+                TelemetryCostClass.CHEAP);
+        collector.add("robot", "total_current_amps",
+                mode.includes(TelemetryMode.DEBUG)
+                        ? totalCurrentSampler.get(
+                                collector.getNowSeconds(),
+                                hardwareManager::getTotalCurrentDrawAmps
+                        )
+                        : null,
+                TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);
     }
 }
