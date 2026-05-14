@@ -126,9 +126,10 @@ public class MainTeleOp {
 
     public void start() {
         limelight.start();
-        follower.startTeleopDrive();
+        follower.startTeleopDrive(true);
         gate.activate();
         intake.setCurrentState(Intake.IntakeState.INTAKE);
+        turret.start();
         lastLoopTime = opMode.getRuntime();
     }
 

@@ -28,7 +28,7 @@ public class ProfiledPositionMotor {
     private final MetaMotor hardware;
     private final EncoderConverter encoderConverter;
     private final TrapezoidalMotionProfileController controller;
-    private final double maxPower;
+    private double maxPower;
 
     private Angle targetAngle = Angle.fromRadians(0.0);
     private Angle minAngle = Angle.fromRadians(Double.NEGATIVE_INFINITY);
@@ -163,6 +163,11 @@ public class ProfiledPositionMotor {
 
     public double getCurrentAmps() {
         return hardware.getCurrentAmps();
+    }
+
+    public void setMaxPower(double maxPower) {
+        this.maxPower = maxPower;
+        hardware.maxPower(maxPower);
     }
 
     public void resetController() {

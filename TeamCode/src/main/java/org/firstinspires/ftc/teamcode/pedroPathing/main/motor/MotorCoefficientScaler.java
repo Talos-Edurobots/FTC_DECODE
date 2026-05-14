@@ -28,7 +28,8 @@ public final class MotorCoefficientScaler {
         return new MotionProfilingCoefficients(
                 fromLegacyTickSpace(legacyCoefficients.getPidCoef(), encoderConverter),
                 encoderConverter.ticksPerSecondToVelocity(legacyCoefficients.getMaxVelocity()).toRadPerSec(),
-                encoderConverter.ticksPerSecondSquaredToAcceleration(legacyCoefficients.getMaxAcceleration())
+                encoderConverter.ticksPerSecondSquaredToAcceleration(legacyCoefficients.getMaxAcceleration()),
+                encoderConverter.ticksPerSecondSquaredToAcceleration(legacyCoefficients.getMaxDeceleration())
         );
     }
 }

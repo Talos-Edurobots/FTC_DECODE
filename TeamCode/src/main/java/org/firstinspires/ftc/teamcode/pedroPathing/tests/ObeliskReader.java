@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "obelisk reader")
-//@Disabled
+@Disabled
 public class ObeliskReader extends LinearOpMode {
     Limelight3A limelight;
     /*

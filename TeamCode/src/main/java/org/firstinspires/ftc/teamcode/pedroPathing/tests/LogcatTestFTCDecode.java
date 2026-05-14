@@ -5,12 +5,14 @@ import com.bylazar.field.PanelsField;
 import com.bylazar.field.Style;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import android.util.Log;
 
 @TeleOp(name = "LogcatTest", group = "tests")
+@Disabled
 public  class LogcatTestFTCDecode extends LinearOpMode {
 
     // Unique logcat tag (filter on this!)

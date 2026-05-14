@@ -904,9 +904,7 @@ class KaTestOpMode extends OpMode {
 class TurretStickTeleOp extends OpMode {
     private final MotorConfig motor;
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    private double lastTime = 0.0;
-    private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
-    static double maxPower = 1;
+    private Turret turret;
 
     public TurretStickTeleOp(MotorConfig motor) {
         this.motor = motor;
@@ -914,56 +912,33 @@ class TurretStickTeleOp extends OpMode {
 
     @Override
     public void init() {
-        kp = motor.kP;
-        ki = motor.kI;
-        kd = motor.kD;
-        ks = motor.kS;
-        kv = motor.kV;
-        ka = motor.kA;
-        maxPower = motor.maxPower;
-        maxVel = motor.maxVelocity;
-        maxAcc = motor.maxAcceleration;
         PanelsConfigurables.INSTANCE.refreshClass(this);
-        motor.init(hardwareMap);
+        PanelsConfigurables.INSTANCE.refreshClass(Turret.class);
+        turret = new Turret(hardwareMap);
+        turret.init();
     }
 
     @Override
     public void start() {
-        lastTime = getRuntime();
+        turret.start();
     }
 
     @Override
     public void loop() {
-        double now = getRuntime();
-        double dt = now - lastTime;
-        lastTime = now;
-        if (dt <= 0) return;
-
         double stick = gamepad1.right_stick_x;
-        double targetTicks = stick >= 0
-                ? stick * motor.getMaxAngleTicks()
-                : stick * Math.abs(motor.getMinAngleTicks());
-//                : stick * motor.getMinAngleTicks();
+        double targetRadians = stick >= 0
+                ? stick * RobotConstants.TURRET_MAX_ANGLE_RADIANS
+                : stick * Math.abs(RobotConstants.TURRET_MIN_ANGLE_RADIANS);
 
-        MotorConfig.setDt(dt);
-        motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
-        motor.maxAcceleration = maxAcc;
-        motor.maxVelocity = maxVel;
-        motor.maxPower = maxPower;
-        motor.setPositionInTicks(targetTicks);
-        motor.updatePositionProfiledPIDF();
+        turret.setAngleRadians(targetRadians);
+        turret.loop();
 
         telemetryM.addLine("Use gamepad1 right stick X to command the turret");
         telemetryM.addData("stick", stick);
-        telemetryM.addData("target ticks", targetTicks);
-        telemetryM.addData("min ticks", motor.getMinAngleTicks());
-        telemetryM.addData("max ticks", motor.getMaxAngleTicks());
-        telemetryM.addData("power", motor.getPower());
-        telemetryM.addData("velocity", motor.getVelocity());
-        telemetryM.addData("position", motor.getCurrentPosition());
-        telemetryM.addData("ref pos", motor.getxRef());
-        telemetryM.addData("ref vel", motor.getvRef());
-        telemetryM.addData("current", motor.getCurrent());
+        telemetryM.addData("target radians", targetRadians);
+        telemetryM.addData("target degrees", Math.toDegrees(targetRadians));
+        telemetryM.addData("min degrees", Math.toDegrees(RobotConstants.TURRET_MIN_ANGLE_RADIANS));
+        telemetryM.addData("max degrees", Math.toDegrees(RobotConstants.TURRET_MAX_ANGLE_RADIANS));
         telemetryM.update(telemetry);
     }
 }

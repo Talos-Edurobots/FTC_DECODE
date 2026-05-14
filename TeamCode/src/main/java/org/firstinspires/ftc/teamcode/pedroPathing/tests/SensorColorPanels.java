@@ -36,6 +36,7 @@ import android.view.View;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -74,7 +75,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  */
 @Configurable
 @TeleOp(name = "Sensor: Color panels", group = "Sensor")
-//@Disabled
+@Disabled
 public class SensorColorPanels extends LinearOpMode {
 
   /** The colorSensor field will contain a reference to our color sensor hardware object */

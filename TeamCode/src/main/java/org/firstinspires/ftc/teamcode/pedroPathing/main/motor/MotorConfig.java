@@ -155,6 +155,7 @@ public class MotorConfig {
 
     public double maxVelocity = 1500.0;      // ticks / sec
     public double maxAcceleration = 3000.0;  // ticks / sec^2
+    public double maxDeceleration = 3000.0;  // ticks / sec^2
     public double maxPower = 1.0;
     public double rampPowerAcceleration = 1;
 
@@ -313,6 +314,7 @@ public class MotorConfig {
         copy.aRef = aRef;
         copy.maxVelocity = maxVelocity;
         copy.maxAcceleration = maxAcceleration;
+        copy.maxDeceleration = maxDeceleration;
         copy.maxPower = maxPower;
         copy.rampPowerAcceleration = rampPowerAcceleration;
         copy.targetVelocityTicks = targetVelocityTicks;
@@ -337,8 +339,16 @@ public class MotorConfig {
     public MotorConfig setMotionProfileCoefficients(double maxVel,
                                                     double maxAccel,
                                                     double maxPower) {
+        return setMotionProfileCoefficients(maxVel, maxAccel, maxAccel, maxPower);
+    }
+
+    public MotorConfig setMotionProfileCoefficients(double maxVel,
+                                                    double maxAccel,
+                                                    double maxDecel,
+                                                    double maxPower) {
         this.maxVelocity = maxVel;
         this.maxAcceleration = maxAccel;
+        this.maxDeceleration = maxDecel;
         this.maxPower = maxPower;
         return this;
     }
@@ -395,10 +405,10 @@ public class MotorConfig {
         double remaining = targetPositionTicks - xRef;
 
         double stoppingDistance =
-                (vRef * vRef) / (2.0 * maxAcceleration);
+                (vRef * vRef) / (2.0 * maxDeceleration);
 
         if (Math.abs(remaining) <= stoppingDistance) {
-            aRef = -Math.signum(velocity) * maxAcceleration;
+            aRef = -Math.signum(velocity) * maxDeceleration;
         } else {
             aRef = Math.signum(remaining) * maxAcceleration;
         }

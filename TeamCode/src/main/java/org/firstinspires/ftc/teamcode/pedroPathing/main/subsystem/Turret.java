@@ -21,20 +21,34 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.Encoder
 
 @Configurable
 public class Turret {
+    private static final double MAX_REASONABLE_LOOP_DT_SECONDS = 0.25;
+
     private enum ControlMode {
         PROFILED,
         MANUAL_PID
     }
 
-    static double maxPower = .5, kp = 0.005, kd = .001, ki = 0, ks = 0, manualMaxPower = .2, ramp = 1;
+    static double maxPower = RobotConstants.TURRET_CONFIG.maxPower;
+    static double kp = RobotConstants.TURRET_CONFIG.kP;
+    static double ki = RobotConstants.TURRET_CONFIG.kI;
+    static double kd = RobotConstants.TURRET_CONFIG.kD;
+    static double ks = RobotConstants.TURRET_CONFIG.kS;
+    static double kv = RobotConstants.TURRET_CONFIG.kV;
+    static double ka = RobotConstants.TURRET_CONFIG.kA;
+    static double maxVel = RobotConstants.TURRET_CONFIG.maxVelocity;
+    static double maxAcc = RobotConstants.TURRET_CONFIG.maxAcceleration;
+    static double maxDec = RobotConstants.TURRET_CONFIG.maxDeceleration;
+    static double manualMaxPower = .2, ramp = 1;
     public static double movingShotLeadFactor = 0.01;
     private final HardwareMap hwmap;
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private final MetaMotor turretHardware = new MetaMotor();
+    private final EncoderConverter encoderConverter =
+            new EncoderConverter(RobotConstants.TURRET_MOTOR_TYPE);
     private final MotionProfilingCoefficients turretProfileCoefficients =
             MotorCoefficientScaler.fromLegacyTickSpace(
                     RobotConstants.TURRET_PROFILE_COEFFICIENTS,
-                    new EncoderConverter(RobotConstants.TURRET_MOTOR_TYPE)
+                    encoderConverter
             );
     private final ProfiledPositionMotor turret = new ProfiledPositionMotor(
             turretHardware,
@@ -118,6 +132,7 @@ public class Turret {
         lookToGoal(compensatedPose, isRed);
     }
     public void init() {
+        applyProfileConfigurables();
         turret.init(hwmap);
         turret.setAngleLimits(
                 Angle.fromRadians(toMotorRadians(RobotConstants.TURRET_MIN_ANGLE_RADIANS)),
@@ -126,6 +141,14 @@ public class Turret {
         faceForward();
         loopTimer.reset();
     }
+
+    public void start() {
+        turret.resetController();
+        manualIntegral = 0.0;
+        lastManualError = 0.0;
+        loopTimer.reset();
+    }
+
     public void limelightAim(LLResult result) {
         updateLoopState();
         if (controlMode != ControlMode.MANUAL_PID) {
@@ -168,6 +191,7 @@ public class Turret {
     }
     public void loop() {
         updateLoopState();
+        applyProfileConfigurables();
         if (controlMode != ControlMode.PROFILED) {
             turret.resetController();
             controlMode = ControlMode.PROFILED;
@@ -176,21 +200,66 @@ public class Turret {
         telemetryM.addData("turret mode", controlMode);
         telemetryM.addData("power", turret.getPower());
         telemetryM.addData("velocity", turretHardware.getVelocityTicksPerSecond());
-        telemetryM.addData("ref vel", turret.getReferenceState().getVelocity().toRadPerSec());
+        telemetryM.addData(
+                "ref vel",
+                encoderConverter.velocityToTicksPerSecond(turret.getReferenceState().getVelocity())
+        );
         telemetryM.addData("position", turretHardware.getCurrentPositionTicks());
         telemetryM.addData("min pos", getMinAngleTicks());
         telemetryM.addData("max pos", getMaxAngleTicks());
-        telemetryM.addData("ref pos", turret.getReferenceState().getPosition().toRadians());
-        telemetryM.addData("ref a", turret.getReferenceState().getAcceleration());
+        telemetryM.addData(
+                "ref pos",
+                encoderConverter.angleToTicks(turret.getReferenceState().getPosition())
+        );
+        telemetryM.addData(
+                "ref a",
+                encoderConverter.accelerationToTicksPerSecondSquared(
+                        turret.getReferenceState().getAcceleration()
+                )
+        );
         telemetryM.addData("current", turret.getCurrentAmps());
-        telemetryM.addData("ks motor", RobotConstants.TURRET_PROFILE_COEFFICIENTS.getPidCoef().ks());
+        telemetryM.addData("kp profile", kp);
+        telemetryM.addData("ki profile", ki);
+        telemetryM.addData("kd profile", kd);
+        telemetryM.addData("ks profile", ks);
+        telemetryM.addData("kv profile", kv);
+        telemetryM.addData("ka profile", ka);
+        telemetryM.addData("max vel profile", maxVel);
+        telemetryM.addData("max acc profile", maxAcc);
+        telemetryM.addData("max dec profile", maxDec);
         telemetryM.addData("target", getTargetPositionTicks());
+    }
+
+    private void applyProfileConfigurables() {
+        MotionProfilingCoefficients scaledCoefficients = MotorCoefficientScaler.fromLegacyTickSpace(
+                new MotionProfilingCoefficients(kp, ki, kd, ks, kv, ka, maxVel, maxAcc, maxDec),
+                encoderConverter
+        );
+        turretProfileCoefficients.setPidCoefficients(
+                scaledCoefficients.getPidCoef().kp(),
+                scaledCoefficients.getPidCoef().ki(),
+                scaledCoefficients.getPidCoef().kd(),
+                scaledCoefficients.getPidCoef().ks(),
+                scaledCoefficients.getPidCoef().kv(),
+                scaledCoefficients.getPidCoef().ka()
+        );
+        turretProfileCoefficients.setMotionProfileLimits(
+                scaledCoefficients.getMaxVelocity(),
+                scaledCoefficients.getMaxAcceleration(),
+                scaledCoefficients.getMaxDeceleration()
+        );
+        turret.setMaxPower(maxPower);
     }
 
     private void updateLoopState() {
         double dt = loopTimer.seconds();
         loopTimer.reset();
-        loopState.set(dt, 1.0 / getBatteryVoltage());
+        double batteryVoltageFactor = 1.0 / getBatteryVoltage();
+        if (dt <= 0.0 || dt > MAX_REASONABLE_LOOP_DT_SECONDS) {
+            loopState.set(0.0, batteryVoltageFactor);
+            return;
+        }
+        loopState.set(dt, batteryVoltageFactor);
     }
 
     private void applyManualPositionPid(double error) {

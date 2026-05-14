@@ -43,15 +43,17 @@ public class TrapezoidalMotionProfileController implements MotorController{
         double vRefRad = vRef.toRadPerSec();
 
         double remaining = targetRad - xRefRad;
+        double maxAcceleration = coef.getMaxAcceleration();
+        double maxDeceleration = coef.getMaxDeceleration();
 
         double stoppingDistance =
-                (vRefRad * vRefRad) / (2.0 * coef.getMaxAcceleration());
+                (vRefRad * vRefRad) / (2.0 * maxDeceleration);
 
         if (Math.signum(vRefRad) == Math.signum(remaining) &&
                 Math.abs(remaining) <= stoppingDistance) {
-            aRef = -Math.signum(velocity) * coef.getMaxAcceleration();
+            aRef = -Math.signum(velocity) * maxDeceleration;
         } else {
-            aRef = Math.signum(remaining) *coef.getMaxAcceleration();
+            aRef = Math.signum(remaining) * maxAcceleration;
         }
         vRefRad += aRef * dt;
         vRefRad = Range.clip(vRefRad,

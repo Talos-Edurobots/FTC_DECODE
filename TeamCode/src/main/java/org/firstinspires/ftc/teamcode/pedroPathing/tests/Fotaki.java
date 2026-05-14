@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.List;
 
-@Configurable
+//@Configurable
 @TeleOp
 public class Fotaki extends LinearOpMode {
     static double color = 0;

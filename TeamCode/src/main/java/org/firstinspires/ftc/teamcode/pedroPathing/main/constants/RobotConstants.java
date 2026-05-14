@@ -104,6 +104,7 @@ public final class RobotConstants {
             new MotionProfilingCoefficients(
                     new PIDFFCoefficients(0.068, 0, 0.002, 1.2, 0.005687094208999908, 0.0004),
                     1800,
+                    4500,
                     4500
             );
     public static final MotorLimits TURRET_LIMITS = new MotorLimits(1.0, Double.POSITIVE_INFINITY);
@@ -117,8 +118,8 @@ public final class RobotConstants {
     ).addExternalGearRatio(TURRET_EXTERNAL_GEAR_RATIO)
             .setMotorUse(MotorUse.MECHANICAL_STOP)
             .setMotorMode(MotorMode.PROFILED_PIDF)
-            .setMotionProfileCoefficients(1800, 4500, 1)
-            .setPIDFCoefficients(0.068, 0, 0.002, 1.2, 0.005687094208999908, 0.0004)
+            .setMotionProfileCoefficients(1800, 3000, 2000, 1)
+            .setPIDFCoefficients(0.005, 0, 0, 0.3, 0.005687094208999908, 0.0004)
 //           .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
             .setMinAngleRadians(TURRET_MIN_ANGLE_RADIANS)
             .setMaxAngleRadians(TURRET_MAX_ANGLE_RADIANS);

@@ -38,4 +38,13 @@ public class PIDFFCoefficients {
     public PIDFFCoefficients(double kp, double ki, double kd, double kf) {
         this(kp, ki, kd, kf, 0, 0);
     }
+
+    public void set(double kp, double ki, double kd, double ks, double kv, double ka) {
+        this.kp = kp;
+        this.ki = ki;
+        this.kd = kd;
+        this.ks = ks;
+        this.kv = kv;
+        this.ka = ka;
+    }
 }
