@@ -49,7 +49,7 @@ public class AutoV2 {
     private  Pose scorePose = new Pose(60, 78, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private Pose gateGrabPose = new Pose(14, 56, Math.toRadians(155)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediatePose = new Pose(40, 60, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
-    private Pose gateIntermediateControlPose = new Pose(54, 66, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private Pose gateIntermediateControlPose = new Pose(54, 67, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.

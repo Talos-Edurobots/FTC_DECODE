@@ -33,7 +33,7 @@ import java.util.HashMap;
 
 public class MainTeleOp implements TelemetryProvider {
     public static int backVel = 1500;
-    public static int frontVel = 1300;
+    public static int frontVel = 1250;
     public static double hoodFarAngle = 0.1;
     public static double hoodCloseAngle = .1;
     public static boolean defaultUseLimelight = false;

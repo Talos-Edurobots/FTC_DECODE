@@ -43,14 +43,16 @@ public class NewAuto {
     private SoloShortAuto auto;
     private  Pose startPose = new Pose(23, 136, Math.toRadians(233)); // Start Pose of our robot.
     private  Pose scorePose = new Pose(48, 85, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private  Pose gatePose = new Pose(19, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private  Pose gatePose = new Pose(18.5, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private  Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickupIntake2Pose = new Pose(15, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private Pose pickup2ControlPose = new Pose(52, 58);
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private Pose pickup3ControlPose = new Pose(52, 30);
     private  Pose pickupIntake3Pose = new Pose(14, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private  Pose parkingPose = new Pose(50, 70, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
@@ -67,9 +69,9 @@ public class NewAuto {
 
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(scorePose, pickup2Pose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
-                .addPath(new BezierLine(pickup2Pose, pickupIntake2Pose))
+//                .addPath(new BezierLine(scorePose, pickup2Pose))
+//                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
+                .addPath(new BezierCurve(pickup2Pose, pickupIntake2Pose, pickup2ControlPose))
                 .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickupIntake2Pose.getHeading())
                 .setGlobalDeceleration()
                 .build();
@@ -104,9 +106,7 @@ public class NewAuto {
 
         /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierLine(score2ndPose, pickup3Pose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
-                .addPath(new BezierLine(pickup3Pose, pickupIntake3Pose))
+                .addPath(new BezierCurve(score2ndPose, pickupIntake3Pose, pickup3ControlPose))
                 .setLinearHeadingInterpolation(pickup3Pose.getHeading(), pickupIntake3Pose.getHeading())
                 .setGlobalDeceleration()
                 .build();
