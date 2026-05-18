@@ -53,7 +53,7 @@ public class NewAuto {
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private Pose pickup3ControlPose = new Pose(52, 30.005820765609734);
-    private  Pose pickupIntake3Pose = new Pose(16, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake3Pose = new Pose(14, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private  Pose parkingPose = new Pose(50, 70, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
 
@@ -69,9 +69,7 @@ public class NewAuto {
 
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup2 = follower.pathBuilder()
-//                .addPath(new BezierLine(scorePose, pickup2Pose))
-//                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
-                .addPath(new BezierCurve(pickup2Pose, pickupIntake2Pose, pickup2ControlPose))
+                .addPath(new BezierCurve(scorePose, pickup2ControlPose, pickupIntake2Pose))
                 .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickupIntake2Pose.getHeading())
                 .setGlobalDeceleration()
                 .build();
@@ -118,8 +116,8 @@ public class NewAuto {
                 .setGlobalDeceleration()
                 .build();
 
-        park = new Path(new BezierLine(pickupIntake3Pose, parkingPose));
-        park.setLinearHeadingInterpolation(pickupIntake3Pose.getHeading(), parkingPose.getHeading());
+        park = new Path(new BezierLine(score2ndPose, parkingPose));
+        park.setLinearHeadingInterpolation(score2ndPose.getHeading(), parkingPose.getHeading());
     }
     //    public SoloShortAuto get() {
 //        if (auto == null) {
@@ -148,14 +146,18 @@ public class NewAuto {
         if (isBlue) return;
         startPose = startPose.mirror();
         scorePose = scorePose.mirror();
+        gatePose = gatePose.mirror();
+        gateControlPose1 = gateControlPose1.mirror();
         pickup1Pose = pickup1Pose.mirror();
         pickup1IntakePose = pickup1IntakePose.mirror();
         pickup2Pose = pickup2Pose.mirror();
         pickupIntake2Pose = pickupIntake2Pose.mirror();
+        pickup2ControlPose = pickup2ControlPose.mirror();
         score2ControlPos = score2ControlPos.mirror();
         pickup3Pose = pickup3Pose.mirror();
         pickupIntake3Pose = pickupIntake3Pose.mirror();
         pickup3ControlPose = pickup3ControlPose.mirror();
+        score2ndPose = score2ndPose.mirror();
         parkingPose = parkingPose.mirror();
     }
 
@@ -225,7 +227,7 @@ public class NewAuto {
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
                 follower.followPath(grabPickup2);
                 Shooter.targetVelocity = 1350;
-                shooter.setHoodAngle(.1);
+                shooter.setHoodAngle(0);
                 setPathState(9);
                 break;
             case 9:
