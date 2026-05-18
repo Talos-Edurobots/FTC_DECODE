@@ -32,6 +32,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue
 import java.util.HashMap;
 
 public class MainTeleOp implements TelemetryProvider {
+    private static final int DRIVER_STATION_TELEMETRY_INTERVAL_MS = 100;
+
     public static int backVel = 1500;
     public static int frontVel = 1250;
     public static double hoodFarAngle = 0.1;
@@ -90,7 +92,7 @@ public class MainTeleOp implements TelemetryProvider {
         hardwareManager = new HardwareManager(hardwareMap);
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        telemetry.setMsTransmissionInterval(11);
+        telemetry.setMsTransmissionInterval(DRIVER_STATION_TELEMETRY_INTERVAL_MS);
         limelight.pipelineSwitch(isBlue ? 2 : 3);
 
         leds = new Leds();

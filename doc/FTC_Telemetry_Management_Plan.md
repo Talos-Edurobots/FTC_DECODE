@@ -194,6 +194,12 @@ This is the final formatting step:
 
 Only this layer should know about `PanelsTelemetry.INSTANCE.getTelemetry()`.
 
+In the implemented version of this architecture, output cadence is also part of this layer:
+
+- `OFF` and `COMPETITION` refresh at `5 Hz`
+- `DEBUG` and `TRACE` refresh every loop on Panels
+- Driver Station telemetry is capped separately at `10 Hz`
+
 ## The telemetry modes I would define
 
 I would not stop at only "debug" and "competition".
@@ -241,6 +247,11 @@ Bad competition examples:
 - static gear-ratio data
 - target values that never change during the match
 
+Cadence:
+
+- refresh at `5 Hz`
+- optimize for readability over raw temporal fidelity
+
 ## 3. `DEBUG`
 
 Use during tuning and testing.
@@ -257,6 +268,11 @@ Contains:
 
 This is where most mechanism tuning telemetry belongs.
 
+Cadence:
+
+- publish every loop to Panels
+- allow Driver Station to stay capped at `5-10 Hz`
+
 ## 4. `TRACE`
 
 Use only for deep debugging.
@@ -270,6 +286,10 @@ Contains:
 - detailed diagnostics
 
 This should almost never be on in normal driving.
+
+Cadence:
+
+- same as `DEBUG` for now: per-loop on Panels, capped on Driver Station
 
 ## The cost model I would use
 
@@ -480,6 +500,7 @@ Responsibilities:
 - know the active telemetry mode
 - know throttling intervals
 - publish final telemetry once per cycle
+- decide whether the current loop should emit telemetry at all based on mode cadence
 
 Example responsibilities:
 
@@ -487,6 +508,12 @@ Example responsibilities:
 - `register(TelemetryProvider provider)`
 - `beginLoop(loopTime)`
 - `publish(telemetry)`
+
+In the current code, that cadence policy is:
+
+- `OFF` and `COMPETITION`: publish every `0.2 s`
+- `DEBUG` and `TRACE`: publish every loop
+- always force an immediate publish when entering a new mode
 
 ## E. Add throttled samplers for expensive values
 
@@ -813,6 +840,7 @@ Optional future improvements:
 - one-shot config dump
 - trace logging to logcat
 - timing instrumentation for loop segments
+- separate per-sink collector paths if Panels and Driver Station ever need different field sets in the same mode
 
 ## Recommended class design
 
