@@ -27,6 +27,18 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TurretTelemetr
 @Configurable
 public class Turret implements TelemetryProvider {
     private static final double MAX_REASONABLE_LOOP_DT_SECONDS = 0.25;
+    private static final PositionAimLut RED_POSITION_AIM_LUT = new PositionAimLut(
+            PositionAimLut.sample(72.0, 72.0, 144.0, 144.0),
+            PositionAimLut.sample(36.5, 131.5, 144.0, 133.9),
+            PositionAimLut.sample(96.5, 9.6, 133.9, 144.0),
+            PositionAimLut.sample(57.6, 20.2, 139.2, 144.0),
+            PositionAimLut.sample(73.4, 9.1, 137.8, 144.0),
+            PositionAimLut.sample(50.4, 108.0, 144.0, 135.8),
+            PositionAimLut.sample(85.4, 97.9, 139.2, 144.0)
+    );
+    private static final PositionAimLut BLUE_POSITION_AIM_LUT = new PositionAimLut(
+            // Add calibrated blue-alliance samples here: sample(robotX, robotY, aimX, aimY)
+    );
 
     private enum ControlMode {
         PROFILED,
@@ -45,6 +57,8 @@ public class Turret implements TelemetryProvider {
     static double maxDec = RobotConstants.TURRET_CONFIG.maxDeceleration;
     static double manualMaxPower = .2, ramp = 1;
     public static double movingShotLeadFactor = 0.01;
+    public static boolean positionAimLutEnabled = false;
+    public static int positionAimLutNeighborCount = 3;
     private final HardwareMap hwmap;
     private final MetaMotor turretHardware = new MetaMotor();
     private final EncoderConverter encoderConverter =
@@ -72,6 +86,9 @@ public class Turret implements TelemetryProvider {
     private double manualExtraPower = 0.0;
     private double manualIntegral = 0.0;
     private double lastManualError = 0.0;
+    private Double lastAimPointX = null;
+    private Double lastAimPointY = null;
+    private boolean lastAimPointWasVirtual = false;
 
     public Turret(HardwareMap hwmap) {
         this.hwmap = hwmap;
@@ -104,15 +121,11 @@ public class Turret implements TelemetryProvider {
     }
 
     public void lookToGoal(Pose pose, boolean isRed) {
-        double atan2;
-        if (isRed) {
-            atan2 = Math.atan2(RED_GOAL_POSE.getY()-pose.getY(), RED_GOAL_POSE.getX()-pose.getX());
-        } else {
-            atan2 = Math.atan2(BLUE_GOAL_POSE.getY()-pose.getY(), BLUE_GOAL_POSE.getX()-pose.getX());
+        if (pose == null) {
+            return;
         }
-        double rad = (atan2 - pose.getHeading());
-        rad = (rad > Math.PI) ? rad - 2 * Math.PI : rad;
-        angleToGoal = rad;
+        Pose aimTarget = getAimTargetPose(pose, isRed);
+        angleToGoal = computeTurretAngleRadians(pose, aimTarget);
         setAngleRadians(angleToGoal);
     }
 
@@ -262,8 +275,12 @@ public class Turret implements TelemetryProvider {
         int positionTicks = turretHardware.getCurrentPositionTicks();
         return new TurretTelemetrySnapshot(
                 controlMode.name(),
+                positionAimLutEnabled,
+                lastAimPointWasVirtual,
                 angleToGoal,
                 targetMechanismAngleRadians,
+                lastAimPointX,
+                lastAimPointY,
                 turret.getMeasuredAngle().toRadians() / RobotConstants.TURRET_EXTERNAL_GEAR_RATIO,
                 turretHardware.getVelocityTicksPerSecond(),
                 turret.getPower(),
@@ -292,6 +309,14 @@ public class Turret implements TelemetryProvider {
                 TelemetryMode.DEBUG, TelemetryCostClass.BULK_CACHED);
         collector.add("turret", "angle_to_goal_rad", snapshot.angleToGoalRadians,
                 TelemetryMode.DEBUG, TelemetryCostClass.FORMATTED);
+        collector.add("turret", "lut_enabled", snapshot.lutEnabled,
+                TelemetryMode.DEBUG, TelemetryCostClass.STATIC);
+        collector.add("turret", "lut_active", snapshot.usingVirtualAimPoint,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "aim_point_x", snapshot.aimPointX,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "aim_point_y", snapshot.aimPointY,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("turret", "velocity_tps", snapshot.measuredVelocityTicksPerSecond,
                 TelemetryMode.DEBUG, TelemetryCostClass.BULK_CACHED);
         collector.add("turret", "power", snapshot.appliedPower,
@@ -331,6 +356,39 @@ public class Turret implements TelemetryProvider {
         return targetMechanismAngleRadians
                 * RobotConstants.TURRET_MOTOR_TYPE.getTicksPerRadian()
                 * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
+    }
+
+    private Pose getAimTargetPose(Pose robotPose, boolean isRed) {
+        Pose goalPose = isRed ? RED_GOAL_POSE : BLUE_GOAL_POSE;
+        Pose virtualAimPose = null;
+        if (positionAimLutEnabled) {
+            PositionAimLut lut = isRed ? RED_POSITION_AIM_LUT : BLUE_POSITION_AIM_LUT;
+            virtualAimPose = lut.getVirtualAimPoint(robotPose, positionAimLutNeighborCount);
+        }
+
+        Pose chosenPose = virtualAimPose != null ? virtualAimPose : goalPose;
+        lastAimPointX = chosenPose.getX();
+        lastAimPointY = chosenPose.getY();
+        lastAimPointWasVirtual = virtualAimPose != null;
+        return chosenPose;
+    }
+
+    private double computeTurretAngleRadians(Pose robotPose, Pose targetPose) {
+        double fieldAngle = Math.atan2(
+                targetPose.getY() - robotPose.getY(),
+                targetPose.getX() - robotPose.getX()
+        );
+        return normalizeRadians(fieldAngle - robotPose.getHeading());
+    }
+
+    private double normalizeRadians(double angleRadians) {
+        while (angleRadians > Math.PI) {
+            angleRadians -= 2 * Math.PI;
+        }
+        while (angleRadians < -Math.PI) {
+            angleRadians += 2 * Math.PI;
+        }
+        return angleRadians;
     }
 
     private double getMinAngleTicks() {

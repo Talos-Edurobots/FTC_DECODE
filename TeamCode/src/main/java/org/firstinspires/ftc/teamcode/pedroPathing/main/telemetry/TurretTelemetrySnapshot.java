@@ -2,8 +2,12 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry;
 
 public final class TurretTelemetrySnapshot {
     public final String controlMode;
+    public final boolean lutEnabled;
+    public final boolean usingVirtualAimPoint;
     public final double angleToGoalRadians;
     public final double targetAngleRadians;
+    public final Double aimPointX;
+    public final Double aimPointY;
     public final double measuredAngleRadians;
     public final double measuredVelocityTicksPerSecond;
     public final double appliedPower;
@@ -15,8 +19,12 @@ public final class TurretTelemetrySnapshot {
     public final Double currentAmps;
 
     public TurretTelemetrySnapshot(String controlMode,
+                                   boolean lutEnabled,
+                                   boolean usingVirtualAimPoint,
                                    double angleToGoalRadians,
                                    double targetAngleRadians,
+                                   Double aimPointX,
+                                   Double aimPointY,
                                    double measuredAngleRadians,
                                    double measuredVelocityTicksPerSecond,
                                    double appliedPower,
@@ -27,8 +35,12 @@ public final class TurretTelemetrySnapshot {
                                    boolean atUpperLimit,
                                    Double currentAmps) {
         this.controlMode = controlMode;
+        this.lutEnabled = lutEnabled;
+        this.usingVirtualAimPoint = usingVirtualAimPoint;
         this.angleToGoalRadians = angleToGoalRadians;
         this.targetAngleRadians = targetAngleRadians;
+        this.aimPointX = aimPointX;
+        this.aimPointY = aimPointY;
         this.measuredAngleRadians = measuredAngleRadians;
         this.measuredVelocityTicksPerSecond = measuredVelocityTicksPerSecond;
         this.appliedPower = appliedPower;
