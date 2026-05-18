@@ -56,6 +56,9 @@ public class OpenLoopMotor {
     public double getCurrentAmps() {
         return hardware.getCurrentAmps();
     }
+    public boolean isOverCurrent() {
+        return hardware.isOverCurrent();
+    }
 
     public MetaMotor getHardware() {
         return hardware;

@@ -212,10 +212,10 @@ public class MainTeleOp implements TelemetryProvider {
             shooter.setHoodAngle(isFar ? hoodFarAngle : hoodCloseAngle);
         }
 
-        if (opMode.gamepad1.options) {
-            imu.resetYaw();
-            follower.setPose(follower.getPose().setHeading(0));
-        }
+//        if (opMode.gamepad1.options) {
+//            imu.resetYaw();
+//            follower.setPose(follower.getPose().setHeading(0));
+//        }
 
         if (opMode.gamepad1.dpadUpWasPressed()) {
             shooter.changeState();
@@ -228,9 +228,9 @@ public class MainTeleOp implements TelemetryProvider {
         if (opMode.gamepad1.dpadRightWasPressed()) {
             shooter.setHoodAngle(shooter.getHoodAngle() + .1);
         }
-        if (opMode.gamepad1.startWasPressed()) {
-            follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
-        }
+//        if (opMode.gamepad1.startWasPressed()) {
+//            follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
+//        }
 
         Drawing.drawRobot(follower.getPose(), turret.getAngleToGoal());
         Drawing.sendPacket();
@@ -245,7 +245,7 @@ public class MainTeleOp implements TelemetryProvider {
         boolean isFull = colors.isFull();
         shooting = opMode.gamepad1.left_bumper;
         boolean rightBumper = opMode.gamepad1.rightBumperWasPressed();
-        if ((intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumper) || (isFull && !shooting)) {
+        if ((intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumper) || (isFull && !shooting) || intake.isOverCurrent()) {
             intake.setCurrentState(Intake.IntakeState.STOP);
             gate.activate();
         } else if (intake.getCurrentState() == Intake.IntakeState.STOP && rightBumper) {

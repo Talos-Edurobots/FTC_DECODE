@@ -48,12 +48,12 @@ public class NewAuto {
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private  Pose pickupIntake2Pose = new Pose(15, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake2Pose = new Pose(12, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private Pose pickup2ControlPose = new Pose(52, 58);
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private Pose pickup3ControlPose = new Pose(52, 30);
-    private  Pose pickupIntake3Pose = new Pose(14, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private Pose pickup3ControlPose = new Pose(52, 30.005820765609734);
+    private  Pose pickupIntake3Pose = new Pose(16, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private  Pose parkingPose = new Pose(50, 70, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
 
@@ -106,8 +106,8 @@ public class NewAuto {
 
         /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup3 = follower.pathBuilder()
-                .addPath(new BezierCurve(score2ndPose, pickupIntake3Pose, pickup3ControlPose))
-                .setLinearHeadingInterpolation(pickup3Pose.getHeading(), pickupIntake3Pose.getHeading())
+                .addPath(new BezierCurve(score2ndPose, pickup3ControlPose, pickupIntake3Pose))
+                .setLinearHeadingInterpolation(score2ndPose.getHeading(), pickupIntake3Pose.getHeading())
                 .setGlobalDeceleration()
                 .build();
 
@@ -155,6 +155,7 @@ public class NewAuto {
         score2ControlPos = score2ControlPos.mirror();
         pickup3Pose = pickup3Pose.mirror();
         pickupIntake3Pose = pickupIntake3Pose.mirror();
+        pickup3ControlPose = pickup3ControlPose.mirror();
         parkingPose = parkingPose.mirror();
     }
 
