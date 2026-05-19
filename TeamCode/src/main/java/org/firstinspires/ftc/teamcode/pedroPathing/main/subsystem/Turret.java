@@ -34,7 +34,8 @@ public class Turret implements TelemetryProvider {
             PositionAimLut.sample(57.6, 20.2, 139.2, 144.0),
             PositionAimLut.sample(73.4, 9.1, 137.8, 144.0),
             PositionAimLut.sample(50.4, 108.0, 144.0, 135.8),
-            PositionAimLut.sample(85.4, 97.9, 139.2, 144.0)
+            PositionAimLut.sample(85.4, 97.9, 139.2, 144.0),
+            PositionAimLut.sample(104.26,131.33,144.0,135.07)
     );
     private static final PositionAimLut BLUE_POSITION_AIM_LUT = new PositionAimLut(
             // Add calibrated blue-alliance samples here: sample(robotX, robotY, aimX, aimY)
