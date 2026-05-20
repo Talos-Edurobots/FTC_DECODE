@@ -14,13 +14,11 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ColorSensors;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCollector;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCostClass;
@@ -52,16 +50,13 @@ public class MainTeleOp implements TelemetryProvider {
     private boolean isBlue;
 
     private HardwareManager hardwareManager;
-    private Intake intake;
+    private Transfer transfer;
     private Shooter shooter;
     private IMU imu;
     private Turret turret;
     private Follower follower;
     private Limelight3A limelight;
     private Leds leds;
-    private Gate gate;
-    private ColorSensors colors;
-
     private boolean automatedDrive = false;
     private boolean isFar = false;
     private boolean slowMode = false;
@@ -107,17 +102,11 @@ public class MainTeleOp implements TelemetryProvider {
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(RobotConstants.IMU_PARAMETERS);
 
-        intake = new Intake(hardwareMap);
-        intake.init();
+        transfer = new Transfer(hardwareMap);
+        transfer.init(hardwareMap);
 
         turret = new Turret(hardwareMap);
         turret.init();
-
-        colors = new ColorSensors();
-        colors.init(hardwareMap);
-
-        gate = new Gate();
-        gate.init(hardwareMap);
 
         useLimelight = defaultUseLimelight;
         automatedDrive = false;
@@ -152,8 +141,8 @@ public class MainTeleOp implements TelemetryProvider {
     public void start() {
         limelight.start();
         follower.startTeleopDrive(true);
-        gate.activate();
-        intake.setCurrentState(Intake.IntakeState.INTAKE);
+        transfer.collect();
+        transfer.update();
         turret.start();
         lastLoopTime = opMode.getRuntime();
     }
@@ -172,7 +161,8 @@ public class MainTeleOp implements TelemetryProvider {
 
         if (opMode.gamepad1.backWasPressed()) {
             if (!useHang) {
-                intake.setCurrentState(Intake.IntakeState.STOP);
+                transfer.stop();
+                transfer.update();
                 shooter.run(false);
             }
             useHang ^= true;
@@ -189,7 +179,7 @@ public class MainTeleOp implements TelemetryProvider {
         } else {
             leds.setLeft(color1);
         }
-        if (intake.getCurrentState() == Intake.IntakeState.STOP) {
+        if (transfer.getState() == Transfer.TransferState.STOP) {
             leds.blinkRight(0.2, dt, color2, 1);
         } else {
             leds.setRight(color2);
@@ -241,21 +231,22 @@ public class MainTeleOp implements TelemetryProvider {
             follower.deactivateAllPIDFs();
         }
 
-        colors.update();
-        boolean isFull = colors.isFull();
         shooting = opMode.gamepad1.left_bumper;
-        boolean rightBumper = opMode.gamepad1.rightBumperWasPressed();
-        if ((intake.getCurrentState() == Intake.IntakeState.INTAKE && rightBumper) || (isFull && !shooting) || intake.isOverCurrent()) {
-            intake.setCurrentState(Intake.IntakeState.STOP);
-            gate.activate();
-        } else if (intake.getCurrentState() == Intake.IntakeState.STOP && rightBumper) {
-            intake.setCurrentState(Intake.IntakeState.INTAKE);
+        if (shooting) {
+            transfer.shoot();
+        } else if (opMode.gamepad1.leftBumperWasPressed()) {
+            transfer.collect();
+        } else if (opMode.gamepad1.rightBumperWasPressed()) {
+            if (transfer.getState() == Transfer.TransferState.COLLECT) {
+                transfer.stop();
+            } else {
+                transfer.collect();
+            }
         }
-        if (opMode.gamepad1.leftBumperWasPressed()) {
-            intake.setCurrentState(Intake.IntakeState.INTAKE);
-            gate.deactivate();
+        if (!shooting && transfer.getState() == Transfer.TransferState.SHOOT) {
+            transfer.stop();
         }
-        intake.update();
+        transfer.update();
 
         if (opMode.gamepad1.leftStickButtonWasPressed() || opMode.gamepad1.rightStickButtonWasPressed()) {
             slowMode ^= true;
@@ -297,32 +288,24 @@ public class MainTeleOp implements TelemetryProvider {
         collector.add("drive", "robot_heading", follower.getHeading(), TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
 
-        collector.add("vision", "using_limelight", useLimelight, TelemetryMode.COMPETITION,
-                TelemetryCostClass.CHEAP);
-        collector.add("vision", "locked", lastTurretTargetLock, TelemetryMode.COMPETITION,
-                TelemetryCostClass.CHEAP);
         collector.add("vision", "tx", lastVisionTx, TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
 
-        collector.add("intake", "state", intake.getCurrentState(), TelemetryMode.COMPETITION,
-                TelemetryCostClass.CHEAP);
-        collector.add("intake", "full", colors.isFull(), TelemetryMode.COMPETITION,
-                TelemetryCostClass.CHEAP);
-        collector.add("intake", "over_current", intake.isOverCurrent(), TelemetryMode.COMPETITION,
+        collector.add("intake", "over_current", transfer.isOverCurrent(), TelemetryMode.COMPETITION,
                 TelemetryCostClass.BULK_CACHED);
         collector.add("intake", "shooting", shooting, TelemetryMode.COMPETITION,
                 TelemetryCostClass.CHEAP);
-        collector.add("intake", "color_1_detected", colors.is1Detected(), TelemetryMode.DEBUG,
+        collector.add("intake", "color_1_detected", transfer.is1Detected(), TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
-        collector.add("intake", "color_2_detected", colors.is2Detected(), TelemetryMode.DEBUG,
+        collector.add("intake", "color_2_detected", transfer.is2Detected(), TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
-        collector.add("intake", "color_3_detected", colors.is3Detected(), TelemetryMode.DEBUG,
+        collector.add("intake", "color_3_detected", transfer.is3Detected(), TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
-        collector.add("intake", "full_time", colors.getFullTIme(), TelemetryMode.DEBUG,
+        collector.add("intake", "full_time", transfer.getFullTime(), TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
         collector.add("intake", "current_amps",
                 mode.includes(TelemetryMode.DEBUG)
-                        ? intakeCurrentSampler.get(collector.getNowSeconds(), intake::getCurrent)
+                        ? intakeCurrentSampler.get(collector.getNowSeconds(), transfer::getCurrent)
                         : null,
                 TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);
 

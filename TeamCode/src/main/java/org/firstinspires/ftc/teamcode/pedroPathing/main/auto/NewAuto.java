@@ -17,11 +17,10 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
 import java.util.HashMap;
@@ -35,8 +34,7 @@ public class NewAuto {
     Telemetry telemetry;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private HardwareManager hwManager;
-    private Intake intake;
-    private Gate gate;
+    private Transfer transfer;
     private Turret turret;
     private Shooter shooter;
     private Timer pathTimer, actionTimer, opmodeTimer, flickerTimer;
@@ -129,14 +127,12 @@ public class NewAuto {
         flickersBusy = true;
         switch (flickerState) {
             case 0:
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
-                gate.deactivate();
+                transfer.shoot();
                 setFlickerState(1);
                 break;
             case 1:
                 if (flickerTimer.getElapsedTimeSeconds() > 1.5) {
-                    intake.setCurrentState(Intake.IntakeState.STOP);
-                    gate.activate();
+                    transfer.stop();
                     flickersBusy = false;
                     setFlickerState(0);
             }
@@ -196,12 +192,12 @@ public class NewAuto {
                 break;
             case 3:
                 follower.followPath(grabPickup1);
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                transfer.collect();
                 setPathState(4);
                 break;
             case 4:
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.4){
-                    intake.setCurrentState(Intake.IntakeState.STOP);
+                    transfer.stop();
                     setPathState(5);
                 }
                 break;
@@ -224,7 +220,7 @@ public class NewAuto {
                 }
                 break;
             case 8:
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                transfer.collect();
                 follower.followPath(grabPickup2);
                 Shooter.targetVelocity = 1350;
                 shooter.setHoodAngle(0);
@@ -232,7 +228,7 @@ public class NewAuto {
                 break;
             case 9:
                 if (!follower.isBusy()/* && pathTimer.getElapsedTimeSeconds() > .05*/) {
-                    intake.setCurrentState(Intake.IntakeState.STOP);
+                    transfer.stop();
                     turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
                     follower.followPath(scorePickup2);
                     setPathState(10);
@@ -248,7 +244,7 @@ public class NewAuto {
                 break;
             case 11:
                 follower.followPath(grabPickup3);
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                transfer.collect();
                 setPathState(12);
                 break;
             case 12:
@@ -261,7 +257,7 @@ public class NewAuto {
                 break;
             case 13:
                 if (pathTimer.getElapsedTimeSeconds() > 0) {
-                    intake.setCurrentState(Intake.IntakeState.STOP);
+                    transfer.stop();
                     setPathState(14);
                 }
                 break;
@@ -279,7 +275,7 @@ public class NewAuto {
                 break;
             case -1:
                 shooter.run(false);
-                intake.setCurrentState(Intake.IntakeState.STOP);
+                transfer.stop();
         }
     }
 
@@ -301,19 +297,20 @@ public class NewAuto {
         hwManager.update();
         follower.update();
         MotorConfig.setDt(opmodeTimer.getElapsedTimeSeconds());
-        intake.update();
+
+        autonomousPathUpdate();
+        transfer.update();
         shooter.update();
         turret.loop();
         Drawing.drawRobot(follower.getPose());
         Drawing.sendPacket();
-
-        autonomousPathUpdate();
 
         // Feedback to Driver Hub for debugging
         telemetryM.addData("is alliance blue", isBlue);
         telemetryM.addData("path state", pathState);
         telemetryM.addData("flicker state", flickerState);
         telemetryM.addData("flicker busy", flickersBusy);
+        telemetryM.addData("transfer state", transfer.getState());
         telemetryM.addData("x", follower.getPose().getX());
         telemetryM.addData("y", follower.getPose().getY());
         telemetryM.addData("heading", follower.getPose().getHeading());
@@ -342,11 +339,8 @@ public class NewAuto {
         turret = new Turret(hwMap);
         turret.init();
 
-        intake = new Intake(hwMap);
-        intake.init();
-
-        gate = new Gate();
-        gate.init(hwMap);
+        transfer = new Transfer(hwMap);
+        transfer.init(hwMap);
 
         shooter = new Shooter(hwMap);
         shooter.init();

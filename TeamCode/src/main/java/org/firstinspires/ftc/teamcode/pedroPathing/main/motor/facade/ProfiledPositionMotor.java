@@ -33,6 +33,7 @@ public class ProfiledPositionMotor {
     private Angle targetAngle = Angle.fromRadians(0.0);
     private Angle minAngle = Angle.fromRadians(Double.NEGATIVE_INFINITY);
     private Angle maxAngle = Angle.fromRadians(Double.POSITIVE_INFINITY);
+    private Angle targetTolerance = Angle.fromRadians(0.0);
 
     private double lastMeasuredVelocityRadPerSec = 0.0;
     private boolean hasLastMeasurement = false;
@@ -102,6 +103,13 @@ public class ProfiledPositionMotor {
             profileInitialized = true;
         }
 
+        if (Math.abs(targetAngle.toRadians() - currentState.getPosition().toRadians())
+                <= targetTolerance.toRadians()) {
+            controller.reset(currentState);
+            hardware.setPower(0.0);
+            return hardware.getPower();
+        }
+
         MotionState targetState = new MotionState(
                 targetAngle,
                 AngularVelocity.fromRadPerSec(0.0),
@@ -128,6 +136,10 @@ public class ProfiledPositionMotor {
 
     public Angle getTargetAngle() {
         return targetAngle;
+    }
+
+    public void setTargetTolerance(Angle targetTolerance) {
+        this.targetTolerance = Angle.fromRadians(Math.max(0.0, targetTolerance.toRadians()));
     }
 
     public void setAngleLimits(Angle minAngle, Angle maxAngle) {

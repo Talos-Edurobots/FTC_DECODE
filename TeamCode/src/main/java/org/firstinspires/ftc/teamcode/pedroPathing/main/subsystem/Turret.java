@@ -56,6 +56,7 @@ public class Turret implements TelemetryProvider {
     static double maxVel = RobotConstants.TURRET_CONFIG.maxVelocity;
     static double maxAcc = RobotConstants.TURRET_CONFIG.maxAcceleration;
     static double maxDec = RobotConstants.TURRET_CONFIG.maxDeceleration;
+    public static double targetToleranceDegrees = 1.0;
     static double manualMaxPower = .2, ramp = 1;
     public static double movingShotLeadFactor = 0.01;
     public static boolean positionAimLutEnabled = false;
@@ -222,6 +223,9 @@ public class Turret implements TelemetryProvider {
                 scaledCoefficients.getMaxAcceleration(),
                 scaledCoefficients.getMaxDeceleration()
         );
+        turret.setTargetTolerance(Angle.fromRadians(
+                toMotorRadians(Math.toRadians(targetToleranceDegrees))
+        ));
         turret.setMaxPower(maxPower);
     }
 
@@ -300,8 +304,6 @@ public class Turret implements TelemetryProvider {
     public void collectTelemetry(TelemetryCollector collector, TelemetryMode mode) {
         TurretTelemetrySnapshot snapshot = getTelemetrySnapshot(mode, collector.getNowSeconds());
 
-        collector.add("turret", "mode", snapshot.controlMode, TelemetryMode.COMPETITION,
-                TelemetryCostClass.CHEAP);
         collector.add("turret", "over_current", snapshot.overCurrent,
                 TelemetryMode.COMPETITION, TelemetryCostClass.BULK_CACHED);
         collector.add("turret", "target_rad", snapshot.targetAngleRadians,
@@ -333,24 +335,6 @@ public class Turret implements TelemetryProvider {
                 TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("turret", "current_amps", snapshot.currentAmps,
                 TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);
-        collector.add("turret", "kp", kp, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
-                TelemetryPublishPolicy.ON_MODE_ENTRY);
-        collector.add("turret", "ki", ki, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
-                TelemetryPublishPolicy.ON_MODE_ENTRY);
-        collector.add("turret", "kd", kd, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
-                TelemetryPublishPolicy.ON_MODE_ENTRY);
-        collector.add("turret", "ks", ks, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
-                TelemetryPublishPolicy.ON_MODE_ENTRY);
-        collector.add("turret", "kv", kv, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
-                TelemetryPublishPolicy.ON_MODE_ENTRY);
-        collector.add("turret", "ka", ka, TelemetryMode.TRACE, TelemetryCostClass.STATIC,
-                TelemetryPublishPolicy.ON_MODE_ENTRY);
-        collector.add("turret", "max_vel", maxVel, TelemetryMode.TRACE,
-                TelemetryCostClass.STATIC, TelemetryPublishPolicy.ON_MODE_ENTRY);
-        collector.add("turret", "max_acc", maxAcc, TelemetryMode.TRACE,
-                TelemetryCostClass.STATIC, TelemetryPublishPolicy.ON_MODE_ENTRY);
-        collector.add("turret", "max_dec", maxDec, TelemetryMode.TRACE,
-                TelemetryCostClass.STATIC, TelemetryPublishPolicy.ON_MODE_ENTRY);
     }
 
     private double getTargetPositionTicks() {

@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 public class MetaMotor {
+    private static final double POWER_WRITE_EPSILON = 5e-2;
+
     private DcMotorEx motor;
     private double currentAlert = Double.POSITIVE_INFINITY;
     private String hwName;
@@ -17,6 +19,7 @@ public class MetaMotor {
     private DcMotor.ZeroPowerBehavior zeroPowerBehavior =
             DcMotor.ZeroPowerBehavior.FLOAT;
     private double maxPower = 1.0;
+    private double lastAppliedPower = Double.NaN;
 
     public void hwName(String hwName) {
         this.hwName = hwName;
@@ -29,6 +32,7 @@ public class MetaMotor {
         this.direction = direction;
         if (motor != null) {
             motor.setDirection(direction);
+            invalidatePowerCache();
         }
     }
 
@@ -40,6 +44,7 @@ public class MetaMotor {
         this.zeroPowerBehavior = zeroPowerBehavior;
         if (motor != null) {
             motor.setZeroPowerBehavior(zeroPowerBehavior);
+            invalidatePowerCache();
         }
     }
 
@@ -60,6 +65,7 @@ public class MetaMotor {
         if (Double.isFinite(currentAlert)) {
             motor.setCurrentAlert(currentAlert, CurrentUnit.AMPS);
         }
+        invalidatePowerCache();
     }
 
     public DcMotorEx getMotor() {
@@ -69,7 +75,12 @@ public class MetaMotor {
 
     public void setPower(double power) {
         requireInitialized();
-        motor.setPower(Range.clip(power, -maxPower, maxPower));
+        double clippedPower = Range.clip(power, -maxPower, maxPower);
+        if (Double.isNaN(lastAppliedPower)
+                || Math.abs(clippedPower - lastAppliedPower) > POWER_WRITE_EPSILON) {
+            motor.setPower(clippedPower);
+            lastAppliedPower = clippedPower;
+        }
     }
 
     public double getPower() {
@@ -95,6 +106,7 @@ public class MetaMotor {
     public void setMode(RunMode runMode) {
         requireInitialized();
         motor.setMode(runMode);
+        invalidatePowerCache();
     }
 
     public RunMode getMode() {
@@ -153,5 +165,9 @@ public class MetaMotor {
         if (motor == null) {
             throw new IllegalStateException("MetaMotor has not been initialized");
         }
+    }
+
+    public void invalidatePowerCache() {
+        lastAppliedPower = Double.NaN;
     }
 }
