@@ -61,6 +61,7 @@ public class MainTeleOp implements TelemetryProvider {
     private boolean isFar = false;
     private boolean slowMode = false;
     private boolean useLimelight = defaultUseLimelight;
+    private boolean turretFaceForwardOverride = false;
     private boolean useHang = false;
     private boolean shooting = false;
     private double lastLoopTime = 0.0;
@@ -114,6 +115,7 @@ public class MainTeleOp implements TelemetryProvider {
         slowMode = false;
         useHang = false;
         shooting = false;
+        turretFaceForwardOverride = false;
         lastLoopTime = 0.0;
         lastLoopDt = 0.0;
         lastHeadingRadians = 0.0;
@@ -158,6 +160,9 @@ public class MainTeleOp implements TelemetryProvider {
         if (opMode.gamepad2.backWasPressed()) {
             telemetryHub.cycleMode();
         }
+        if (opMode.gamepad2.yWasPressed()) {
+            turretFaceForwardOverride ^= true;
+        }
 
         if (opMode.gamepad1.backWasPressed()) {
             if (!useHang) {
@@ -186,10 +191,14 @@ public class MainTeleOp implements TelemetryProvider {
         }
 
         turret.manualControl(opMode.gamepad1.left_trigger - opMode.gamepad1.right_trigger);
-        if (useLimelight) {
+        if (turretFaceForwardOverride) {
+            turret.faceForward();
+            turret.loop();
+        } else if (useLimelight) {
             turret.limelightAim(result);
         } else {
-            turret.lookToGoalWhileMoving(follower.getPose(), follower.getVelocity(), !isBlue);
+//            turret.lookToGoalWhileMoving(follower.getPose(), follower.getVelocity(), !isBlue);
+            turret.lookToGoal(follower.getPose(), !isBlue);
             turret.loop();
         }
 
@@ -313,6 +322,8 @@ public class MainTeleOp implements TelemetryProvider {
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("robot", "slow_mode", slowMode, TelemetryMode.COMPETITION,
                 TelemetryCostClass.CHEAP);
+        collector.add("robot", "turret_forward_override", turretFaceForwardOverride,
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("robot", "hang_mode", useHang, TelemetryMode.COMPETITION,
                 TelemetryCostClass.CHEAP);
         collector.add("robot", "total_current_amps",
