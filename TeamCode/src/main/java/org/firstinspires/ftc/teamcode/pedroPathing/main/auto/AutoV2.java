@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
 import java.util.HashMap;
@@ -35,19 +36,18 @@ public class AutoV2 {
     Telemetry telemetry;
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private HardwareManager hwManager;
-    private Intake intake;
-    private Gate gate;
+    Transfer transfer;
     private Turret turret;
     private Shooter shooter;
     private Timer pathTimer, actionTimer, opmodeTimer, transferTimer;
     private SoloShortAuto auto;
     private  Pose startPose = new Pose(25, 129, Math.toRadians(233)); // Start Pose of our robot.
     private  Pose scorePreloadPose = new Pose(48, 100, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private Pose gateWithoutGrabPose = new Pose(20, 62, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private Pose gateWithoutGrabPose = new Pose(18, 64, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateWithoutGrabPoseControl1 = new Pose(48, 60); // Position of the gate that we need to open to access the artifacts.
     private Pose gateWithoutGrabPoseControl2 = new Pose(42, 60); // Position of the gate that we need to open to access the artifacts.
     private  Pose scorePose = new Pose(60, 78, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private Pose gateGrabPose = new Pose(14, 56, Math.toRadians(155)); // Position of the gate that we need to open to access the artifacts.
+    private Pose gateGrabPose = new Pose(13.5, 58.5, Math.toRadians(155)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediatePose = new Pose(40, 60, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediateControlPose = new Pose(54, 67, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
@@ -87,7 +87,10 @@ public class AutoV2 {
                 .setLinearHeadingInterpolation(scorePose.getHeading(), gateIntermediatePose.getHeading())
                 .addPath(new BezierLine(gateIntermediatePose, gateGrabPose))
                 .setLinearHeadingInterpolation(gateIntermediatePose.getHeading(), gateGrabPose.getHeading())
+                .addPath(new BezierLine(gateGrabPose, new Pose(gateGrabPose.getX(), gateGrabPose.getY()-5)))
+                .setLinearHeadingInterpolation(gateGrabPose.getHeading(), gateGrabPose.getHeading())
                 .build();
+
         scoreFromGate = follower.pathBuilder()
                 .addPath(new BezierLine(gateGrabPose, scorePose))
                 .setLinearHeadingInterpolation(gateGrabPose.getHeading(), scorePose.getHeading())
@@ -97,14 +100,12 @@ public class AutoV2 {
         transferBusy = true;
         switch (transferState) {
             case 0:
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
-                gate.deactivate();
+                transfer.setState(Transfer.TransferState.SHOOT);
                 setTransferState(1);
                 break;
             case 1:
                 if (transferTimer.getElapsedTimeSeconds() > 1.5) {
-                    intake.setCurrentState(Intake.IntakeState.STOP);
-                    gate.activate();
+                    transfer.setState(Transfer.TransferState.STOP);
                     transferBusy = false;
                     setTransferState(0);
                 }
@@ -137,8 +138,9 @@ public class AutoV2 {
             case 0:
                 follower.followPath(scorePreload);
                 shooter.run(true);
-                shooter.setHoodAngle(.4);
-                turret.setAngleRadians(Math.toRadians(isBlue ? -49: 49));
+                shooter.setHoodAngle(.2);
+//                turret.setAngleRadians(Math.toRadians(isBlue ? -49: 49));
+                turret.lookToGoal(scorePreloadPose, !isBlue);
                 setPathState(1);
                 break;
             case 1:
@@ -167,21 +169,23 @@ public class AutoV2 {
                 break;
             case 3:
                 follower.followPath(grabPickup2);
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                transfer.setState(Transfer.TransferState.COLLECT);
                 setPathState(4);
                 break;
             case 4:
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.4){
-                    intake.setCurrentState(Intake.IntakeState.STOP);
                     setPathState(5);
                 }
                 break;
             case 5:
-                setPathState(6);
+                if(pathTimer.getElapsedTimeSeconds()>0.5) {
+                    setPathState(6);
+                }
                 break;
             case 6:
                 if (!follower.isBusy()) {
                     follower.followPath(scorePickup2);
+                    turret.lookToGoal(scorePose, !isBlue);
                     setPathState(7);
                 }
                 break;
@@ -194,15 +198,14 @@ public class AutoV2 {
                 }
                 break;
             case 8:
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                transfer.setState(Transfer.TransferState.COLLECT);
                 follower.followPath(grabGateFromScore);
                 Shooter.targetVelocity = 1350;
-                shooter.setHoodAngle(.3);
+                shooter.setHoodAngle(.1);
                 setPathState(9);
                 break;
             case 9:
-                if (!follower.isBusy()/* && pathTimer.getElapsedTimeSeconds() > .05*/) {
-                    intake.setCurrentState(Intake.IntakeState.STOP);
+                if ((!follower.isBusy() && transfer.isFull()) || pathTimer.getElapsedTimeSeconds() > 5) {
                     turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
                     follower.followPath(scoreFromGate);
                     setPathState(10);
@@ -218,7 +221,7 @@ public class AutoV2 {
                 break;
             case 11:
                 follower.followPath(grabPickup3);
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                transfer.setState(Transfer.TransferState.COLLECT);
                 setPathState(12);
                 break;
             case 12:
@@ -231,7 +234,6 @@ public class AutoV2 {
                 break;
             case 13:
                 if (pathTimer.getElapsedTimeSeconds() > 0) {
-                    intake.setCurrentState(Intake.IntakeState.STOP);
                     setPathState(14);
                 }
                 break;
@@ -249,7 +251,7 @@ public class AutoV2 {
                 break;
             case -1:
                 shooter.run(false);
-                intake.setCurrentState(Intake.IntakeState.STOP);
+                transfer.setState(Transfer.TransferState.STOP);
         }
     }
 
@@ -271,7 +273,7 @@ public class AutoV2 {
         hwManager.update();
         follower.update();
         MotorConfig.setDt(opmodeTimer.getElapsedTimeSeconds());
-        intake.update();
+        transfer.update();
         shooter.update();
         turret.loop();
         Drawing.drawRobot(follower.getPose());
@@ -282,6 +284,10 @@ public class AutoV2 {
         // Feedback to Driver Hub for debugging
         telemetryM.addData("is alliance blue", isBlue);
         telemetryM.addData("path state", pathState);
+        telemetryM.addData("is robot full", transfer.isFull());
+        telemetryM.addData("is color 1 detected", transfer.is1Detected());
+        telemetryM.addData("is color 2 detected", transfer.is2Detected());
+        telemetryM.addData("is color 3 detected", transfer.is3Detected());
         telemetryM.addData("flicker state", transferState);
         telemetryM.addData("flicker busy", transferBusy);
         telemetryM.addData("x", follower.getPose().getX());
@@ -314,15 +320,12 @@ public class AutoV2 {
         turret = new Turret(hwMap);
         turret.init();
 
-        intake = new Intake(hwMap);
-        intake.init();
-
-        gate = new Gate();
-        gate.init(hwMap);
+        transfer = new Transfer(hwMap);
+        transfer.init(hwMap);
 
         shooter = new Shooter(hwMap);
         shooter.init();
-        Shooter.targetVelocity = 1250;
+        Shooter.targetVelocity = 1200;
 
         setAlliance(isBlue);
         follower = PPConstants.createFollower(hwMap);

@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class ColorSensors {
-    private static final double DEFAULT_UPDATE_HZ = 5.0;
+    private static final double DEFAULT_UPDATE_HZ = 10.0;
 
     HardwareMap hwmap;
     DistanceSensor color1, color2, color3;
@@ -59,16 +59,16 @@ public class ColorSensors {
     }
 
     public boolean is1Detected() {
-        return dist1 < 6;
+        return dist1 < 5;
     }
     public boolean is2Detected() {
-        return dist2 < 3;
+        return dist2 < 1;
     }
     public boolean is3Detected() {
-        return dist3 < 7;
+        return dist3 < 5.5;
     }
     public boolean isFull() {
-        return timer.seconds() > 0.2;
+        return timer.seconds() > 0.4;
     }
     public double getFullTIme() {
         return timer.seconds();
