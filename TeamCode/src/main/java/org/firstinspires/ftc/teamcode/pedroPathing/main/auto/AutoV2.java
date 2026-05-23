@@ -18,9 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.RobotPoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
@@ -47,7 +45,9 @@ public class AutoV2 {
     private Pose gateWithoutGrabPoseControl1 = new Pose(48, 60); // Position of the gate that we need to open to access the artifacts.
     private Pose gateWithoutGrabPoseControl2 = new Pose(42, 60); // Position of the gate that we need to open to access the artifacts.
     private  Pose scorePose = new Pose(60, 78, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private Pose gateGrabPose = new Pose(13.5, 58.5, Math.toRadians(155)); // Position of the gate that we need to open to access the artifacts.
+    private Pose gateOpenWithGrabPose = new Pose(17, 62.5, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private Pose gateGrabPose = new Pose( 14, 57, Math.toRadians(140));
+    private Pose openGateWithGrabControlPose = new Pose( 41, 67);
     private Pose gateIntermediatePose = new Pose(40, 60, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediateControlPose = new Pose(54, 67, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
@@ -60,12 +60,15 @@ public class AutoV2 {
     private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private  Pose parkingPose = new Pose(50, 70, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
 
-    private Path scorePreload, openGate, park;
-    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, grabGateFromScore, scoreFromGate;
+    private Path scorePreload, openGate, park, grabFromGate;
+    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, openGateFromScore, scoreFromGate;
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePreloadPose));
         scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePreloadPose.getHeading());
+
+        grabFromGate = new Path(new BezierLine(gateOpenWithGrabPose, gateGrabPose));
+        grabFromGate.setLinearHeadingInterpolation(gateOpenWithGrabPose.getHeading(), gateGrabPose.getHeading());
 
     /* Here is an example for Constant Interpolation
     scorePreload.setConstantInterpolation(startPose.getHeading()); */
@@ -82,14 +85,16 @@ public class AutoV2 {
                 .setLinearHeadingInterpolation(gateWithoutGrabPose.getHeading(), scorePose.getHeading())
                 .build();
 
-        grabGateFromScore = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, gateIntermediateControlPose, gateIntermediatePose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), gateIntermediatePose.getHeading())
-                .addPath(new BezierLine(gateIntermediatePose, gateGrabPose))
-                .setLinearHeadingInterpolation(gateIntermediatePose.getHeading(), gateGrabPose.getHeading())
-                .addPath(new BezierLine(gateGrabPose, new Pose(gateGrabPose.getX(), gateGrabPose.getY()-5)))
-                .setLinearHeadingInterpolation(gateGrabPose.getHeading(), gateGrabPose.getHeading())
+        openGateFromScore = follower.pathBuilder()
+                .addPath(new BezierCurve(scorePose, openGateWithGrabControlPose, gateOpenWithGrabPose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), gateOpenWithGrabPose.getHeading())
+//                .addPath(new BezierLine(scorePose, gateIntermediatePose))
+//                .setLinearHeadingInterpolation(scorePose.getHeading(), gateIntermediatePose.getHeading())
+//                .addPath(new BezierLine(gateIntermediatePose, gateOpenWithGrabPose))
+//                .setLinearHeadingInterpolation(gateIntermediatePose.getHeading(), gateOpenWithGrabPose.getHeading())
+
                 .build();
+
 
         scoreFromGate = follower.pathBuilder()
                 .addPath(new BezierLine(gateGrabPose, scorePose))
@@ -119,7 +124,7 @@ public class AutoV2 {
         gateWithoutGrabPoseControl1 = gateWithoutGrabPoseControl1.mirror();
         gateWithoutGrabPoseControl2 = gateWithoutGrabPoseControl2.mirror();
         scorePose = scorePose.mirror();
-        gateGrabPose = gateGrabPose.mirror();
+        gateOpenWithGrabPose = gateOpenWithGrabPose.mirror();
         gateIntermediatePose = gateIntermediatePose.mirror();
         gateIntermediateControlPose = gateIntermediateControlPose.mirror();
         pickup1Pose = pickup1Pose.mirror();
@@ -160,7 +165,7 @@ public class AutoV2 {
                 }
                 break;
             case 2:
-                if (pathTimer.getElapsedTimeSeconds() > 1) {
+                if (pathTimer.getElapsedTimeSeconds() > 0) {
                     shootArtifacts();
                     if (!transferBusy) {
                         setPathState(3);
@@ -193,21 +198,26 @@ public class AutoV2 {
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
                     shootArtifacts();
                     if (!transferBusy) {
+                        transfer.setState(Transfer.TransferState.COLLECT);
+                        follower.followPath(openGateFromScore);
+                        Shooter.targetVelocity = 1350;
+                        shooter.setHoodAngle(.1);
                         setPathState(8);
                     }
                 }
                 break;
             case 8:
-                transfer.setState(Transfer.TransferState.COLLECT);
-                follower.followPath(grabGateFromScore);
-                Shooter.targetVelocity = 1350;
-                shooter.setHoodAngle(.1);
-                setPathState(9);
+                if (!follower.isBusy()) {
+                    follower.followPath(grabFromGate);
+                    setPathState(9);
+                }
                 break;
             case 9:
                 if ((!follower.isBusy() && transfer.isFull()) || pathTimer.getElapsedTimeSeconds() > 5) {
-                    turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
+//                    turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
+                    turret.lookToGoal(score2ndPose, !isBlue);
                     follower.followPath(scoreFromGate);
+                    transfer.setState(Transfer.TransferState.STOP);
                     setPathState(10);
                 }
                 break;
@@ -284,6 +294,8 @@ public class AutoV2 {
         // Feedback to Driver Hub for debugging
         telemetryM.addData("is alliance blue", isBlue);
         telemetryM.addData("path state", pathState);
+        telemetryM.addData("shooter speed", shooter.getVelocity());
+        telemetryM.addData("shooter ready", !shooter.isBusy()?500:0);
         telemetryM.addData("is robot full", transfer.isFull());
         telemetryM.addData("is color 1 detected", transfer.is1Detected());
         telemetryM.addData("is color 2 detected", transfer.is2Detected());
