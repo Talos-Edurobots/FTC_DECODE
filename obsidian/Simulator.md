@@ -1,0 +1,1 @@
+In order for us to add the correct values inside the [[Turret LUT]] we developed a simulator as shown on [[TurretLUT.png]]

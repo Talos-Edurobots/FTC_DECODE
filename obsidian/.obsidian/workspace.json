@@ -1,0 +1,199 @@
+{
+  "main": {
+    "id": "d0375e30803d01af",
+    "type": "split",
+    "children": [
+      {
+        "id": "841866f62e4b5893",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "486e82e83999adea",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "LUTS/Interpolated Look Up Table.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Interpolated Look Up Table"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "1f381ca68b42419e",
+    "type": "split",
+    "children": [
+      {
+        "id": "eeb202bdaa7f1957",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "403eae66048fa8fe",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "ad089d9e033215af",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "8419ef082177ae60",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "671f0253349a4c6c",
+    "type": "split",
+    "children": [
+      {
+        "id": "497a40b0b895ef3f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5bbddc10f390be44",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "LUTS/Interpolated Look Up Table.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Interpolated Look Up Table"
+            }
+          },
+          {
+            "id": "089b04717cfa8a46",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "LUTS/Interpolated Look Up Table.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Interpolated Look Up Table"
+            }
+          },
+          {
+            "id": "c9074aedd40c8244",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "95878eb2eb642cd8",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "79b3a13a56c692ba",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "LUTS/Interpolated Look Up Table.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Interpolated Look Up Table"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "486e82e83999adea",
+  "lastOpenFiles": [
+    "Simulator.md",
+    "subsystem/Shooter.md",
+    "TurretLUT.png",
+    "subsystem/Turret.md",
+    "Untitled.md",
+    "LUTS/Interpolated Look Up Table.md",
+    "Turret LUT.md",
+    "Untitled 1.md",
+    "LUTS",
+    "subsystem"
+  ]
+}
