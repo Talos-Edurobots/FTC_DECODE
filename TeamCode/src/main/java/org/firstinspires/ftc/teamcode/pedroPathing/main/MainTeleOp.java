@@ -300,15 +300,15 @@ public class MainTeleOp implements TelemetryProvider {
         collector.add("vision", "tx", lastVisionTx, TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
 
-        collector.add("intake", "over_current", transfer.isOverCurrent(), TelemetryMode.COMPETITION,
+        collector.add("intake", "over_current", transfer.isOverCurrent()?.9:0, TelemetryMode.COMPETITION,
                 TelemetryCostClass.BULK_CACHED);
         collector.add("intake", "shooting", shooting, TelemetryMode.COMPETITION,
                 TelemetryCostClass.CHEAP);
-        collector.add("intake", "color_1_detected", transfer.is1Detected(), TelemetryMode.DEBUG,
+        collector.add("intake", "color_1_detected", transfer.is1Detected()?1:0, TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
-        collector.add("intake", "color_2_detected", transfer.is2Detected(), TelemetryMode.DEBUG,
+        collector.add("intake", "color_2_detected", transfer.is2Detected()?1.1:0, TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
-        collector.add("intake", "color_3_detected", transfer.is3Detected(), TelemetryMode.DEBUG,
+        collector.add("intake", "color_3_detected", transfer.is3Detected()?1.2:0, TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
         collector.add("intake", "full_time", transfer.getFullTime(), TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);

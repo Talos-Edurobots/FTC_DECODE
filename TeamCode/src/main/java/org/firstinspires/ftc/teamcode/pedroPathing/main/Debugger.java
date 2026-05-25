@@ -34,8 +34,10 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HoodAngleLut;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ShooterHoodLuts;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
 import java.util.List;
@@ -85,6 +87,7 @@ public class Debugger extends SelectableOpMode {
 //                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
                 hlt.add("hang control", HangControl::new);
                 hlt.add("robot mechanism demo", RobotMechanismDemo::new);
+                hlt.add("shooter + hood lut debug", ShooterHoodLutDebug::new);
                 hlt.add("turret simple pidf with turret", LimelightTurretAlign::new);
                 hlt.add("throughput test", TestThroughput::new);
                 hlt.add("collect data", CollectData::new);
@@ -206,6 +209,173 @@ class RobotMechanismDemo extends OpMode {
         telemetryM.addLine("-------------------------");
         telemetryM.addData("turret target degrees", turretTargetDegrees);
         telemetryM.update(telemetry);
+    }
+}
+
+@Configurable
+class ShooterHoodLutDebug extends OpMode {
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+
+    public static boolean usePoseDistance = true;
+    public static boolean usePredictedVelocityForHood = true;
+    public static boolean applyToHardware = false;
+    public static boolean runShooter = false;
+    public static double robotX = 48.0;
+    public static double robotY = 100.0;
+    public static double manualDistanceFromGoal = 48.0;
+    public static double testShooterVelocity = 1400.0;
+    public static double testHoodPosition = 0.15;
+    public static int hoodNeighborCount = HoodAngleLut.DEFAULT_NEIGHBOR_COUNT;
+    public static double poseAdjustInchesPerSecond = 24.0;
+    public static double distanceAdjustInchesPerSecond = 24.0;
+    public static double velocityAdjustTicksPerSecond = 500.0;
+    public static double hoodAdjustPerSecond = 0.25;
+
+    private Shooter shooter;
+    private double lastLoopTime = 0.0;
+    private String lastAction = "ready";
+
+    @Override
+    public void init() {
+        PanelsConfigurables.INSTANCE.refreshClass(this);
+
+        shooter = new Shooter(hardwareMap);
+        shooter.init();
+        shooter.run(false);
+        shooter.setHoodAngle(testHoodPosition);
+
+        lastLoopTime = getRuntime();
+        lastAction = "ready";
+        telemetryM.addLine("Shooter + hood LUT debug ready");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+        double now = getRuntime();
+        double dt = Math.max(0.0, now - lastLoopTime);
+        lastLoopTime = now;
+
+        updateInputs(dt);
+
+        double distanceFromGoal = getDistanceFromGoal();
+        double predictedVelocity =
+                ShooterHoodLuts.SHOOTER_VELOCITY_LUT.getTargetVelocity(distanceFromGoal);
+        double hoodVelocityInput = usePredictedVelocityForHood
+                ? predictedVelocity
+                : testShooterVelocity;
+        double predictedHoodPosition = ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(
+                distanceFromGoal,
+                hoodVelocityInput,
+                hoodNeighborCount
+        );
+
+        if (gamepad1.aWasPressed()) {
+            ShooterHoodLuts.SHOOTER_VELOCITY_LUT.putSample(
+                    distanceFromGoal,
+                    testShooterVelocity
+            );
+            lastAction = String.format(
+                    "saved shooter sample: distance %.2f -> velocity %.2f",
+                    distanceFromGoal,
+                    testShooterVelocity
+            );
+        }
+        if (gamepad1.bWasPressed()) {
+            ShooterHoodLuts.HOOD_ANGLE_LUT.putSample(
+                    distanceFromGoal,
+                    hoodVelocityInput,
+                    testHoodPosition
+            );
+            lastAction = String.format(
+                    "saved hood sample: distance %.2f, velocity %.2f -> hood %.3f",
+                    distanceFromGoal,
+                    hoodVelocityInput,
+                    testHoodPosition
+            );
+        }
+        if (gamepad1.xWasPressed()) {
+            usePoseDistance ^= true;
+            lastAction = "distance mode: " + (usePoseDistance ? "pose to blue goal" : "manual");
+        }
+        if (gamepad1.yWasPressed()) {
+            usePredictedVelocityForHood ^= true;
+            lastAction = "hood velocity input: "
+                    + (usePredictedVelocityForHood ? "predicted shooter velocity" : "manual");
+        }
+        if (gamepad1.leftBumperWasPressed()) {
+            runShooter ^= true;
+            lastAction = "run shooter: " + runShooter;
+        }
+        if (gamepad1.rightBumperWasPressed()) {
+            applyToHardware ^= true;
+            lastAction = "apply outputs to hardware: " + applyToHardware;
+        }
+
+        if (applyToHardware) {
+            Shooter.setTargetVelocity(predictedVelocity);
+            shooter.setHoodAngle(predictedHoodPosition);
+            shooter.run(runShooter);
+            shooter.update();
+        } else {
+            shooter.run(false);
+            shooter.floatShooter();
+            shooter.setHoodAngle(testHoodPosition);
+        }
+
+        telemetryM.addLine("Controls: A add shooter pair, B add hood pair, X distance mode, Y hood velocity mode");
+        telemetryM.addLine("LB toggles shooter motor, RB toggles hardware output");
+        telemetryM.addData("last action", lastAction);
+        telemetryM.addData("blue goal", String.format("(%.1f, %.1f)",
+                ShooterHoodLuts.BLUE_GOAL_X,
+                ShooterHoodLuts.BLUE_GOAL_Y));
+        telemetryM.addData("distance mode", usePoseDistance ? "pose" : "manual");
+        telemetryM.addData("robot x", robotX);
+        telemetryM.addData("robot y", robotY);
+        telemetryM.addData("distance from goal", distanceFromGoal);
+        telemetryM.addData("test shooter velocity", testShooterVelocity);
+        telemetryM.addData("predicted shooter velocity", predictedVelocity);
+        telemetryM.addData("hood velocity input", hoodVelocityInput);
+        telemetryM.addData("test hood position", testHoodPosition);
+        telemetryM.addData("predicted hood position", predictedHoodPosition);
+        telemetryM.addData("hardware output", applyToHardware);
+        telemetryM.addData("run shooter", runShooter);
+        telemetryM.addData("measured shooter velocity", shooter.getVelocity());
+        telemetryM.addData("actual hood position", shooter.getHoodAngle());
+        telemetryM.addData("shooter lut samples",
+                ShooterHoodLuts.SHOOTER_VELOCITY_LUT.getSampleCount());
+        telemetryM.addData("hood lut samples", ShooterHoodLuts.HOOD_ANGLE_LUT.getSampleCount());
+        telemetryM.update(telemetry);
+    }
+
+    private void updateInputs(double dt) {
+        if (usePoseDistance) {
+            robotX += gamepad1.left_stick_x * poseAdjustInchesPerSecond * dt;
+            robotY += -gamepad1.left_stick_y * poseAdjustInchesPerSecond * dt;
+        } else {
+            manualDistanceFromGoal += -gamepad1.left_stick_y
+                    * distanceAdjustInchesPerSecond
+                    * dt;
+            manualDistanceFromGoal = Math.max(0.0, manualDistanceFromGoal);
+        }
+
+        testShooterVelocity += -gamepad1.right_stick_y
+                * velocityAdjustTicksPerSecond
+                * dt;
+        testShooterVelocity = Math.max(0.0, testShooterVelocity);
+
+        testHoodPosition += (gamepad1.right_trigger - gamepad1.left_trigger)
+                * hoodAdjustPerSecond
+                * dt;
+        testHoodPosition = Math.max(0.0, Math.min(0.5, testHoodPosition));
+        hoodNeighborCount = Math.max(1, hoodNeighborCount);
+    }
+
+    private double getDistanceFromGoal() {
+        if (usePoseDistance) {
+            return ShooterHoodLuts.distanceToBlueGoal(robotX, robotY);
+        }
+        return manualDistanceFromGoal;
     }
 }
 
@@ -1154,7 +1324,7 @@ class RampPowerOpMode extends OpMode {
     }
 @Configurable
 class CollectData extends OpMode {
-    Pose startPose = new Pose(72, 72, 0);
+    Pose startPose = new Pose(72, 72, Math.toRadians(180));
     Follower follower;
     Gate gate;
     Intake intake;

@@ -50,7 +50,7 @@ public final class RobotConstants {
     public static final DcMotorSimple.Direction INTAKE_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     public static final DcMotor.ZeroPowerBehavior INTAKE_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.FLOAT;
-    public static final MotorLimits INTAKE_LIMITS = new MotorLimits(1.0, 6.0);
+    public static final MotorLimits INTAKE_LIMITS = new MotorLimits(1.0, 7.0);
     public static MotorConfig INTAKE_CONFIG = new MotorConfig(
             INTAKE_MOTOR_NAME,
             INTAKE_MOTOR_TYPE,
