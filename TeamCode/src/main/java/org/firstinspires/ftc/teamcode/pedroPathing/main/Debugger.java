@@ -326,9 +326,7 @@ class ShooterHoodLutDebug extends OpMode {
         telemetryM.addLine("Controls: A add shooter pair, B add hood pair, X distance mode, Y hood velocity mode");
         telemetryM.addLine("LB toggles shooter motor, RB toggles hardware output");
         telemetryM.addData("last action", lastAction);
-        telemetryM.addData("blue goal", String.format("(%.1f, %.1f)",
-                ShooterHoodLuts.BLUE_GOAL_X,
-                ShooterHoodLuts.BLUE_GOAL_Y));
+//        telemetryM.addData("blue goal", );
         telemetryM.addData("distance mode", usePoseDistance ? "pose" : "manual");
         telemetryM.addData("robot x", robotX);
         telemetryM.addData("robot y", robotY);
@@ -373,7 +371,7 @@ class ShooterHoodLutDebug extends OpMode {
 
     private double getDistanceFromGoal() {
         if (usePoseDistance) {
-            return ShooterHoodLuts.distanceToBlueGoal(robotX, robotY);
+            return ShooterHoodLuts.distanceToGoal(new Pose(robotX, robotY), false);
         }
         return manualDistanceFromGoal;
     }

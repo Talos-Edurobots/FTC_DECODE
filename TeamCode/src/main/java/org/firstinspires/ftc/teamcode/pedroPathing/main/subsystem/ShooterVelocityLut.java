@@ -97,11 +97,11 @@ public final class ShooterVelocityLut {
         return last.targetVelocityTicksPerSecond;
     }
 
-    public static double distanceToGoal(Pose robotPose, double goalX, double goalY) {
+    public static double distanceToGoal(Pose robotPose, Pose goalPose) {
         if (robotPose == null) {
             return Double.NaN;
         }
-        return distanceToGoal(robotPose.getX(), robotPose.getY(), goalX, goalY);
+        return distanceToGoal(robotPose.getX(), robotPose.getY(), goalPose.getX(), goalPose.getY());
     }
 
     public static double distanceToGoal(double robotX, double robotY, double goalX, double goalY) {

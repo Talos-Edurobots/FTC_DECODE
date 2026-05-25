@@ -221,11 +221,11 @@ public class MainTeleOp implements TelemetryProvider {
         }
         shooter.update();
 
-        if (opMode.gamepad1.dpadLeftWasPressed()) {
-            shooter.setHoodAngle(shooter.getHoodAngle() - .1);
+        if (opMode.gamepad1.dpad_left) {
+            shooter.setHoodAngle(shooter.getHoodAngle() - dt * 0.5);
         }
-        if (opMode.gamepad1.dpadRightWasPressed()) {
-            shooter.setHoodAngle(shooter.getHoodAngle() + .1);
+        if (opMode.gamepad1.dpad_right) {
+            shooter.setHoodAngle(shooter.getHoodAngle() + .5 * dt);
         }
 //        if (opMode.gamepad1.startWasPressed()) {
 //            follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));

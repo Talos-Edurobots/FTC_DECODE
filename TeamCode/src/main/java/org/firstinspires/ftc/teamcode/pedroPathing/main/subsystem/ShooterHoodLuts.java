@@ -6,43 +6,36 @@ import com.pedropathing.geometry.Pose;
  * Shared shooter calibration LUTs and goal-distance helpers.
  */
 public final class ShooterHoodLuts {
-    public static final double BLUE_GOAL_X = 15.0;
-    public static final double BLUE_GOAL_Y = 128.0;
+    public static Pose BLUE_GOAL_POSE = new Pose(15.0, 128.0);
 
     public static final ShooterVelocityLut SHOOTER_VELOCITY_LUT = new ShooterVelocityLut(
-            ShooterVelocityLut.sample(18.0, 1250.0),
-            ShooterVelocityLut.sample(36.0, 1325.0),
-            ShooterVelocityLut.sample(60.0, 1450.0),
-            ShooterVelocityLut.sample(84.0, 1575.0),
-            ShooterVelocityLut.sample(108.0, 1700.0)
+        ShooterVelocityLut.sample(45, 1250),
+        ShooterVelocityLut.sample(115, 1500)
     );
 
     public static final HoodAngleLut HOOD_ANGLE_LUT = new HoodAngleLut(
-            HoodAngleLut.sample(18.0, 1250.0, 0.10),
-            HoodAngleLut.sample(36.0, 1325.0, 0.13),
-            HoodAngleLut.sample(60.0, 1450.0, 0.18),
-            HoodAngleLut.sample(84.0, 1575.0, 0.24),
-            HoodAngleLut.sample(108.0, 1700.0, 0.30)
+            HoodAngleLut.sample(45, 1250.0, 0.10),
+            HoodAngleLut.sample(115, 1500, 0.13)
     );
 
     private ShooterHoodLuts() {}
 
-    public static double distanceToBlueGoal(Pose robotPose) {
-        return ShooterVelocityLut.distanceToGoal(robotPose, BLUE_GOAL_X, BLUE_GOAL_Y);
+    public static double distanceToGoal(Pose robotPose, boolean isRed) {
+        return ShooterVelocityLut.distanceToGoal(robotPose, BLUE_GOAL_POSE);
     }
 
-    public static double distanceToBlueGoal(double robotX, double robotY) {
-        return ShooterVelocityLut.distanceToGoal(robotX, robotY, BLUE_GOAL_X, BLUE_GOAL_Y);
+    public static double distanceToGoal(Pose robotPose, Pose goalPose) {
+        return ShooterVelocityLut.distanceToGoal(robotPose, goalPose);
     }
 
-    public static double getShooterVelocityForBlueGoal(Pose robotPose) {
-        return SHOOTER_VELOCITY_LUT.getTargetVelocity(distanceToBlueGoal(robotPose));
+    public static double getShooterVelocityForGoal(Pose robotPose, boolean isRed) {
+        return SHOOTER_VELOCITY_LUT.getTargetVelocity(distanceToGoal(robotPose, isRed));
     }
 
     public static double getHoodPositionForBlueGoal(Pose robotPose,
-                                                    double shooterVelocityTicksPerSecond) {
+                                                    double shooterVelocityTicksPerSecond, boolean isRed) {
         return HOOD_ANGLE_LUT.getHoodPosition(
-                distanceToBlueGoal(robotPose),
+                distanceToGoal(robotPose, isRed),
                 shooterVelocityTicksPerSecond
         );
     }
