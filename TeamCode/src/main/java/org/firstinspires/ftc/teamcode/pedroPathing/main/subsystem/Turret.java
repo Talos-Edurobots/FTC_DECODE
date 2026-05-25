@@ -122,6 +122,10 @@ public class Turret implements TelemetryProvider {
         return angleToGoal;
     }
 
+    public double getMeasuredAngleRadians() {
+        return turret.getMeasuredAngle().toRadians() / RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
+    }
+
     public void lookToGoal(Pose pose, boolean isRed) {
         if (pose == null) {
             return;

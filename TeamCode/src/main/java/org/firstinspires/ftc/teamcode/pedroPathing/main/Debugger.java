@@ -11,6 +11,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.telemetry.SelectableOpMode;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -20,6 +21,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
@@ -30,8 +34,11 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
+
+import java.util.List;
 
 
 @TeleOp(name = "Debugger", group = "main")
@@ -81,6 +88,7 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("turret simple pidf with turret", LimelightTurretAlign::new);
                 hlt.add("throughput test", TestThroughput::new);
                 hlt.add("collect data", CollectData::new);
+                hlt.add("vision relocalization", VisionRelocalizationDebugOpMode::new);
             });
         });
     }
@@ -1232,6 +1240,455 @@ class CollectData extends OpMode {
         telemetryM.addData("shooter velocity", shooterVel);
         telemetryM.addData("intake state", intake.getCurrentState());
         telemetryM.update(telemetry);
+    }
+}
+
+@Configurable
+class VisionRelocalizationDebugOpMode extends OpMode {
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+
+    private Pinpoint pinpoint;
+    private Turret turret;
+    private Limelight3A limelight;
+    private Follower follower;
+    private VisionRelocalizationSubsystem relocalization;
+    private VisionRelocalizationSubsystem.RelocalizationResult lastResult =
+            VisionRelocalizationSubsystem.RelocalizationResult.rejected("not run");
+    private double lastLoopTime = 0.0;
+
+    public static boolean redAlliance = false;
+    public static boolean updateFollower = false;
+    public static boolean continuousRelocalization = false;
+    public static boolean aimTurretAtGoal = true;
+    public static double manualTurretTargetDegrees = 0.0;
+    public static double manualTurretDegreesPerSecond = 90.0;
+
+    @Override
+    public void init() {
+        PanelsConfigurables.INSTANCE.refreshClass(this);
+        PanelsConfigurables.INSTANCE.refreshClass(VisionRelocalizationSubsystem.class);
+
+        pinpoint = new Pinpoint(hardwareMap);
+        pinpoint.init();
+
+        turret = new Turret(hardwareMap);
+        turret.init();
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(redAlliance ? 3 : 2);
+
+        follower = updateFollower ? PPConstants.createFollower(hardwareMap) : null;
+        if (follower != null) {
+            follower.setStartingPose(pinpoint.getPosition());
+            follower.update();
+        }
+
+        relocalization = new VisionRelocalizationSubsystem(limelight, pinpoint, follower);
+        continuousRelocalization = false;
+        manualTurretTargetDegrees = 0.0;
+
+        telemetryM.addLine("Vision relocalization ready");
+        telemetryM.addLine("A sample, B force sample, X continuous, Y aim/manual");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void start() {
+        limelight.start();
+        turret.start();
+        lastLoopTime = getRuntime();
+    }
+
+    @Override
+    public void loop() {
+        double now = getRuntime();
+        double dt = Math.max(0.0, now - lastLoopTime);
+        lastLoopTime = now;
+
+        pinpoint.update();
+        Pose currentPose = pinpoint.getPosition();
+
+        if (gamepad1.xWasPressed()) {
+            continuousRelocalization = !continuousRelocalization;
+        }
+        if (gamepad1.yWasPressed()) {
+            aimTurretAtGoal = !aimTurretAtGoal;
+        }
+
+        if (aimTurretAtGoal) {
+            turret.lookToGoal(currentPose, redAlliance);
+        } else {
+            manualTurretTargetDegrees += gamepad1.right_stick_x * manualTurretDegreesPerSecond * dt;
+            turret.setAngleRadians(Math.toRadians(manualTurretTargetDegrees));
+        }
+        turret.loop();
+
+        LLResult visionResult = limelight.getLatestResult();
+        boolean targetLocked = visionResult != null
+                && visionResult.isValid()
+                && Math.abs(visionResult.getTx()) <= VisionRelocalizationSubsystem.turretLockTxDegrees;
+        boolean sampleRequested = continuousRelocalization || gamepad1.aWasPressed();
+        boolean forceRequested = gamepad1.bWasPressed();
+
+        if (sampleRequested || forceRequested) {
+            lastResult = relocalization.update(
+                    currentPose,
+                    turret.getMeasuredAngleRadians(),
+                    targetLocked || forceRequested,
+                    now
+            );
+        }
+
+        telemetryM.addLine("A sample, B force sample, X continuous, Y aim/manual");
+        telemetryM.addData("alliance", redAlliance ? "red" : "blue");
+        telemetryM.addData("continuous", continuousRelocalization);
+        telemetryM.addData("aim turret at goal", aimTurretAtGoal);
+        telemetryM.addData("target locked", targetLocked);
+        telemetryM.addData("vision tx", visionResult == null ? 0.0 : visionResult.getTx());
+        telemetryM.addData("turret measured deg", Math.toDegrees(turret.getMeasuredAngleRadians()));
+        telemetryM.addData("pinpoint pose", currentPose);
+        telemetryM.addData("last accepted", lastResult.accepted);
+        telemetryM.addData("last reason", lastResult.reason);
+        telemetryM.addData("last trusted tag", lastResult.trustedTagId);
+        telemetryM.addData("last correction inches", lastResult.correctionDistanceInches);
+        telemetryM.addData("raw MT2 pose", lastResult.rawPose);
+        telemetryM.addData("corrected pose", lastResult.correctedPose);
+        telemetryM.addData("accepted count", relocalization.getAcceptedCount());
+        telemetryM.addData("rejected count", relocalization.getRejectedCount());
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void stop() {
+        if (limelight != null) {
+            limelight.stop();
+        }
+    }
+}
+
+@Configurable
+class VisionRelocalizationSubsystem {
+    private static final double INCHES_PER_METER = 39.37007874015748;
+
+    public static int blueGoalTagId = 20;
+    public static int redGoalTagId = 24;
+    public static boolean rejectMixedTagFrames = true;
+    public static boolean requireTurretLocked = true;
+    public static double turretLockTxDegrees = 3.0;
+    public static double minTargetAreaPercent = 0.08;
+    public static double maxResultAgeMs = 150.0;
+    public static double minSecondsBetweenCorrections = 0.20;
+    public static double maxCorrectionDistanceInches = 18.0;
+    public static double maxMt2StdDevInches = 10.0;
+    public static double minFieldCoordinateInches = -24.0;
+    public static double maxFieldCoordinateInches = 168.0;
+
+    public static double turretPivotForwardInches = 0.0;
+    public static double turretPivotLeftInches = 0.0;
+    public static double cameraForwardFromTurretPivotInches = 0.0;
+    public static double cameraLeftFromTurretPivotInches = 0.0;
+    public static double limelightConfiguredForwardInches = 0.0;
+    public static double limelightConfiguredLeftInches = 0.0;
+
+    private final Limelight3A limelight;
+    private final Pinpoint pinpoint;
+    private final Follower follower;
+
+    private int acceptedCount = 0;
+    private int rejectedCount = 0;
+    private double lastAcceptedTimeSeconds = Double.NEGATIVE_INFINITY;
+
+    VisionRelocalizationSubsystem(Limelight3A limelight, Pinpoint pinpoint, Follower follower) {
+        this.limelight = limelight;
+        this.pinpoint = pinpoint;
+        this.follower = follower;
+    }
+
+    RelocalizationResult update(
+            Pose currentPose,
+            double turretAngleRadians,
+            boolean turretLocked,
+            double nowSeconds
+    ) {
+        if (limelight == null) {
+            return reject("no limelight");
+        }
+        if (currentPose == null && pinpoint != null) {
+            currentPose = pinpoint.getPosition();
+        }
+        if (currentPose == null) {
+            return reject("no current pose");
+        }
+
+        limelight.updateRobotOrientation(Math.toDegrees(currentPose.getHeading()));
+        return processResult(
+                limelight.getLatestResult(),
+                currentPose,
+                turretAngleRadians,
+                turretLocked,
+                nowSeconds
+        );
+    }
+
+    RelocalizationResult processResult(
+            LLResult result,
+            Pose currentPose,
+            double turretAngleRadians,
+            boolean turretLocked,
+            double nowSeconds
+    ) {
+        if (requireTurretLocked && !turretLocked) {
+            return reject("turret not locked");
+        }
+        if (nowSeconds - lastAcceptedTimeSeconds < minSecondsBetweenCorrections) {
+            return reject("correction cooldown");
+        }
+        if (result == null) {
+            return reject("null limelight result");
+        }
+        if (!result.isValid()) {
+            return reject("invalid limelight result");
+        }
+        if (result.getStaleness() > maxResultAgeMs) {
+            return reject("stale limelight result");
+        }
+
+        TrustedTagSelection tagSelection = getTrustedTagSelection(result.getFiducialResults());
+        if (!tagSelection.valid) {
+            return reject(tagSelection.reason);
+        }
+
+        if (tagSelection.maxTargetArea < minTargetAreaPercent) {
+            return reject("target area too small", tagSelection.trustedTagId);
+        }
+
+        Pose rawPose = poseFromMeters(result.getBotpose_MT2(), currentPose.getHeading());
+        if (!isPoseFinite(rawPose)) {
+            return reject("invalid MT2 pose", tagSelection.trustedTagId);
+        }
+        if (!isInsideFieldBounds(rawPose)) {
+            return reject("MT2 pose outside field", tagSelection.trustedTagId);
+        }
+
+        if (!isStdDevAcceptable(result.getStddevMt2())) {
+            return reject("MT2 stddev too high", tagSelection.trustedTagId);
+        }
+
+        Pose correctedPose = applyTurretCameraCorrection(rawPose, currentPose.getHeading(), turretAngleRadians);
+        double correctionDistance = currentPose.distanceFrom(correctedPose);
+        if (correctionDistance > maxCorrectionDistanceInches) {
+            return reject("correction jump too large", tagSelection.trustedTagId, rawPose, correctedPose, correctionDistance);
+        }
+
+        if (pinpoint != null) {
+            pinpoint.setPosition(correctedPose);
+        }
+        if (follower != null) {
+            follower.setPose(correctedPose);
+        }
+
+        acceptedCount++;
+        lastAcceptedTimeSeconds = nowSeconds;
+        return RelocalizationResult.accepted(tagSelection.trustedTagId, rawPose, correctedPose, correctionDistance);
+    }
+
+    int getAcceptedCount() {
+        return acceptedCount;
+    }
+
+    int getRejectedCount() {
+        return rejectedCount;
+    }
+
+    private Pose poseFromMeters(Pose3D pose3D, double headingRadians) {
+        Position position = pose3D.getPosition().toUnit(DistanceUnit.INCH);
+        return new Pose(position.x, position.y, headingRadians);
+    }
+
+    private Pose applyTurretCameraCorrection(Pose rawPose, double robotHeadingRadians, double turretAngleRadians) {
+        double cosTurret = Math.cos(turretAngleRadians);
+        double sinTurret = Math.sin(turretAngleRadians);
+
+        double actualCameraForward = turretPivotForwardInches
+                + cameraForwardFromTurretPivotInches * cosTurret
+                - cameraLeftFromTurretPivotInches * sinTurret;
+        double actualCameraLeft = turretPivotLeftInches
+                + cameraForwardFromTurretPivotInches * sinTurret
+                + cameraLeftFromTurretPivotInches * cosTurret;
+
+        double correctionForward = limelightConfiguredForwardInches - actualCameraForward;
+        double correctionLeft = limelightConfiguredLeftInches - actualCameraLeft;
+
+        double cosHeading = Math.cos(robotHeadingRadians);
+        double sinHeading = Math.sin(robotHeadingRadians);
+        double fieldCorrectionX = correctionForward * cosHeading - correctionLeft * sinHeading;
+        double fieldCorrectionY = correctionForward * sinHeading + correctionLeft * cosHeading;
+
+        return new Pose(
+                rawPose.getX() + fieldCorrectionX,
+                rawPose.getY() + fieldCorrectionY,
+                robotHeadingRadians
+        );
+    }
+
+    private boolean isPoseFinite(Pose pose) {
+        return pose != null
+                && Double.isFinite(pose.getX())
+                && Double.isFinite(pose.getY())
+                && Double.isFinite(pose.getHeading());
+    }
+
+    private boolean isInsideFieldBounds(Pose pose) {
+        return pose.getX() >= minFieldCoordinateInches
+                && pose.getX() <= maxFieldCoordinateInches
+                && pose.getY() >= minFieldCoordinateInches
+                && pose.getY() <= maxFieldCoordinateInches;
+    }
+
+    private boolean isStdDevAcceptable(double[] stdDevsMeters) {
+        if (maxMt2StdDevInches <= 0 || stdDevsMeters == null || stdDevsMeters.length < 2) {
+            return true;
+        }
+        return stdDevsMeters[0] * INCHES_PER_METER <= maxMt2StdDevInches
+                && stdDevsMeters[1] * INCHES_PER_METER <= maxMt2StdDevInches;
+    }
+
+    private TrustedTagSelection getTrustedTagSelection(List<LLResultTypes.FiducialResult> fiducials) {
+        if (fiducials == null || fiducials.isEmpty()) {
+            return TrustedTagSelection.rejected("no fiducials");
+        }
+
+        int trustedCount = 0;
+        int untrustedCount = 0;
+        int trustedTagId = 0;
+        double maxTargetArea = 0.0;
+
+        for (LLResultTypes.FiducialResult fiducial : fiducials) {
+            int tagId = fiducial.getFiducialId();
+            if (isTrustedGoalTag(tagId)) {
+                trustedCount++;
+                trustedTagId = tagId;
+                maxTargetArea = Math.max(maxTargetArea, fiducial.getTargetArea());
+            } else {
+                untrustedCount++;
+            }
+        }
+
+        if (trustedCount == 0) {
+            return TrustedTagSelection.rejected("no trusted goal tag");
+        }
+        if (rejectMixedTagFrames && untrustedCount > 0) {
+            return TrustedTagSelection.rejected("mixed trusted/untrusted tags");
+        }
+
+        return TrustedTagSelection.accepted(trustedTagId, maxTargetArea);
+    }
+
+    private boolean isTrustedGoalTag(int tagId) {
+        return tagId == blueGoalTagId || tagId == redGoalTagId;
+    }
+
+    private RelocalizationResult reject(String reason) {
+        return reject(reason, 0);
+    }
+
+    private RelocalizationResult reject(String reason, int trustedTagId) {
+        return reject(reason, trustedTagId, null, null, 0.0);
+    }
+
+    private RelocalizationResult reject(
+            String reason,
+            int trustedTagId,
+            Pose rawPose,
+            Pose correctedPose,
+            double correctionDistance
+    ) {
+        rejectedCount++;
+        return RelocalizationResult.rejected(reason, trustedTagId, rawPose, correctedPose, correctionDistance);
+    }
+
+    private static class TrustedTagSelection {
+        final boolean valid;
+        final String reason;
+        final int trustedTagId;
+        final double maxTargetArea;
+
+        private TrustedTagSelection(boolean valid, String reason, int trustedTagId, double maxTargetArea) {
+            this.valid = valid;
+            this.reason = reason;
+            this.trustedTagId = trustedTagId;
+            this.maxTargetArea = maxTargetArea;
+        }
+
+        static TrustedTagSelection accepted(int trustedTagId, double maxTargetArea) {
+            return new TrustedTagSelection(true, "accepted", trustedTagId, maxTargetArea);
+        }
+
+        static TrustedTagSelection rejected(String reason) {
+            return new TrustedTagSelection(false, reason, 0, 0.0);
+        }
+    }
+
+    static class RelocalizationResult {
+        final boolean accepted;
+        final String reason;
+        final int trustedTagId;
+        final Pose rawPose;
+        final Pose correctedPose;
+        final double correctionDistanceInches;
+
+        private RelocalizationResult(
+                boolean accepted,
+                String reason,
+                int trustedTagId,
+                Pose rawPose,
+                Pose correctedPose,
+                double correctionDistanceInches
+        ) {
+            this.accepted = accepted;
+            this.reason = reason;
+            this.trustedTagId = trustedTagId;
+            this.rawPose = rawPose;
+            this.correctedPose = correctedPose;
+            this.correctionDistanceInches = correctionDistanceInches;
+        }
+
+        static RelocalizationResult accepted(
+                int trustedTagId,
+                Pose rawPose,
+                Pose correctedPose,
+                double correctionDistanceInches
+        ) {
+            return new RelocalizationResult(
+                    true,
+                    "accepted",
+                    trustedTagId,
+                    rawPose,
+                    correctedPose,
+                    correctionDistanceInches
+            );
+        }
+
+        static RelocalizationResult rejected(String reason) {
+            return rejected(reason, 0, null, null, 0.0);
+        }
+
+        static RelocalizationResult rejected(
+                String reason,
+                int trustedTagId,
+                Pose rawPose,
+                Pose correctedPose,
+                double correctionDistanceInches
+        ) {
+            return new RelocalizationResult(
+                    false,
+                    reason,
+                    trustedTagId,
+                    rawPose,
+                    correctedPose,
+                    correctionDistanceInches
+            );
+        }
     }
 }
 

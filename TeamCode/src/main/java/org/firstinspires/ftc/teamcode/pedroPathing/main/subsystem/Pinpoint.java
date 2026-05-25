@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 
 public class Pinpoint {
@@ -36,5 +37,15 @@ public class Pinpoint {
                 pinpoint.getPosY(DistanceUnit.INCH),
                 pinpoint.getHeading(AngleUnit.RADIANS)
         );
+    }
+
+    public void setPosition(Pose pose) {
+        pinpoint.setPosition(new Pose2D(
+                DistanceUnit.INCH,
+                pose.getX(),
+                pose.getY(),
+                AngleUnit.RADIANS,
+                pose.getHeading()
+        ));
     }
 }
