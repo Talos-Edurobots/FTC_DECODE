@@ -1,1 +1,1 @@
-The Turret uses a [[Trapezoidal Motion Profiling]] to go to a desired position. Go get its target position, we have implemented a [[Interpolated Look Up Table]] 
+The Turret uses a [[Trapezoidal Motion Profiling]] to go to a desired position. Go get its target position, we have implemented a [[Interpolated Look Up Table]] more information in [[Turret LUT]].
