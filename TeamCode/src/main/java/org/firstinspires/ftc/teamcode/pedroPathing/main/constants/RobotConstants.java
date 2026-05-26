@@ -7,11 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.DcMotorConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.GoBILDAMotorTypes;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorMode;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.MotionProfilingCoefficients;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.config.MotorLimits;
@@ -21,42 +17,29 @@ public final class RobotConstants {
 
     /* Robot Configuration Constants */
 // Drivetrain motors
-    public static MotorConfig LEFT_FRONT_CONFIG = new MotorConfig(
-            "leftFront",
-            GoBILDAMotorTypes.MOTOR_312_RPM,
-            DcMotorSimple.Direction.REVERSE,
-            DcMotor.ZeroPowerBehavior.BRAKE
-    ).setMotorUse(MotorUse.DRIVETRAIN);
-    public static MotorConfig LEFT_BACK_CONFIG = new MotorConfig(
-            "leftBack",
-            GoBILDAMotorTypes.MOTOR_312_RPM,
-            DcMotorSimple.Direction.REVERSE,
-            DcMotor.ZeroPowerBehavior.BRAKE
-    ).setMotorUse(MotorUse.DRIVETRAIN);
-    public static MotorConfig RIGHT_BACK_CONFIG = new MotorConfig(
-            "rightBack",
-            GoBILDAMotorTypes.MOTOR_312_RPM,
-            DcMotorSimple.Direction.FORWARD,
-            DcMotor.ZeroPowerBehavior.BRAKE
-    ).setMotorUse(MotorUse.DRIVETRAIN);
-    public static MotorConfig RIGHT_FRONT_CONFIG = new MotorConfig(
-            "rightFront",
-            GoBILDAMotorTypes.MOTOR_312_RPM,
-            DcMotorSimple.Direction.FORWARD,
-            DcMotor.ZeroPowerBehavior.BRAKE
-    ).setMotorUse(MotorUse.DRIVETRAIN);
+    public static final String LEFT_FRONT_MOTOR_NAME = "leftFront";
+    public static final String LEFT_BACK_MOTOR_NAME = "leftBack";
+    public static final String RIGHT_BACK_MOTOR_NAME = "rightBack";
+    public static final String RIGHT_FRONT_MOTOR_NAME = "rightFront";
+    public static final GoBILDAMotorTypes DRIVETRAIN_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_312_RPM;
+    public static final DcMotorSimple.Direction LEFT_FRONT_MOTOR_DIRECTION =
+            DcMotorSimple.Direction.REVERSE;
+    public static final DcMotorSimple.Direction LEFT_BACK_MOTOR_DIRECTION =
+            DcMotorSimple.Direction.REVERSE;
+    public static final DcMotorSimple.Direction RIGHT_BACK_MOTOR_DIRECTION =
+            DcMotorSimple.Direction.FORWARD;
+    public static final DcMotorSimple.Direction RIGHT_FRONT_MOTOR_DIRECTION =
+            DcMotorSimple.Direction.FORWARD;
+    public static final DcMotor.ZeroPowerBehavior DRIVETRAIN_ZERO_POWER_BEHAVIOR =
+            DcMotor.ZeroPowerBehavior.BRAKE;
+    public static final MotorLimits DRIVETRAIN_LIMITS = MotorLimits.defaults();
+
     public static final String INTAKE_MOTOR_NAME = "intake";
     public static final GoBILDAMotorTypes INTAKE_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_1150_RPM;
     public static final DcMotorSimple.Direction INTAKE_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     public static final DcMotor.ZeroPowerBehavior INTAKE_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.FLOAT;
     public static final MotorLimits INTAKE_LIMITS = new MotorLimits(1.0, 7.0);
-    public static MotorConfig INTAKE_CONFIG = new MotorConfig(
-            INTAKE_MOTOR_NAME,
-            INTAKE_MOTOR_TYPE,
-            INTAKE_MOTOR_DIRECTION
-    ).setMotorUse(MotorUse.FREE_SPIN)
-            .setMotorMode(MotorMode.OPEN_LOOP);
 
     public static final String SHOOTER_MOTOR_NAME = "shooter";
     public static final GoBILDAMotorTypes SHOOTER_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_6000_RPM;
@@ -72,28 +55,6 @@ public final class RobotConstants {
     public static final DcMotor.ZeroPowerBehavior SHOOTER_FOLLOWER_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.FLOAT;
 
-    public static MotorConfig SHOOTER_CONFIG = new MotorConfig(
-            SHOOTER_MOTOR_NAME,
-            SHOOTER_MOTOR_TYPE,
-            SHOOTER_MOTOR_DIRECTION
-    ).setPIDFCoefficients(
-            SHOOTER_VELOCITY_PIDF.kp(),
-            SHOOTER_VELOCITY_PIDF.ki(),
-            SHOOTER_VELOCITY_PIDF.kd(),
-            SHOOTER_VELOCITY_PIDF.ks(),
-            SHOOTER_VELOCITY_PIDF.kv(),
-            SHOOTER_VELOCITY_PIDF.ka()
-    )
-            .setMotorMode(MotorMode.VELOCITY_CONTROL);
-    public static MotorConfig SHOOTER2_CONFIG = new MotorConfig(
-            SHOOTER_FOLLOWER_MOTOR_NAME,
-            SHOOTER_FOLLOWER_MOTOR_TYPE,
-            SHOOTER_FOLLOWER_DIRECTION
-    );
-    public static final MotorConfig[] SHOOTER_MOTOR_CONFIGS = new MotorConfig[]{
-            SHOOTER_CONFIG,
-            SHOOTER2_CONFIG
-    };
     public static final String TURRET_MOTOR_NAME = "turret";
     public static final GoBILDAMotorTypes TURRET_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_312_RPM;
     public static final DcMotorSimple.Direction TURRET_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
@@ -110,39 +71,27 @@ public final class RobotConstants {
     public static final MotorLimits TURRET_LIMITS = new MotorLimits(1.0, Double.POSITIVE_INFINITY);
     public static final double TURRET_MIN_ANGLE_RADIANS = Math.toRadians(-100);
     public static final double TURRET_MAX_ANGLE_RADIANS = Math.toRadians(120);
-    public static MotorConfig TURRET_CONFIG = new MotorConfig(
-            TURRET_MOTOR_NAME,
-            TURRET_MOTOR_TYPE,
-            TURRET_MOTOR_DIRECTION,
-            TURRET_ZERO_POWER_BEHAVIOR
-    ).addExternalGearRatio(TURRET_EXTERNAL_GEAR_RATIO)
-            .setMotorUse(MotorUse.MECHANICAL_STOP)
-            .setMotorMode(MotorMode.PROFILED_PIDF)
-            .setMotionProfileCoefficients(1800, 3000, 2000, 1)
-            .setPIDFCoefficients(0.005, 0, 0, 0.3, 0.005687094208999908, 0.0004)
-//           .setPIDFCoefficients(.005, 0, 0.001, 0, 0, 0)
-            .setMinAngleRadians(TURRET_MIN_ANGLE_RADIANS)
-            .setMaxAngleRadians(TURRET_MAX_ANGLE_RADIANS);
+    public static final MotionProfilingCoefficients TURRET_CONFIGURABLE_PROFILE_DEFAULTS =
+            new MotionProfilingCoefficients(
+                    new PIDFFCoefficients(0.005, 0, 0, 0.3, 0.005687094208999908, 0.0004),
+                    1800,
+                    3000,
+                    2000
+            );
+
     public static final String HANG_MOTOR_NAME = "hang";
     public static final GoBILDAMotorTypes HANG_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_117_RPM;
     public static final DcMotorSimple.Direction HANG_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     public static final DcMotor.ZeroPowerBehavior HANG_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.BRAKE;
-    public static MotorConfig HANG_CONFIG = new MotorConfig(
-            HANG_MOTOR_NAME,
-            HANG_MOTOR_TYPE,
-            HANG_MOTOR_DIRECTION,
-            HANG_ZERO_POWER_BEHAVIOR
-    ).setMotorUse(MotorUse.MECHANICAL_STOP)
-            .setMotorMode(MotorMode.SIMPLE_POSITION);
 
     public static String SHOOTER_LED_RED  = "shooterRed";
     public static String SHOOTER_LED_GREEN= "shooterGreen";
     // Pinpoint
     public static String RIGHT_SERVO_NAME = "rightServo";
     public static String LEFT_SERVO_NAME = "leftServo";
-    public static String LEFT_FLICKER_NAME = "leftFlicker";
     public static String RIGHT_FLICKER_NAME = "rightFlicker";
+    public static String LEFT_FLICKER_NAME = "leftFlicker";
     public static String PINPOINT_NAME    = "pinpoint";
     public static String LED_RIGHT = "led_right";
     public static String LED_LEFT = "led_left";

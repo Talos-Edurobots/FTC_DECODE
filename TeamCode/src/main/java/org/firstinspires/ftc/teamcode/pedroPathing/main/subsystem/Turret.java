@@ -46,16 +46,16 @@ public class Turret implements TelemetryProvider {
         MANUAL_PID
     }
 
-    static double maxPower = RobotConstants.TURRET_CONFIG.maxPower;
-    static double kp = RobotConstants.TURRET_CONFIG.kP;
-    static double ki = RobotConstants.TURRET_CONFIG.kI;
-    static double kd = RobotConstants.TURRET_CONFIG.kD;
-    static double ks = RobotConstants.TURRET_CONFIG.kS;
-    static double kv = RobotConstants.TURRET_CONFIG.kV;
-    static double ka = RobotConstants.TURRET_CONFIG.kA;
-    static double maxVel = RobotConstants.TURRET_CONFIG.maxVelocity;
-    static double maxAcc = RobotConstants.TURRET_CONFIG.maxAcceleration;
-    static double maxDec = RobotConstants.TURRET_CONFIG.maxDeceleration;
+    static double maxPower = RobotConstants.TURRET_LIMITS.getMaxPower();
+    static double kp = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().kp();
+    static double ki = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().ki();
+    static double kd = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().kd();
+    static double ks = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().ks();
+    static double kv = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().kv();
+    static double ka = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().ka();
+    static double maxVel = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getMaxVelocity();
+    static double maxAcc = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getMaxAcceleration();
+    static double maxDec = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getMaxDeceleration();
     public static double targetToleranceDegrees = 1.0;
     static double manualMaxPower = .2, ramp = 1;
     public static double movingShotLeadFactor = 0.01;

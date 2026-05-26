@@ -15,6 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
@@ -57,6 +58,7 @@ public class MainTeleOp implements TelemetryProvider {
     private Follower follower;
     private Limelight3A limelight;
     private Leds leds;
+    private DriveTrain drivetrain;
     private boolean automatedDrive = false;
     private boolean isFar = false;
     private boolean slowMode = false;
@@ -109,6 +111,9 @@ public class MainTeleOp implements TelemetryProvider {
         turret = new Turret(hardwareMap);
         turret.init();
 
+        drivetrain = new DriveTrain(hardwareMap);
+        drivetrain.init();
+
         useLimelight = defaultUseLimelight;
         automatedDrive = false;
         isFar = false;
@@ -142,7 +147,7 @@ public class MainTeleOp implements TelemetryProvider {
 
     public void start() {
         limelight.start();
-        follower.startTeleopDrive(true);
+//        follower.startTeleopDrive(true);
         transfer.collect();
         transfer.update();
         turret.start();
@@ -222,17 +227,17 @@ public class MainTeleOp implements TelemetryProvider {
         shooter.update();
 
         if (opMode.gamepad1.dpad_left) {
-            shooter.setHoodAngle(shooter.getHoodAngle() - dt * 0.5);
+            shooter.setHoodAngle(shooter.getHoodAngle() - dt * 0.8);
         }
         if (opMode.gamepad1.dpad_right) {
-            shooter.setHoodAngle(shooter.getHoodAngle() + .5 * dt);
+            shooter.setHoodAngle(shooter.getHoodAngle() + .8 * dt);
         }
 //        if (opMode.gamepad1.startWasPressed()) {
 //            follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
 //        }
 
-        Drawing.drawRobot(follower.getPose(), turret.getAngleToGoal());
-        Drawing.sendPacket();
+//        Drawing.drawRobot(follower.getPose(), turret.getAngleToGoal());
+//        Drawing.sendPacket();
 
         if (opMode.gamepad2.x) {
             follower.activateAllPIDFs();
@@ -268,7 +273,7 @@ public class MainTeleOp implements TelemetryProvider {
         lastHeadingRadians = heading;
 
         if (!automatedDrive) {
-            follower.setTeleOpDrive(forward, strafe, rotate, false);
+            drivetrain.FieldCentricAccelerationDrive(forward, strafe, rotate, heading, mult, dt);
         }
         follower.update();
         telemetryHub.publish(telemetryM, telemetry, newTime);

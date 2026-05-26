@@ -24,6 +24,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.LegacyMotorConfigs;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
@@ -49,18 +50,18 @@ public class Debugger extends SelectableOpMode {
         super("Select a Tuning OpMode", s -> {
             s.folder("Without encoder", ne -> {
                 ne.add("shooter subsystem", ShooterPowerTest::new);
-                ne.add("Run Intake",  () -> new MotorPowerTest(RobotConstants.INTAKE_CONFIG.copy()));
-                ne.add("Run Shooter", () -> new MotorPowerTest(RobotConstants.SHOOTER_CONFIG.copy()));
-                ne.add("Run Turret",  () -> new MotorPowerTest(RobotConstants.TURRET_CONFIG.copy()));
-                ne.add("Run Hang", () -> new MotorPowerTest(RobotConstants.HANG_CONFIG.copy()));
-                ne.add("Run Left Front Drive",  () -> new MotorPowerTest(RobotConstants.LEFT_FRONT_CONFIG.copy()));
-                ne.add("Run Right Front Drive", () -> new MotorPowerTest(RobotConstants.RIGHT_FRONT_CONFIG.copy()));
-                ne.add("Run Left Back Drive",   () -> new MotorPowerTest(RobotConstants.LEFT_BACK_CONFIG.copy()));
-                ne.add("Run Right Back Drive",  () -> new MotorPowerTest(RobotConstants.RIGHT_BACK_CONFIG.copy()));
+                ne.add("Run Intake",  () -> new MotorPowerTest(LegacyMotorConfigs.intake()));
+                ne.add("Run Shooter", () -> new MotorPowerTest(LegacyMotorConfigs.shooter()));
+                ne.add("Run Turret",  () -> new MotorPowerTest(LegacyMotorConfigs.turret()));
+                ne.add("Run Hang", () -> new MotorPowerTest(LegacyMotorConfigs.hang()));
+                ne.add("Run Left Front Drive",  () -> new MotorPowerTest(LegacyMotorConfigs.leftFront()));
+                ne.add("Run Right Front Drive", () -> new MotorPowerTest(LegacyMotorConfigs.rightFront()));
+                ne.add("Run Left Back Drive",   () -> new MotorPowerTest(LegacyMotorConfigs.leftBack()));
+                ne.add("Run Right Back Drive",  () -> new MotorPowerTest(LegacyMotorConfigs.rightBack()));
             });
             s.folder("Velocity Control", vc -> {
-                vc.add("Run Shooter Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.SHOOTER_CONFIG.copy()));
-                vc.add("Run Intake Velocity", () -> new MotorPIDFVelocityTest(RobotConstants.INTAKE_CONFIG.copy()));
+                vc.add("Run Shooter Velocity", () -> new MotorPIDFVelocityTest(LegacyMotorConfigs.shooter()));
+                vc.add("Run Intake Velocity", () -> new MotorPIDFVelocityTest(LegacyMotorConfigs.intake()));
             });
             s.folder("servo control", sc -> {
                 sc.add("right servo", () -> new ServoControl(RobotConstants.RIGHT_SERVO_NAME));
@@ -70,21 +71,21 @@ public class Debugger extends SelectableOpMode {
                 sc.add("enable pwm all servos", EnableAllServoPwmOpMode::new);
             });
             s.folder("position control", pc -> {
-                pc.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG.copy()));
-                pc.add("turret ka test", () -> new KaTestOpMode(RobotConstants.TURRET_CONFIG.copy()));
-                pc.add("turret stick teleop", () -> new TurretStickTeleOp(RobotConstants.TURRET_CONFIG.copy()));
+                pc.add("turret position pid", () -> new MotorPositionTest(LegacyMotorConfigs.turret()));
+                pc.add("turret ka test", () -> new KaTestOpMode(LegacyMotorConfigs.turret()));
+                pc.add("turret stick teleop", () -> new TurretStickTeleOp(LegacyMotorConfigs.turret()));
             });
             s.folder("ke characterization", kect -> {
                 kect.add("shooter ke", KeCharacterizationOpMode::new);
-//                kect.add("intake ke", () -> new KeCharacterizationOpMode(RobotConstants.INTAKE_CONFIG));
-//                kect.add("turret ke", () -> new KeCharacterizationOpMode(RobotConstants.TURRET_CONFIG));
+//                kect.add("intake ke", () -> new KeCharacterizationOpMode(LegacyMotorConfigs.intake()));
+//                kect.add("turret ke", () -> new KeCharacterizationOpMode(LegacyMotorConfigs.turret()));
             });
             s.folder("high level", hlt -> {
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
                 hlt.add("voltage sensor readout", VoltageSensorReadoutOpMode::new);
                 hlt.add("color readout", ColorReadoutOpMode::new);
                 hlt.add("led subsystem demo", LedsSubsystemDemo::new);
-//                hlt.add("turret position pid", () -> new MotorPositionTest(RobotConstants.TURRET_CONFIG));
+//                hlt.add("turret position pid", () -> new MotorPositionTest(LegacyMotorConfigs.turret()));
                 hlt.add("hang control", HangControl::new);
                 hlt.add("robot mechanism demo", RobotMechanismDemo::new);
                 hlt.add("shooter + hood lut debug", ShooterHoodLutDebug::new);
@@ -633,7 +634,7 @@ class MotorPositionTest extends OpMode {
 @Configurable
 class LimelightTurretAlign extends OpMode {
     ElapsedTime timer = new ElapsedTime();
-    MotorConfig motor = RobotConstants.TURRET_CONFIG.copy();
+    MotorConfig motor = LegacyMotorConfigs.turret();
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     Limelight3A limelight;
     public static double maxPower = .2;
@@ -1304,8 +1305,8 @@ class RampPowerOpMode extends OpMode {
             }
             else {
                 shooter.run(false);
-                double ffPower = (RobotConstants.SHOOTER_CONFIG.kS * Math.signum(velocity)
-                        + RobotConstants.SHOOTER_CONFIG.kV * velocity) / 12.0;
+                double ffPower = (RobotConstants.SHOOTER_VELOCITY_PIDF.ks() * Math.signum(velocity)
+                        + RobotConstants.SHOOTER_VELOCITY_PIDF.kv() * velocity) / 12.0;
                 shooter.setPower(ffPower);
             }
 
