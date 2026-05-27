@@ -59,7 +59,7 @@ public class Turret implements TelemetryProvider {
     public static double targetToleranceDegrees = 1.0;
     static double manualMaxPower = .2, ramp = 1;
     public static double movingShotLeadFactor = 0.01;
-    public static boolean positionAimLutEnabled = false;
+    public static boolean positionAimLutEnabled = true;
     public static int positionAimLutNeighborCount = 3;
     private final HardwareMap hwmap;
     private final MetaMotor turretHardware = new MetaMotor();
