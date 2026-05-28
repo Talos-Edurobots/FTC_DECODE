@@ -15,14 +15,14 @@ Execute in order. Do not freestyle.
 
 Fill these numbers:
 
-| System | Required result |
-| --- | --- |
-| Shooter | spin-up time, average velocity error, max error, recovery time after shot |
-| Turret | settle time, final angle error, overshoot, peak current |
-| LUT aiming | shots made before LUT, shots made after LUT, per field position |
-| Transfer | detection success, false positives, false negatives, stop response time |
-| Telemetry | loop Hz in competition mode, loop Hz in debug mode |
-| Vision | accepted corrections, rejected corrections, pose error before/after |
+| System     | Required result                                                           |
+| ---------- | ------------------------------------------------------------------------- |
+| Shooter    | spin-up time, average velocity error, max error, recovery time after shot |
+| Turret     | settle time, final angle error, overshoot, peak current                   |
+| LUT aiming | shots made before LUT, shots made after LUT, per field position           |
+| Transfer   | detection success, false positives, false negatives, stop response time   |
+| Telemetry  | loop Hz in competition mode, loop Hz in debug mode                        |
+| Vision     | accepted corrections, rejected corrections, pose error before/after       |
 
 If a number is missing, run the test again.
 

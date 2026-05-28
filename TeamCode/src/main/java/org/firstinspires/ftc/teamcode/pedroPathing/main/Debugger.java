@@ -978,7 +978,8 @@ class KaTestOpMode extends OpMode {
 //    VoltageSensorReadout voltageSensor;
     TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private Iterable<VoltageSensor> voltageSensors;
-    static double degreesOffset = 30;
+    static double position1 = 0, position2 = 30;
+    boolean goingToPos2 = true;
     private double lastTime = 0.0;
     private double timer;
     private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
@@ -1036,17 +1037,14 @@ class KaTestOpMode extends OpMode {
         lastTime = now;
         if (dt <= 0) return;
 
-        timer += dt;
-        MotorConfig.setDt(dt);
         motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
         motor.maxAcceleration = maxAcc;
         motor.maxVelocity = maxVel;
         motor.maxPower = maxPower;
-        if (timer >= loopTime) {
-            direction *= -1;
-            timer = 0;
+        if (gamepad1.aWasPressed()) {
+            goingToPos2 ^= true;
         }
-        motor.setPositionInDegrees(degreesOffset * direction);
+        motor.setPositionInDegrees(goingToPos2? position2 : position1);
         motor.updatePositionProfiledPIDF();
         telemetryM.addData("power", motor.getPower());
         telemetryM.addData("max power", motor.maxPower);
@@ -1054,7 +1052,7 @@ class KaTestOpMode extends OpMode {
         telemetryM.addData("ref vel", motor.getvRef());
         telemetryM.addData("position", motor.getCurrentPosition());
         telemetryM.addData("ref pos", motor.getxRef());
-        telemetryM.addData("target pos", degreesOffset * direction);
+        telemetryM.addData("target pos", motor.getCurrentPosition());
         telemetryM.addData("ref a", motor.getaRef());
         telemetryM.addData("current", motor.getCurrent());
         telemetryM.addData("dt", dt);
@@ -1321,6 +1319,36 @@ class RampPowerOpMode extends OpMode {
             Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWithVel, shooter.getVelocity(), shooter.getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent1(), Shooter.targetVelocity));
         }
     }
+
+class LimelightDataCollection extends OpMode {
+    Limelight3A limelight;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    final String tag = "LimelightData";
+    Pose3D pose;
+    @Override
+    public void init() {
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(2);
+        telemetryM.addLine("init complete");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void start() {
+        limelight.start();
+    }
+
+    @Override
+    public void loop() {
+        LLResult result = limelight.getLatestResult();
+//        limelight.updateRobotOrientation();
+        if (result != null && result.isValid()) {
+            pose = result.getBotpose();
+        }
+        telemetryM.addData("pose", pose);
+        telemetryM.update(telemetry);
+    }
+}
 @Configurable
 class CollectData extends OpMode {
     Pose startPose = new Pose(72, 72, Math.toRadians(180));
@@ -1502,7 +1530,6 @@ class VisionRelocalizationDebugOpMode extends OpMode {
         if (sampleRequested || forceRequested) {
             lastResult = relocalization.update(
                     currentPose,
-                    turret.getMeasuredAngleRadians(),
                     targetLocked || forceRequested,
                     now
             );
@@ -1552,13 +1579,6 @@ class VisionRelocalizationSubsystem {
     public static double minFieldCoordinateInches = -24.0;
     public static double maxFieldCoordinateInches = 168.0;
 
-    public static double turretPivotForwardInches = 0.0;
-    public static double turretPivotLeftInches = 0.0;
-    public static double cameraForwardFromTurretPivotInches = 0.0;
-    public static double cameraLeftFromTurretPivotInches = 0.0;
-    public static double limelightConfiguredForwardInches = 0.0;
-    public static double limelightConfiguredLeftInches = 0.0;
-
     private final Limelight3A limelight;
     private final Pinpoint pinpoint;
     private final Follower follower;
@@ -1575,7 +1595,6 @@ class VisionRelocalizationSubsystem {
 
     RelocalizationResult update(
             Pose currentPose,
-            double turretAngleRadians,
             boolean turretLocked,
             double nowSeconds
     ) {
@@ -1593,7 +1612,6 @@ class VisionRelocalizationSubsystem {
         return processResult(
                 limelight.getLatestResult(),
                 currentPose,
-                turretAngleRadians,
                 turretLocked,
                 nowSeconds
         );
@@ -1602,7 +1620,6 @@ class VisionRelocalizationSubsystem {
     RelocalizationResult processResult(
             LLResult result,
             Pose currentPose,
-            double turretAngleRadians,
             boolean turretLocked,
             double nowSeconds
     ) {
@@ -1631,11 +1648,11 @@ class VisionRelocalizationSubsystem {
             return reject("target area too small", tagSelection.trustedTagId);
         }
 
-        Pose rawPose = poseFromMeters(result.getBotpose_MT2(), currentPose.getHeading());
-        if (!isPoseFinite(rawPose)) {
+        Pose visionPose = poseFromMeters(result.getBotpose_MT2(), currentPose.getHeading());
+        if (!isPoseFinite(visionPose)) {
             return reject("invalid MT2 pose", tagSelection.trustedTagId);
         }
-        if (!isInsideFieldBounds(rawPose)) {
+        if (!isInsideFieldBounds(visionPose)) {
             return reject("MT2 pose outside field", tagSelection.trustedTagId);
         }
 
@@ -1643,22 +1660,21 @@ class VisionRelocalizationSubsystem {
             return reject("MT2 stddev too high", tagSelection.trustedTagId);
         }
 
-        Pose correctedPose = applyTurretCameraCorrection(rawPose, currentPose.getHeading(), turretAngleRadians);
-        double correctionDistance = currentPose.distanceFrom(correctedPose);
+        double correctionDistance = currentPose.distanceFrom(visionPose);
         if (correctionDistance > maxCorrectionDistanceInches) {
-            return reject("correction jump too large", tagSelection.trustedTagId, rawPose, correctedPose, correctionDistance);
+            return reject("correction jump too large", tagSelection.trustedTagId, visionPose, visionPose, correctionDistance);
         }
 
         if (pinpoint != null) {
-            pinpoint.setPosition(correctedPose);
+            pinpoint.setPosition(visionPose);
         }
         if (follower != null) {
-            follower.setPose(correctedPose);
+            follower.setPose(visionPose);
         }
 
         acceptedCount++;
         lastAcceptedTimeSeconds = nowSeconds;
-        return RelocalizationResult.accepted(tagSelection.trustedTagId, rawPose, correctedPose, correctionDistance);
+        return RelocalizationResult.accepted(tagSelection.trustedTagId, visionPose, visionPose, correctionDistance);
     }
 
     int getAcceptedCount() {
@@ -1672,32 +1688,6 @@ class VisionRelocalizationSubsystem {
     private Pose poseFromMeters(Pose3D pose3D, double headingRadians) {
         Position position = pose3D.getPosition().toUnit(DistanceUnit.INCH);
         return new Pose(position.x, position.y, headingRadians);
-    }
-
-    private Pose applyTurretCameraCorrection(Pose rawPose, double robotHeadingRadians, double turretAngleRadians) {
-        double cosTurret = Math.cos(turretAngleRadians);
-        double sinTurret = Math.sin(turretAngleRadians);
-
-        double actualCameraForward = turretPivotForwardInches
-                + cameraForwardFromTurretPivotInches * cosTurret
-                - cameraLeftFromTurretPivotInches * sinTurret;
-        double actualCameraLeft = turretPivotLeftInches
-                + cameraForwardFromTurretPivotInches * sinTurret
-                + cameraLeftFromTurretPivotInches * cosTurret;
-
-        double correctionForward = limelightConfiguredForwardInches - actualCameraForward;
-        double correctionLeft = limelightConfiguredLeftInches - actualCameraLeft;
-
-        double cosHeading = Math.cos(robotHeadingRadians);
-        double sinHeading = Math.sin(robotHeadingRadians);
-        double fieldCorrectionX = correctionForward * cosHeading - correctionLeft * sinHeading;
-        double fieldCorrectionY = correctionForward * sinHeading + correctionLeft * cosHeading;
-
-        return new Pose(
-                rawPose.getX() + fieldCorrectionX,
-                rawPose.getY() + fieldCorrectionY,
-                robotHeadingRadians
-        );
     }
 
     private boolean isPoseFinite(Pose pose) {
