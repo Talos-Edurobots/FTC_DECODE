@@ -111,7 +111,7 @@ public class Turret implements TelemetryProvider {
                 RobotConstants.TURRET_MIN_ANGLE_RADIANS,
                 RobotConstants.TURRET_MAX_ANGLE_RADIANS
         );
-        turret.setTargetAngle(Angle.fromRadians(toMotorRadians(targetMechanismAngleRadians)));
+        turret.setTargetAngle(Angle.fromRadians(toRawMotorRadians(targetMechanismAngleRadians)));
         if (controlMode != ControlMode.PROFILED) {
             turret.resetController();
             controlMode = ControlMode.PROFILED;
@@ -123,7 +123,7 @@ public class Turret implements TelemetryProvider {
     }
 
     public double getMeasuredAngleRadians() {
-        return turret.getMeasuredAngle().toRadians() / RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
+        return rawMotorRadiansToMechanismRadians(turret.getMeasuredAngle().toRadians());
     }
 
     public void lookToGoal(Pose pose, boolean isRed) {
@@ -156,10 +156,10 @@ public class Turret implements TelemetryProvider {
         applyProfileConfigurables();
         turret.init(hwmap);
         turret.setAngleLimits(
-                Angle.fromRadians(toMotorRadians(RobotConstants.TURRET_MIN_ANGLE_RADIANS)),
-                Angle.fromRadians(toMotorRadians(RobotConstants.TURRET_MAX_ANGLE_RADIANS))
+                Angle.fromRadians(toRawMotorRadians(RobotConstants.TURRET_MIN_ANGLE_RADIANS)),
+                Angle.fromRadians(toRawMotorRadians(RobotConstants.TURRET_MAX_ANGLE_RADIANS))
         );
-        faceForward();
+        setAngleRadians(RobotConstants.TURRET_MIN_ANGLE_RADIANS);
         loopTimer.reset();
     }
 
@@ -228,7 +228,7 @@ public class Turret implements TelemetryProvider {
                 scaledCoefficients.getMaxDeceleration()
         );
         turret.setTargetTolerance(Angle.fromRadians(
-                toMotorRadians(Math.toRadians(targetToleranceDegrees))
+                mechanismDeltaToMotorRadians(Math.toRadians(targetToleranceDegrees))
         ));
         turret.setMaxPower(maxPower);
     }
@@ -290,7 +290,7 @@ public class Turret implements TelemetryProvider {
                 targetMechanismAngleRadians,
                 lastAimPointX,
                 lastAimPointY,
-                turret.getMeasuredAngle().toRadians() / RobotConstants.TURRET_EXTERNAL_GEAR_RATIO,
+                getMeasuredAngleRadians(),
                 turretHardware.getVelocityTicksPerSecond(),
                 turret.getPower(),
                 encoderConverter.velocityToTicksPerSecond(turret.getReferenceState().getVelocity()),
@@ -342,7 +342,8 @@ public class Turret implements TelemetryProvider {
     }
 
     private double getTargetPositionTicks() {
-        return targetMechanismAngleRadians
+        return RobotConstants.TURRET_ZERO_OFFSET_TICKS
+                + targetMechanismAngleRadians
                 * RobotConstants.TURRET_MOTOR_TYPE.getTicksPerRadian()
                 * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
     }
@@ -381,18 +382,30 @@ public class Turret implements TelemetryProvider {
     }
 
     private double getMinAngleTicks() {
-        return RobotConstants.TURRET_MIN_ANGLE_RADIANS
+        return RobotConstants.TURRET_ZERO_OFFSET_TICKS
+                + RobotConstants.TURRET_MIN_ANGLE_RADIANS
                 * RobotConstants.TURRET_MOTOR_TYPE.getTicksPerRadian()
                 * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
     }
 
     private double getMaxAngleTicks() {
-        return RobotConstants.TURRET_MAX_ANGLE_RADIANS
+        return RobotConstants.TURRET_ZERO_OFFSET_TICKS
+                + RobotConstants.TURRET_MAX_ANGLE_RADIANS
                 * RobotConstants.TURRET_MOTOR_TYPE.getTicksPerRadian()
                 * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
     }
 
-    private double toMotorRadians(double mechanismRadians) {
+    private double toRawMotorRadians(double mechanismRadians) {
+        return RobotConstants.TURRET_ZERO_OFFSET_MOTOR_RADIANS
+                + mechanismRadians * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
+    }
+
+    private double rawMotorRadiansToMechanismRadians(double rawMotorRadians) {
+        return (rawMotorRadians - RobotConstants.TURRET_ZERO_OFFSET_MOTOR_RADIANS)
+                / RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
+    }
+
+    private double mechanismDeltaToMotorRadians(double mechanismRadians) {
         return mechanismRadians * RobotConstants.TURRET_EXTERNAL_GEAR_RATIO;
     }
 

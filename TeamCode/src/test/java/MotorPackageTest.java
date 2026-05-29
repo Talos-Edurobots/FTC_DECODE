@@ -51,7 +51,6 @@ public class MotorPackageTest {
     @Test
     public void encoderConverterConvertsAngleVelocityAndAcceleration() {
         EncoderConverter encoder = new EncoderConverter(GoBILDAMotorTypes.MOTOR_312_RPM);
-
         assertEquals(537.7, encoder.angleToTicks(Angle.fromDegrees(360)), 0.1);
         assertEquals(Math.toRadians(360), encoder.ticksToAngle(537.7).toRadians(), 1e-3);
         assertEquals(312.0, encoder.ticksPerSecondToVelocity(2800).toRpm(), 1.0);

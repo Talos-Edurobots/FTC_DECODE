@@ -61,6 +61,12 @@ public final class RobotConstants {
     public static final DcMotor.ZeroPowerBehavior TURRET_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.FLOAT;
     public static final double TURRET_EXTERNAL_GEAR_RATIO = 2.8;
+    public static final double TURRET_HARD_STOP_START_TICKS = -367.0;
+    public static final double TURRET_ZERO_OFFSET_TICKS = -TURRET_HARD_STOP_START_TICKS;
+    public static final double TURRET_ZERO_OFFSET_MOTOR_RADIANS =
+            TURRET_ZERO_OFFSET_TICKS / TURRET_MOTOR_TYPE.getTicksPerRadian();
+    public static final double TURRET_ZERO_OFFSET_MECHANISM_RADIANS =
+            TURRET_ZERO_OFFSET_MOTOR_RADIANS / TURRET_EXTERNAL_GEAR_RATIO;
     public static final MotionProfilingCoefficients TURRET_PROFILE_COEFFICIENTS =
             new MotionProfilingCoefficients(
                     new PIDFFCoefficients(0.068, 0, 0.002, 1.2, 0.005687094208999908, 0.0004),
@@ -69,7 +75,7 @@ public final class RobotConstants {
                     4500
             );
     public static final MotorLimits TURRET_LIMITS = new MotorLimits(1.0, Double.POSITIVE_INFINITY);
-    public static final double TURRET_MIN_ANGLE_RADIANS = Math.toRadians(-100);
+    public static final double TURRET_MIN_ANGLE_RADIANS = -TURRET_ZERO_OFFSET_MECHANISM_RADIANS;
     public static final double TURRET_MAX_ANGLE_RADIANS = Math.toRadians(120);
     public static final MotionProfilingCoefficients TURRET_CONFIGURABLE_PROFILE_DEFAULTS =
             new MotionProfilingCoefficients(

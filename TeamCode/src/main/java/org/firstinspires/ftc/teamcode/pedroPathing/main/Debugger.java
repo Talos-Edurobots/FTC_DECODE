@@ -976,6 +976,9 @@ class KeCharacterizationOpMode extends OpMode {
 class KaTestOpMode extends OpMode {
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private Turret turret;
+    static double position1 = 0;
+    static double position2 = 30;
+    private boolean goingToPos2 = true;
 
     public KaTestOpMode(MotorConfig motor) {
     }
@@ -991,22 +994,26 @@ class KaTestOpMode extends OpMode {
     @Override
     public void start() {
         turret.start();
+        goingToPos2 = true;
     }
 
     @Override
     public void loop() {
-        double stick = gamepad1.right_stick_x;
-        double targetRadians = stick >= 0
-                ? stick * RobotConstants.TURRET_MAX_ANGLE_RADIANS
-                : stick * Math.abs(RobotConstants.TURRET_MIN_ANGLE_RADIANS);
+        if (gamepad1.aWasPressed()) {
+            goingToPos2 ^= true;
+        }
 
+        double targetDegrees = goingToPos2 ? position2 : position1;
+        double targetRadians = Math.toRadians(targetDegrees);
         turret.setAngleRadians(targetRadians);
         turret.loop();
 
-        telemetryM.addLine("Use gamepad1 right stick X to command the turret");
-        telemetryM.addData("stick", stick);
+        telemetryM.addLine("Use gamepad1 A to switch turret target positions");
+        telemetryM.addData("active target", goingToPos2 ? "position2" : "position1");
+        telemetryM.addData("position1 degrees", position1);
+        telemetryM.addData("position2 degrees", position2);
         telemetryM.addData("target radians", targetRadians);
-        telemetryM.addData("target degrees", Math.toDegrees(targetRadians));
+        telemetryM.addData("target degrees", targetDegrees);
         telemetryM.addData("measured degrees", Math.toDegrees(turret.getMeasuredAngleRadians()));
         telemetryM.addData("min degrees", Math.toDegrees(RobotConstants.TURRET_MIN_ANGLE_RADIANS));
         telemetryM.addData("max degrees", Math.toDegrees(RobotConstants.TURRET_MAX_ANGLE_RADIANS));
