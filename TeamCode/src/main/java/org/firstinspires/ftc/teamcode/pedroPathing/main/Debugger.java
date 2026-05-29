@@ -974,104 +974,43 @@ class KeCharacterizationOpMode extends OpMode {
 
 @Configurable
 class KaTestOpMode extends OpMode {
-    MotorConfig motor;
-//    VoltageSensorReadout voltageSensor;
-    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    private Iterable<VoltageSensor> voltageSensors;
-    static double position1 = 0, position2 = 30;
-    boolean goingToPos2 = true;
-    private double lastTime = 0.0;
-    private double timer;
-    private static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc;
-    private int direction = 1;
-    static double maxPower = 1;
-    static double loopTime = 2;
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private Turret turret;
+
     public KaTestOpMode(MotorConfig motor) {
-        this.motor = motor;
-    }
-    static boolean logPoints = false;
-    public void log() {
-        double velocity = motor.getVelocity();
-        double appliedVoltage = motor.getPower() * getBatteryVoltage();
-        double current = motor.getCurrent();
-        double power = motor.getPower();
-        double position = motor.getCurrentPosition();
-        double xref = motor.getxRef();
-        double vref = motor.getvRef();
-        double aref = motor.getaRef();
-        double targetPos = motor.getTargetPositionTicks();
-
-
-        Log.d("KaTest", String.format("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f",
-                velocity, appliedVoltage, current, power, position, xref, vref, aref, targetPos, getRuntime())
-        );
     }
 
     @Override
     public void init() {
-//        voltageSensor.init(hardwareMap);
-        kp = motor.kP; ki = motor.kI; kd = motor.kD; ks = motor.kS; kv = motor.kV; ka = motor.kA;
-        maxPower = motor.maxPower;
-        maxVel = motor.maxVelocity;
-        maxAcc = motor.maxAcceleration;
-        voltageSensors = hardwareMap.voltageSensor;
-        Log.d("KaTest", "velocity,applied_voltage,current,power,position,xref,vref,aref,targetPos,time");
         PanelsConfigurables.INSTANCE.refreshClass(this);
-        motor.init(hardwareMap);
-    }
-    @Override
-    public void init_loop() {
-//        PanelsConfigurables.INSTANCE.refreshClass(this);
+        PanelsConfigurables.INSTANCE.refreshClass(Turret.class);
+        turret = new Turret(hardwareMap);
+        turret.init();
     }
 
     @Override
     public void start() {
-        lastTime = getRuntime();
-        timer = 0.0;
+        turret.start();
     }
 
     @Override
     public void loop() {
-        double now = getRuntime();
-        double dt = now - lastTime;
-        lastTime = now;
-        if (dt <= 0) return;
+        double stick = gamepad1.right_stick_x;
+        double targetRadians = stick >= 0
+                ? stick * RobotConstants.TURRET_MAX_ANGLE_RADIANS
+                : stick * Math.abs(RobotConstants.TURRET_MIN_ANGLE_RADIANS);
 
-        motor.setPIDFCoefficients(kp, ki, kd, ks, kv, ka);
-        motor.maxAcceleration = maxAcc;
-        motor.maxVelocity = maxVel;
-        motor.maxPower = maxPower;
-        if (gamepad1.aWasPressed()) {
-            goingToPos2 ^= true;
-        }
-        motor.setPositionInDegrees(goingToPos2? position2 : position1);
-        motor.updatePositionProfiledPIDF();
-        telemetryM.addData("power", motor.getPower());
-        telemetryM.addData("max power", motor.maxPower);
-        telemetryM.addData("velocity", motor.getVelocity());
-        telemetryM.addData("ref vel", motor.getvRef());
-        telemetryM.addData("position", motor.getCurrentPosition());
-        telemetryM.addData("ref pos", motor.getxRef());
-        telemetryM.addData("target pos", motor.getCurrentPosition());
-        telemetryM.addData("ref a", motor.getaRef());
-        telemetryM.addData("current", motor.getCurrent());
-        telemetryM.addData("dt", dt);
-        telemetryM.addData("timer", timer);
-        telemetryM.addData("ks", ks);
-        telemetryM.addData("ks motor", motor.kS);
+        turret.setAngleRadians(targetRadians);
+        turret.loop();
+
+        telemetryM.addLine("Use gamepad1 right stick X to command the turret");
+        telemetryM.addData("stick", stick);
+        telemetryM.addData("target radians", targetRadians);
+        telemetryM.addData("target degrees", Math.toDegrees(targetRadians));
+        telemetryM.addData("measured degrees", Math.toDegrees(turret.getMeasuredAngleRadians()));
+        telemetryM.addData("min degrees", Math.toDegrees(RobotConstants.TURRET_MIN_ANGLE_RADIANS));
+        telemetryM.addData("max degrees", Math.toDegrees(RobotConstants.TURRET_MAX_ANGLE_RADIANS));
         telemetryM.update(telemetry);
-        if (logPoints) log();
-    }
-
-    private double getBatteryVoltage() {
-        double minVoltage = Double.POSITIVE_INFINITY;
-        for (VoltageSensor sensor : voltageSensors) {
-            double voltage = sensor.getVoltage();
-            if (voltage > 0) {
-                minVoltage = Math.min(minVoltage, voltage);
-            }
-        }
-        return minVoltage < Double.POSITIVE_INFINITY ? minVoltage : 12.0;
     }
 }
 
@@ -1265,6 +1204,7 @@ class RampPowerOpMode extends OpMode {
         Shooter shooter;
         Gate gate;
         boolean lastRightTriggerPressed;
+        double lastLoopTime;
         @Override
         public void init() {
             runWithVel = true;
@@ -1272,15 +1212,20 @@ class RampPowerOpMode extends OpMode {
             intake.init();
             shooter = new Shooter(hardwareMap);
             shooter.init();
+            shooter.run(false);
             gate = new Gate();
             gate.init(hardwareMap);
+            lastLoopTime = getRuntime();
             telemetryM.addLine("init complete");
             telemetryM.update(telemetry);
-            Log.d("ThroughputTest", "isUsingController,shooter_velocity,shooter_power,time,intake_current,shooter_current,shooter_target");
+            Log.d("ThroughputTest", "isUsingController,shooter_velocity,shooter_power,time,intake_current,shooter_current,shooter2_current,battery_voltage,shooter_target");
         }
 
         @Override
         public void loop() {
+            double newTime = getRuntime();
+            double dt = newTime - lastLoopTime;
+            lastLoopTime = newTime;
             boolean rightTriggerPressed = gamepad1.right_trigger > TRIGGER_PRESS_THRESHOLD;
             boolean trigger = rightTriggerPressed && !lastRightTriggerPressed;
             lastRightTriggerPressed = rightTriggerPressed;
@@ -1296,16 +1241,15 @@ class RampPowerOpMode extends OpMode {
             if (gamepad1.aWasPressed()) intake.setCurrentState(Intake.IntakeState.INTAKE);
             else if (gamepad1.bWasPressed()) intake.setCurrentState(Intake.IntakeState.STOP);
 
-            Shooter.targetVelocity = velocity;
+            Shooter.setTargetVelocity(velocity);
+            double mult = gamepad1.dpad_right ? 1: -(gamepad1.dpad_left ? 1 : 0);
+            shooter.setHoodAngle(shooter.getHoodAngle() + mult * dt);
             if (runWithVel) {
                 shooter.run(true);
                 shooter.update();
             }
             else {
-                shooter.run(false);
-                double ffPower = (RobotConstants.SHOOTER_VELOCITY_PIDF.ks() * Math.signum(velocity)
-                        + RobotConstants.SHOOTER_VELOCITY_PIDF.kv() * velocity) / 12.0;
-                shooter.setPower(ffPower);
+                shooter.updateOpenLoopFeedforward();
             }
 
             intake.update();
@@ -1313,10 +1257,14 @@ class RampPowerOpMode extends OpMode {
             telemetryM.addData("shooter enabled", shooter.getRun());
             telemetryM.addData("shooter velocity", shooter.getVelocity());
             telemetryM.addData("shooter power", shooter.getPower());
+            telemetryM.addData("shooter target", shooter.getTargetVelocity());
+            telemetryM.addData("shooter current", shooter.getCurrent1());
+            telemetryM.addData("shooter2 current", shooter.getCurrent2());
+            telemetryM.addData("battery voltage", shooter.getBatteryVoltage());
             telemetryM.update(telemetry);
         }
         public void log() {
-            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWithVel, shooter.getVelocity(), shooter.getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent1(), Shooter.targetVelocity));
+            Log.d("ThroughputTest", String.format("%b,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%f", runWithVel, shooter.getVelocity(), shooter.getPower(), getRuntime(), intake.getCurrent(), shooter.getCurrent1(), shooter.getCurrent2(), shooter.getBatteryVoltage(), shooter.getTargetVelocity()));
         }
     }
 

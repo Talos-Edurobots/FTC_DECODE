@@ -34,6 +34,7 @@ public class Shooter implements TelemetryProvider {
     private final ElapsedTime loopTimer = new ElapsedTime();
     private final LoopState loopState = new LoopState();
     private final ThrottledValue<Double> currentSampler = new ThrottledValue<>(0.1);
+    private final ThrottledValue<Double> followerCurrentSampler = new ThrottledValue<>(0.1);
 
     public boolean isImpactDetected() {
         return impactDetected;
@@ -84,6 +85,13 @@ public class Shooter implements TelemetryProvider {
         shooterMotor.setTargetVelocityTicksPerSecond(targetVelocity);
         calculateFilteredVelocity();
         setVelocity();
+    }
+    public void updateOpenLoopFeedforward() {
+        dt = loopTimer.seconds();
+        loopTimer.reset();
+        calculateFilteredVelocity();
+        isRunning = true;
+        setPower(calculateOpenLoopFeedforwardPower(targetVelocity));
     }
     public double getImpactTime() {
         return impactTimer.seconds();
@@ -139,6 +147,12 @@ public class Shooter implements TelemetryProvider {
         setPower(0);
     }
 
+    private double calculateOpenLoopFeedforwardPower(double targetVelocityTicksPerSecond) {
+        return (RobotConstants.SHOOTER_VELOCITY_PIDF.ks() * Math.signum(targetVelocityTicksPerSecond)
+                + RobotConstants.SHOOTER_VELOCITY_PIDF.kv() * targetVelocityTicksPerSecond)
+                / getBatteryVoltage();
+    }
+
     public double getVelocity() {
         return shooterMotor.getMeasuredVelocityTicksPerSecond();
     }
@@ -151,9 +165,16 @@ public class Shooter implements TelemetryProvider {
         return shooterMotor.getCurrentAmps();
     }
 
+    public double getCurrent2() {
+        return shooterFollowerMotor.getCurrentAmps();
+    }
+
     public ShooterTelemetrySnapshot getTelemetrySnapshot(TelemetryMode mode, double nowSeconds) {
         Double currentAmps = mode.includes(TelemetryMode.DEBUG)
                 ? currentSampler.get(nowSeconds, shooterMotor::getCurrentAmps)
+                : null;
+        Double followerCurrentAmps = mode.includes(TelemetryMode.DEBUG)
+                ? followerCurrentSampler.get(nowSeconds, shooterFollowerMotor::getCurrentAmps)
                 : null;
         return new ShooterTelemetrySnapshot(
                 targetVelocity,
@@ -165,7 +186,9 @@ public class Shooter implements TelemetryProvider {
                 isBusy(),
                 impactDetected,
                 shooterMotor.getHardware().isOverCurrent(),
-                currentAmps
+                currentAmps,
+                followerCurrentAmps,
+                getBatteryVoltage()
         );
     }
 
@@ -193,9 +216,13 @@ public class Shooter implements TelemetryProvider {
                 TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("shooter", "current_amps", snapshot.currentAmps,
                 TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);
+        collector.add("shooter", "follower_current_amps", snapshot.followerCurrentAmps,
+                TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);
+        collector.add("shooter", "battery_voltage", snapshot.batteryVoltage,
+                TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);
     }
 
-    private double getBatteryVoltage() {
+    public double getBatteryVoltage() {
         double minVoltage = Double.POSITIVE_INFINITY;
         for (VoltageSensor sensor : hwmap.voltageSensor) {
             double voltage = sensor.getVoltage();

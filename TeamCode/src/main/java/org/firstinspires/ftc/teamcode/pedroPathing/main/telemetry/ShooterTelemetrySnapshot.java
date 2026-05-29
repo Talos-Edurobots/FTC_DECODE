@@ -11,6 +11,8 @@ public final class ShooterTelemetrySnapshot {
     public final boolean impactDetected;
     public final boolean overCurrent;
     public final Double currentAmps;
+    public final Double followerCurrentAmps;
+    public final double batteryVoltage;
 
     public ShooterTelemetrySnapshot(double targetVelocityTicksPerSecond,
                                     double measuredVelocityTicksPerSecond,
@@ -21,7 +23,9 @@ public final class ShooterTelemetrySnapshot {
                                     boolean busy,
                                     boolean impactDetected,
                                     boolean overCurrent,
-                                    Double currentAmps) {
+                                    Double currentAmps,
+                                    Double followerCurrentAmps,
+                                    double batteryVoltage) {
         this.targetVelocityTicksPerSecond = targetVelocityTicksPerSecond;
         this.measuredVelocityTicksPerSecond = measuredVelocityTicksPerSecond;
         this.filteredVelocityTicksPerSecond = filteredVelocityTicksPerSecond;
@@ -32,5 +36,7 @@ public final class ShooterTelemetrySnapshot {
         this.impactDetected = impactDetected;
         this.overCurrent = overCurrent;
         this.currentAmps = currentAmps;
+        this.followerCurrentAmps = followerCurrentAmps;
+        this.batteryVoltage = batteryVoltage;
     }
 }

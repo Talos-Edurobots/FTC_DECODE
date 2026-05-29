@@ -266,14 +266,14 @@ public class MainTeleOp implements TelemetryProvider {
             slowMode ^= true;
         }
         double mult = slowMode ? 0.25 : 1;
-        double forward = opMode.gamepad1.left_stick_y * mult;
+        double forward = -opMode.gamepad1.left_stick_y * mult;
         double strafe = opMode.gamepad1.left_stick_x * mult;
-        double rotate = -opMode.gamepad1.right_stick_x * mult;
+        double rotate = opMode.gamepad1.right_stick_x * mult;
         double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
         lastHeadingRadians = heading;
 
         if (!automatedDrive) {
-            drivetrain.FieldCentricAccelerationDrive(forward, strafe, rotate, heading, mult, dt);
+            drivetrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, mult, dt);
         }
         follower.update();
         telemetryHub.publish(telemetryM, telemetry, newTime);
