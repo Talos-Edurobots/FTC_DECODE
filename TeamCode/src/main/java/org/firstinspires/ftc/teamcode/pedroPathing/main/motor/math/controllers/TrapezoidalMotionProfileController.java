@@ -51,7 +51,7 @@ public class TrapezoidalMotionProfileController implements MotorController{
 
         if (Math.signum(vRefRad) == Math.signum(remaining) &&
                 Math.abs(remaining) <= stoppingDistance) {
-            aRef = -Math.signum(velocity) * maxDeceleration;
+            aRef = -Math.signum(vRefRad) * maxDeceleration;
         } else {
             aRef = Math.signum(remaining) * maxAcceleration;
         }

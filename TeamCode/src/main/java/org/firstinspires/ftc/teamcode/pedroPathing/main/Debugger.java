@@ -40,6 +40,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Pinpoint;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ShooterHoodLuts;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryMode;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TurretTelemetrySnapshot;
 
 import java.util.List;
 
@@ -78,7 +80,7 @@ public class Debugger extends SelectableOpMode {
             s.folder("ke characterization", kect -> {
                 kect.add("shooter ke", KeCharacterizationOpMode::new);
 //                kect.add("intake ke", () -> new KeCharacterizationOpMode(LegacyMotorConfigs.intake()));
-//                kect.add("turret ke", () -> new KeCharacterizationOpMode(LegacyMotorConfigs.turret()));
+                kect.add("turret ke", () -> new KeCharacterizationOpMode(LegacyMotorConfigs.turret()));
             });
             s.folder("high level", hlt -> {
                 hlt.add("flicker analog control", FlickerAnalogControl::new);
@@ -511,6 +513,7 @@ class MotorPowerTest extends OpMode {
 
     private double maxVelocity = 0;
     private static double mult = 1;
+    private static final double TRIGGER_DEADBAND = 0.03;
 
     @Override
     public void init() {
@@ -537,7 +540,8 @@ class MotorPowerTest extends OpMode {
             motor.setDirection(motor.getDirection() == DcMotor.Direction.FORWARD ? DcMotor.Direction.REVERSE : DcMotor.Direction.FORWARD);
         }
         // Set power via triggers
-        double power = mult * (gamepad1.right_trigger - gamepad1.left_trigger);
+        double rawPower = gamepad1.right_trigger - gamepad1.left_trigger;
+        double power = Math.abs(rawPower) < TRIGGER_DEADBAND ? 0.0 : mult * rawPower;
         motor.setPower(power);
 
         double currentVelocity = motor.getVelocity();
@@ -547,6 +551,7 @@ class MotorPowerTest extends OpMode {
         telemetryM.addLine("press Y to reverse direction");
         telemetryM.addLine("-----------------------------");
         telemetryM.addData("Power", power);
+        telemetryM.addData("Raw Power", rawPower);
         telemetryM.addData("Velocity", currentVelocity);
         telemetryM.addData("motor pos", motor.getCurrentPosition());
         telemetryM.addData("current Direction", motor.getDirection().toString());
@@ -876,55 +881,161 @@ class HangControl extends OpMode {
 
 @Configurable
 class KeCharacterizationOpMode extends OpMode {
-    Shooter shooter;
-    private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    static int SAMPLES = 10;
-    static double maxPower = 1;
-    double[] powerLevels = new double[SAMPLES];
-    {
-        for (int i = 1; i <= SAMPLES; i++) {
-            powerLevels[i-1] = i * maxPower * (1.0 / (SAMPLES));
+    private interface CharacterizedMechanism {
+        void init(HardwareMap hardwareMap);
+        void setPower(double power);
+        double getVelocity();
+        double getPower();
+        MotorUse getMotorUse();
+        String getName();
+        String getDescription();
+    }
+
+    private static class ShooterMechanism implements CharacterizedMechanism {
+        private Shooter shooter;
+
+        @Override
+        public void init(HardwareMap hardwareMap) {
+            shooter = new Shooter(hardwareMap);
+            shooter.init();
+        }
+
+        @Override
+        public void setPower(double power) {
+            shooter.setPower(power);
+        }
+
+        @Override
+        public double getVelocity() {
+            return shooter.getVelocity();
+        }
+
+        @Override
+        public double getPower() {
+            return shooter.getPower();
+        }
+
+        @Override
+        public MotorUse getMotorUse() {
+            return MotorUse.FREE_SPIN;
+        }
+
+        @Override
+        public String getName() {
+            return "shooter";
+        }
+
+        @Override
+        public String getDescription() {
+            return "Powers both shooter motors through the Shooter subsystem";
         }
     }
+
+    private static class MotorConfigMechanism implements CharacterizedMechanism {
+        private final MotorConfig motor;
+
+        MotorConfigMechanism(MotorConfig motor) {
+            this.motor = motor;
+        }
+
+        @Override
+        public void init(HardwareMap hardwareMap) {
+            motor.init(hardwareMap);
+        }
+
+        @Override
+        public void setPower(double power) {
+            motor.maxPower = Math.abs(maxPower);
+            motor.setPower(power);
+        }
+
+        @Override
+        public double getVelocity() {
+            return motor.getVelocity();
+        }
+
+        @Override
+        public double getPower() {
+            return motor.getPower();
+        }
+
+        @Override
+        public MotorUse getMotorUse() {
+            return motor.getMotorUse();
+        }
+
+        @Override
+        public String getName() {
+            return motor.getHardwareName();
+        }
+
+        @Override
+        public String getDescription() {
+            return "Powers one configured motor directly";
+        }
+    }
+
+    private final CharacterizedMechanism mechanism;
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    static int SAMPLES = 10;
+    static double maxPower = 1;
+    double[] powerLevels = new double[0];
     int index = 0;
     double lastVelocity = 0.0;
-    long stableStartTime = 0;
-    boolean steady = false;
     String TAG = "KeChar";
     ElapsedTime timer = new ElapsedTime();
 
+    public KeCharacterizationOpMode() {
+        this(new ShooterMechanism());
+    }
+
+    public KeCharacterizationOpMode(MotorConfig motor) {
+        this(new MotorConfigMechanism(motor));
+    }
+
+    private KeCharacterizationOpMode(CharacterizedMechanism mechanism) {
+        this.mechanism = mechanism;
+    }
+
     @Override
     public void init() {
+        TAG = "KeChar";
         Log.d(TAG, "velocity,applied_voltage");
-        shooter = new Shooter(hardwareMap);
-        shooter.init();
+        mechanism.init(hardwareMap);
     }
     @Override
     public void init_loop() {
         telemetryM.addLine("Ke Characterization Ready");
-//        telemetryM.addLine((shooter.getMotorUse() == MotorUse.DRIVETRAIN) ? "WARNING: RUN THIS ONLY IF THE ROBOT IS ELEVATED OFF THE GROUND, OR PLACED SIDEWAYS":"");
-//        telemetryM.addLine((shooter.getMotorUse() == MotorUse.MECHANICAL_STOP) ? "WARNING: THIS MOTOR RUNS WITHOUT ENCODER FEEDBACK AND IT MAY DAMAGE MECHANICAL PARTS IF MISUSED":"");
+        telemetryM.addData("mechanism", mechanism.getName());
+        telemetryM.addLine(mechanism.getDescription());
+        if (mechanism.getMotorUse() == MotorUse.DRIVETRAIN) {
+            telemetryM.addLine("WARNING: RUN THIS ONLY IF THE ROBOT IS ELEVATED OFF THE GROUND, OR PLACED SIDEWAYS");
+        } else if (mechanism.getMotorUse() == MotorUse.MECHANICAL_STOP) {
+            telemetryM.addLine("WARNING: THIS MOTOR MAY HIT A MECHANICAL STOP IF MISUSED");
+        }
         telemetryM.update(telemetry);
     }
 
     @Override
     public void start() {
         index = 0;
+        buildPowerLevels();
         applyPower();
-        lastVelocity = shooter.getVelocity();
+        lastVelocity = mechanism.getVelocity();
         timer.reset();
     }
 
     @Override
     public void loop() {
         if (index >= powerLevels.length) {
-            shooter.setPower(0);
+            mechanism.setPower(0);
             telemetryM.addLine("Done");
             telemetryM.addData("LogCat tag", TAG);
+            telemetryM.update(telemetry);
             return;
         }
 
-        double currentVelocity = shooter.getVelocity();
+        double currentVelocity = mechanism.getVelocity();
         double dt = Math.max(timer.seconds(), 1e-6);
         double accel = (currentVelocity - lastVelocity) / dt; // ~20ms loop
 
@@ -937,25 +1048,43 @@ class KeCharacterizationOpMode extends OpMode {
         lastVelocity = currentVelocity;
 
         telemetryM.addData("Index", index);
+        telemetryM.addData("Mechanism", mechanism.getName());
+        telemetryM.addData("Power", mechanism.getPower());
         telemetryM.addData("Velocity (ticks/s)", currentVelocity);
         telemetryM.addData("Accel (ticks/s^2)", accel);
+        telemetryM.addLine("Press Y to log this point and move to the next power level");
 
         telemetryM.update(telemetry);
         timer.reset();
     }
 
+    @Override
+    public void stop() {
+        mechanism.setPower(0);
+    }
+
+    private void buildPowerLevels() {
+        int sampleCount = Math.max(1, SAMPLES);
+        double clippedMaxPower = Math.max(0, Math.min(1, maxPower));
+        powerLevels = new double[sampleCount];
+        for (int i = 1; i <= sampleCount; i++) {
+            powerLevels[i - 1] = i * clippedMaxPower / sampleCount;
+        }
+    }
+
     private void applyPower() {
         if (index < powerLevels.length) {
-            shooter.setPower(powerLevels[index]);
+            mechanism.setPower(powerLevels[index]);
         }
     }
 
     private void logPoint() {
-        double velocity = shooter.getVelocity();
+        double velocity = mechanism.getVelocity();
         double batteryVoltage = getBatteryVoltage();
         double appliedVoltage = powerLevels[index] * batteryVoltage;
 
         telemetryM.addLine("=== DATA POINT ===");
+        telemetryM.addData("Mechanism", mechanism.getName());
         telemetryM.addData("Power", powerLevels[index]);
         telemetryM.addData("Velocity (ticks/s)", velocity);
         telemetryM.addData("Battery Voltage (V)", batteryVoltage);
@@ -973,60 +1102,11 @@ class KeCharacterizationOpMode extends OpMode {
 }
 
 @Configurable
-class KaTestOpMode extends OpMode {
-    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    private Turret turret;
-    static double position1 = 0;
-    static double position2 = 30;
-    private boolean goingToPos2 = true;
-
-    public KaTestOpMode(MotorConfig motor) {
-    }
-
-    @Override
-    public void init() {
-        PanelsConfigurables.INSTANCE.refreshClass(this);
-        PanelsConfigurables.INSTANCE.refreshClass(Turret.class);
-        turret = new Turret(hardwareMap);
-        turret.init();
-    }
-
-    @Override
-    public void start() {
-        turret.start();
-        goingToPos2 = true;
-    }
-
-    @Override
-    public void loop() {
-        if (gamepad1.aWasPressed()) {
-            goingToPos2 ^= true;
-        }
-
-        double targetDegrees = goingToPos2 ? position2 : position1;
-        double targetRadians = Math.toRadians(targetDegrees);
-        turret.setAngleRadians(targetRadians);
-        turret.loop();
-
-        telemetryM.addLine("Use gamepad1 A to switch turret target positions");
-        telemetryM.addData("active target", goingToPos2 ? "position2" : "position1");
-        telemetryM.addData("position1 degrees", position1);
-        telemetryM.addData("position2 degrees", position2);
-        telemetryM.addData("target radians", targetRadians);
-        telemetryM.addData("target degrees", targetDegrees);
-        telemetryM.addData("measured degrees", Math.toDegrees(turret.getMeasuredAngleRadians()));
-        telemetryM.addData("min degrees", Math.toDegrees(RobotConstants.TURRET_MIN_ANGLE_RADIANS));
-        telemetryM.addData("max degrees", Math.toDegrees(RobotConstants.TURRET_MAX_ANGLE_RADIANS));
-        telemetryM.update(telemetry);
-    }
-}
-
-@Configurable
 class TurretStickTeleOp extends OpMode {
+
     private final MotorConfig motor;
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private Turret turret;
-
     public TurretStickTeleOp(MotorConfig motor) {
         this.motor = motor;
     }
@@ -1061,6 +1141,113 @@ class TurretStickTeleOp extends OpMode {
         telemetryM.addData("min degrees", Math.toDegrees(RobotConstants.TURRET_MIN_ANGLE_RADIANS));
         telemetryM.addData("max degrees", Math.toDegrees(RobotConstants.TURRET_MAX_ANGLE_RADIANS));
         telemetryM.update(telemetry);
+    }
+
+}
+@Configurable
+class KaTestOpMode extends OpMode {
+    public static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc, maxDec, maxPower;
+    public static boolean feedforwardEnabled = true;
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private Turret turret;
+    public static double position1 = 0;
+    public static double position2 = 30;
+    private boolean goingToPos2 = true;
+    private double originalKp, originalKi, originalKd, originalKs, originalKv, originalKa;
+    private double originalMaxVel, originalMaxAcc, originalMaxDec, originalMaxPower;
+
+    public KaTestOpMode(MotorConfig motor) {
+    }
+
+    @Override
+    public void init() {
+        originalKp = Turret.getKp(); originalKi = Turret.getKi(); originalKd = Turret.getKd();
+        originalKs = Turret.getKs(); originalKv = Turret.getKv(); originalKa = Turret.getKa();
+        originalMaxPower = Turret.getMaxPower();
+        originalMaxVel = Turret.getMaxVel();
+        originalMaxAcc = Turret.getMaxAcc();
+        originalMaxDec = Turret.getMaxDec();
+        kp = Turret.getKp(); ki = Turret.getKi(); kd = Turret.getKd(); ks = Turret.getKs(); kv = Turret.getKv(); ka = Turret.getKa();
+        maxPower = Turret.getMaxPower();
+        maxVel = Turret.getMaxVel();
+        maxAcc = Turret.getMaxAcc();
+        maxDec = Turret.getMaxDec();
+        PanelsConfigurables.INSTANCE.refreshClass(this);
+        applyTuningConfigurables();
+        turret = new Turret(hardwareMap);
+        turret.init();
+    }
+
+    @Override
+    public void start() {
+        turret.start();
+        goingToPos2 = true;
+    }
+
+    @Override
+    public void loop() {
+        if (gamepad1.aWasPressed()) {
+            goingToPos2 ^= true;
+        }
+
+        double targetDegrees = goingToPos2 ? position2 : position1;
+        double targetRadians = Math.toRadians(targetDegrees);
+        applyTuningConfigurables();
+        turret.setAngleRadians(targetRadians);
+        turret.loop();
+        TurretTelemetrySnapshot snapshot = turret.getTelemetrySnapshot(TelemetryMode.DEBUG, getRuntime());
+
+        telemetryM.addLine("Use gamepad1 A to switch turret target positions");
+        telemetryM.addData("active target", goingToPos2 ? "position2" : "position1");
+        telemetryM.addData("position1 degrees", position1);
+        telemetryM.addData("position2 degrees", position2);
+        telemetryM.addData("aRef", snapshot.referenceAccelerationTicksPerSecondSquared);
+        telemetryM.addData("vRef", snapshot.referenceVelocityTicksPerSecond);
+        telemetryM.addData("xRef", snapshot.referencePositionTicks);
+        telemetryM.addData("current position", snapshot.positionTicks);
+        telemetryM.addData("current velocity", snapshot.measuredVelocityTicksPerSecond);
+        telemetryM.addData("current", snapshot.currentAmps);
+        telemetryM.addData("power", snapshot.appliedPower);
+        telemetryM.addData("feedforward enabled", feedforwardEnabled);
+        telemetryM.addData("kp", kp);
+        telemetryM.addData("ki", ki);
+        telemetryM.addData("kd", kd);
+        telemetryM.addData("ks", feedforwardEnabled ? ks : 0.0);
+        telemetryM.addData("kv", feedforwardEnabled ? kv : 0.0);
+        telemetryM.addData("ka", feedforwardEnabled ? ka : 0.0);
+        telemetryM.addData("target radians", targetRadians);
+        telemetryM.addData("target degrees", targetDegrees);
+        telemetryM.addData("measured degrees", Math.toDegrees(turret.getMeasuredAngleRadians()));
+        telemetryM.addData("min degrees", Math.toDegrees(RobotConstants.TURRET_MIN_ANGLE_RADIANS));
+        telemetryM.addData("max degrees", Math.toDegrees(RobotConstants.TURRET_MAX_ANGLE_RADIANS));
+        telemetryM.update(telemetry);
+    }
+
+    private void applyTuningConfigurables() {
+        Turret.setKp(kp);
+        Turret.setKi(ki);
+        Turret.setKd(kd);
+        Turret.setKs(feedforwardEnabled ? ks : 0.0);
+        Turret.setKv(feedforwardEnabled ? kv : 0.0);
+        Turret.setKa(feedforwardEnabled ? ka : 0.0);
+        Turret.setMaxVel(maxVel);
+        Turret.setMaxAcc(maxAcc);
+        Turret.setMaxDec(maxDec);
+        Turret.setMaxPower(maxPower);
+    }
+
+    @Override
+    public void stop() {
+        Turret.setKp(originalKp);
+        Turret.setKi(originalKi);
+        Turret.setKd(originalKd);
+        Turret.setKs(originalKs);
+        Turret.setKv(originalKv);
+        Turret.setKa(originalKa);
+        Turret.setMaxVel(originalMaxVel);
+        Turret.setMaxAcc(originalMaxAcc);
+        Turret.setMaxDec(originalMaxDec);
+        Turret.setMaxPower(originalMaxPower);
     }
 }
 

@@ -48,6 +48,47 @@ public class Turret implements TelemetryProvider {
 
     static double maxPower = RobotConstants.TURRET_LIMITS.getMaxPower();
     static double kp = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().kp();
+
+    public static void setMaxPower(double maxPower) {
+        Turret.maxPower = maxPower;
+    }
+
+    public static void setKp(double kp) {
+        Turret.kp = kp;
+    }
+
+    public static void setKi(double ki) {
+        Turret.ki = ki;
+    }
+
+    public static void setKd(double kd) {
+        Turret.kd = kd;
+    }
+
+    public static void setKs(double ks) {
+        Turret.ks = ks;
+    }
+
+    public static void setKv(double kv) {
+        Turret.kv = kv;
+    }
+
+    public static void setKa(double ka) {
+        Turret.ka = ka;
+    }
+
+    public static void setMaxVel(double maxVel) {
+        Turret.maxVel = maxVel;
+    }
+
+    public static void setMaxAcc(double maxAcc) {
+        Turret.maxAcc = maxAcc;
+    }
+
+    public static void setMaxDec(double maxDec) {
+        Turret.maxDec = maxDec;
+    }
+
     static double ki = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().ki();
     static double kd = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().kd();
     static double ks = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().ks();
@@ -57,6 +98,47 @@ public class Turret implements TelemetryProvider {
     static double maxAcc = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getMaxAcceleration();
     static double maxDec = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getMaxDeceleration();
     public static double targetToleranceDegrees = 1.0;
+
+    public static double getMaxPower() {
+        return maxPower;
+    }
+
+    public static double getKp() {
+        return kp;
+    }
+
+    public static double getKi() {
+        return ki;
+    }
+
+    public static double getKd() {
+        return kd;
+    }
+
+    public static double getKs() {
+        return ks;
+    }
+
+    public static double getKv() {
+        return kv;
+    }
+
+    public static double getKa() {
+        return ka;
+    }
+
+    public static double getMaxVel() {
+        return maxVel;
+    }
+
+    public static double getMaxAcc() {
+        return maxAcc;
+    }
+
+    public static double getMaxDec() {
+        return maxDec;
+    }
+
     static double manualMaxPower = .2, ramp = 1;
     public static double movingShotLeadFactor = 0.01;
     public static boolean positionAimLutEnabled = true;
@@ -290,9 +372,11 @@ public class Turret implements TelemetryProvider {
                 targetMechanismAngleRadians,
                 lastAimPointX,
                 lastAimPointY,
+                positionTicks,
                 getMeasuredAngleRadians(),
                 turretHardware.getVelocityTicksPerSecond(),
                 turret.getPower(),
+                encoderConverter.angleToTicks(turret.getReferenceState().getPosition()),
                 encoderConverter.velocityToTicksPerSecond(turret.getReferenceState().getVelocity()),
                 encoderConverter.accelerationToTicksPerSecondSquared(
                         turret.getReferenceState().getAcceleration()
@@ -314,6 +398,8 @@ public class Turret implements TelemetryProvider {
                 TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("turret", "measured_rad", snapshot.measuredAngleRadians,
                 TelemetryMode.DEBUG, TelemetryCostClass.BULK_CACHED);
+        collector.add("turret", "position_ticks", snapshot.positionTicks,
+                TelemetryMode.DEBUG, TelemetryCostClass.BULK_CACHED);
         collector.add("turret", "angle_to_goal_rad", snapshot.angleToGoalRadians,
                 TelemetryMode.DEBUG, TelemetryCostClass.FORMATTED);
         collector.add("turret", "lut_enabled", snapshot.lutEnabled,
@@ -327,6 +413,8 @@ public class Turret implements TelemetryProvider {
         collector.add("turret", "velocity_tps", snapshot.measuredVelocityTicksPerSecond,
                 TelemetryMode.DEBUG, TelemetryCostClass.BULK_CACHED);
         collector.add("turret", "power", snapshot.appliedPower,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "reference_position_ticks", snapshot.referencePositionTicks,
                 TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("turret", "reference_velocity_tps", snapshot.referenceVelocityTicksPerSecond,
                 TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);

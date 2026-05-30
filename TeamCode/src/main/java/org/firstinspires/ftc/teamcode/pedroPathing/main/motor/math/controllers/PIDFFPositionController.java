@@ -74,7 +74,7 @@ public class PIDFFPositionController implements MotorController{
                         coef.kv() * vRef +
                         coef.ka() * aRef;
 
-        return pid + ff * feedforwardScale;
+        return (pid + ff) * feedforwardScale;
     }
 
     public void reset() {

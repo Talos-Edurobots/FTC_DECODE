@@ -130,8 +130,8 @@ public class MotorPackageTest {
         double output = controller.update(reference, current, 0.5, 0.25, 1.0);
 
         double expectedPid = 2.0 * 1.0 + 0.5 * 0.5 + 3.0 * 2.0;
-        double expectedFf = (0.2 + 0.7 * 5.0 + 0.9 * 7.0) * 0.25;
-        assertEquals(expectedPid + expectedFf, output, 1e-9);
+        double expectedFf = 0.2 + 0.7 * 5.0 + 0.9 * 7.0;
+        assertEquals((expectedPid + expectedFf) * 0.25, output, 1e-9);
     }
 
     @Test
@@ -254,6 +254,36 @@ public class MotorPackageTest {
         assertEquals(3.0, reference.getPosition().toRadians(), 1e-9);
         assertEquals(1.5, reference.getVelocity().toRadPerSec(), 1e-9);
         assertEquals(-0.5, reference.getAcceleration(), 1e-9);
+    }
+
+    @Test
+    public void trapezoidalProfileDeceleratesAgainstReferenceVelocity() {
+        TrapezoidalMotionProfileController controller =
+                new TrapezoidalMotionProfileController(
+                        new MotionProfilingCoefficients(
+                                new PIDFFCoefficients(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                                10.0,
+                                2.0
+                        )
+                );
+        MotionState measured = new MotionState(
+                Angle.fromRadians(9.8),
+                AngularVelocity.fromRadPerSec(-0.5),
+                0.0
+        );
+        controller.reset(new MotionState(
+                Angle.fromRadians(9.8),
+                AngularVelocity.fromRadPerSec(2.0),
+                0.0
+        ));
+
+        controller.update(
+                new MotionState(Angle.fromRadians(10.0), AngularVelocity.fromRadPerSec(0.0), 0.0),
+                measured,
+                0.1
+        );
+
+        assertEquals(-2.0, controller.getReferenceState().getAcceleration(), 1e-9);
     }
 
     @Test
