@@ -37,12 +37,23 @@ public class VelocityControlledMotor {
                                    DcMotor.ZeroPowerBehavior zeroPowerBehavior,
                                    PIDFFCoefficients coefficients,
                                    MotorLimits limits) {
+        this(hardwareName, motorType, direction, zeroPowerBehavior, coefficients, limits, 0.0);
+    }
+
+    public VelocityControlledMotor(String hardwareName,
+                                   GoBILDAMotorTypes motorType,
+                                   DcMotorSimple.Direction direction,
+                                   DcMotor.ZeroPowerBehavior zeroPowerBehavior,
+                                   PIDFFCoefficients coefficients,
+                                   MotorLimits limits,
+                                   double powerWriteEpsilon) {
         this(new MetaMotor(), motorType, coefficients);
         hardware.hwName(hardwareName);
         hardware.direction(direction);
         hardware.zeroPowerBehavior(zeroPowerBehavior);
         hardware.maxPower(limits.getMaxPower());
         hardware.currentAlert(limits.getCurrentAlertAmps());
+        hardware.powerWriteEpsilon(powerWriteEpsilon);
     }
 
     public VelocityControlledMotor(MetaMotor hardware,
@@ -61,6 +72,26 @@ public class VelocityControlledMotor {
             PIDFFCoefficients legacyCoefficients,
             MotorLimits limits
     ) {
+        return fromLegacyTickCoefficients(
+                hardwareName,
+                motorType,
+                direction,
+                zeroPowerBehavior,
+                legacyCoefficients,
+                limits,
+                0.0
+        );
+    }
+
+    public static VelocityControlledMotor fromLegacyTickCoefficients(
+            String hardwareName,
+            GoBILDAMotorTypes motorType,
+            DcMotorSimple.Direction direction,
+            DcMotor.ZeroPowerBehavior zeroPowerBehavior,
+            PIDFFCoefficients legacyCoefficients,
+            MotorLimits limits,
+            double powerWriteEpsilon
+    ) {
         EncoderConverter encoderConverter = new EncoderConverter(motorType);
         PIDFFCoefficients scaledCoefficients =
                 MotorCoefficientScaler.fromLegacyTickSpace(legacyCoefficients, encoderConverter);
@@ -70,7 +101,8 @@ public class VelocityControlledMotor {
                 direction,
                 zeroPowerBehavior,
                 scaledCoefficients,
-                limits
+                limits,
+                powerWriteEpsilon
         );
     }
 

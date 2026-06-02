@@ -20,7 +20,15 @@ public class OpenLoopMotor {
                          DcMotorSimple.Direction direction,
                          DcMotor.ZeroPowerBehavior zeroPowerBehavior,
                          MotorLimits limits) {
-        this(new MetaMotor(), hardwareName, direction, zeroPowerBehavior, limits);
+        this(new MetaMotor(), hardwareName, direction, zeroPowerBehavior, limits, 0.0);
+    }
+
+    public OpenLoopMotor(String hardwareName,
+                         DcMotorSimple.Direction direction,
+                         DcMotor.ZeroPowerBehavior zeroPowerBehavior,
+                         MotorLimits limits,
+                         double powerWriteEpsilon) {
+        this(new MetaMotor(), hardwareName, direction, zeroPowerBehavior, limits, powerWriteEpsilon);
     }
 
     public OpenLoopMotor(MetaMotor hardware,
@@ -28,12 +36,22 @@ public class OpenLoopMotor {
                          DcMotorSimple.Direction direction,
                          DcMotor.ZeroPowerBehavior zeroPowerBehavior,
                          MotorLimits limits) {
+        this(hardware, hardwareName, direction, zeroPowerBehavior, limits, 0.0);
+    }
+
+    public OpenLoopMotor(MetaMotor hardware,
+                         String hardwareName,
+                         DcMotorSimple.Direction direction,
+                         DcMotor.ZeroPowerBehavior zeroPowerBehavior,
+                         MotorLimits limits,
+                         double powerWriteEpsilon) {
         this.hardware = hardware;
         this.hardware.hwName(hardwareName);
         this.hardware.direction(direction);
         this.hardware.zeroPowerBehavior(zeroPowerBehavior);
         this.hardware.maxPower(limits.getMaxPower());
         this.hardware.currentAlert(limits.getCurrentAlertAmps());
+        this.hardware.powerWriteEpsilon(powerWriteEpsilon);
     }
 
     public OpenLoopMotor(MetaMotor hardware) {

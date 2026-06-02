@@ -24,6 +24,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCollector;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCostClass;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryHub;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.LoopTimeStats;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryProvider;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue;
@@ -41,6 +42,7 @@ public class MainTeleOp implements TelemetryProvider {
 
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private final TelemetryHub telemetryHub = new TelemetryHub();
+    private final LoopTimeStats loopTimeStats = new LoopTimeStats();
     private final ThrottledValue<Double> intakeCurrentSampler = new ThrottledValue<>(0.1);
     private final ThrottledValue<Double> totalCurrentSampler = new ThrottledValue<>(0.2);
     private final Pose startingPose = new Pose(72, 72, Math.toRadians(180));
@@ -126,6 +128,7 @@ public class MainTeleOp implements TelemetryProvider {
         lastHeadingRadians = 0.0;
         lastVisionTx = 0.0;
         lastTurretTargetLock = false;
+        loopTimeStats.reset();
 
         telemetryHub.clearProviders();
         telemetryHub.setMode(TelemetryMode.COMPETITION);
@@ -152,6 +155,7 @@ public class MainTeleOp implements TelemetryProvider {
         transfer.update();
         turret.start();
         lastLoopTime = opMode.getRuntime();
+        loopTimeStats.reset();
     }
 
     public void loop() {
@@ -159,6 +163,12 @@ public class MainTeleOp implements TelemetryProvider {
         double dt = newTime - lastLoopTime;
         lastLoopTime = newTime;
         lastLoopDt = dt;
+        boolean resetLoopStats = opMode.gamepad2.startWasPressed();
+        if (resetLoopStats) {
+            loopTimeStats.reset();
+        } else {
+            loopTimeStats.record(dt);
+        }
 
         hardwareManager.update();
 
@@ -286,10 +296,26 @@ public class MainTeleOp implements TelemetryProvider {
 
     @Override
     public void collectTelemetry(TelemetryCollector collector, TelemetryMode mode) {
+        LoopTimeStats.Snapshot loopStats = loopTimeStats.snapshot();
+
         collector.add("system", "telemetry_mode", mode, TelemetryMode.COMPETITION,
                 TelemetryCostClass.CHEAP);
         collector.add("system", "loop_hz", lastLoopDt > 0 ? 1 / lastLoopDt : 0.0,
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "loop_avg_ms", loopStats.averageMillis,
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "loop_worst_ms", loopStats.worstMillis,
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "loop_p99_ms", loopStats.p99Millis,
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "loop_p999_ms", loopStats.p999Millis,
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "loop_1pct_low_hz", loopStats.onePercentLowHertz(),
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "loop_0_1pct_low_hz", loopStats.pointOnePercentLowHertz(),
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "loop_stats_samples", loopStats.sampleCount,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("system", "dt", lastLoopDt, TelemetryMode.DEBUG,
                 TelemetryCostClass.CHEAP);
 

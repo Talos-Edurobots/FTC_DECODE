@@ -17,25 +17,29 @@ public class DriveTrain {
                 RobotConstants.LEFT_FRONT_MOTOR_NAME,
                 RobotConstants.LEFT_FRONT_MOTOR_DIRECTION,
                 RobotConstants.DRIVETRAIN_ZERO_POWER_BEHAVIOR,
-                RobotConstants.DRIVETRAIN_LIMITS
+                RobotConstants.DRIVETRAIN_LIMITS,
+                RobotConstants.DRIVETRAIN_POWER_WRITE_EPSILON
         );
         rf = new OpenLoopMotor(
                 RobotConstants.RIGHT_FRONT_MOTOR_NAME,
                 RobotConstants.RIGHT_FRONT_MOTOR_DIRECTION,
                 RobotConstants.DRIVETRAIN_ZERO_POWER_BEHAVIOR,
-                RobotConstants.DRIVETRAIN_LIMITS
+                RobotConstants.DRIVETRAIN_LIMITS,
+                RobotConstants.DRIVETRAIN_POWER_WRITE_EPSILON
         );
         lb = new OpenLoopMotor(
                 RobotConstants.LEFT_BACK_MOTOR_NAME,
                 RobotConstants.LEFT_BACK_MOTOR_DIRECTION,
                 RobotConstants.DRIVETRAIN_ZERO_POWER_BEHAVIOR,
-                RobotConstants.DRIVETRAIN_LIMITS
+                RobotConstants.DRIVETRAIN_LIMITS,
+                RobotConstants.DRIVETRAIN_POWER_WRITE_EPSILON
         );
         rb = new OpenLoopMotor(
                 RobotConstants.RIGHT_BACK_MOTOR_NAME,
                 RobotConstants.RIGHT_BACK_MOTOR_DIRECTION,
                 RobotConstants.DRIVETRAIN_ZERO_POWER_BEHAVIOR,
-                RobotConstants.DRIVETRAIN_LIMITS
+                RobotConstants.DRIVETRAIN_LIMITS,
+                RobotConstants.DRIVETRAIN_POWER_WRITE_EPSILON
         );
         lf.init(hwMap);
         rf.init(hwMap);

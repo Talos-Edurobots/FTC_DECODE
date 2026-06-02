@@ -61,14 +61,16 @@ public class Shooter implements TelemetryProvider {
                 RobotConstants.SHOOTER_MOTOR_DIRECTION,
                 RobotConstants.SHOOTER_ZERO_POWER_BEHAVIOR,
                 RobotConstants.SHOOTER_VELOCITY_PIDF,
-                RobotConstants.SHOOTER_LIMITS
+                RobotConstants.SHOOTER_LIMITS,
+                RobotConstants.SHOOTER_POWER_WRITE_EPSILON
         );
         shooterMotor.init(hwmap);
         shooterFollowerMotor = new OpenLoopMotor(
                 RobotConstants.SHOOTER_FOLLOWER_MOTOR_NAME,
                 RobotConstants.SHOOTER_FOLLOWER_DIRECTION,
                 RobotConstants.SHOOTER_FOLLOWER_ZERO_POWER_BEHAVIOR,
-                RobotConstants.SHOOTER_LIMITS
+                RobotConstants.SHOOTER_LIMITS,
+                RobotConstants.SHOOTER_POWER_WRITE_EPSILON
         );
         shooterFollowerMotor.init(hwmap);
 

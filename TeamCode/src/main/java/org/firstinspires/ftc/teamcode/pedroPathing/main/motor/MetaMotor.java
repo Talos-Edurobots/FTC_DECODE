@@ -17,6 +17,8 @@ public class MetaMotor {
     private DcMotor.ZeroPowerBehavior zeroPowerBehavior =
             DcMotor.ZeroPowerBehavior.FLOAT;
     private double maxPower = 1.0;
+    private double powerWriteEpsilon = 0.0;
+    private double lastAppliedPower = Double.NaN;
 
     public void hwName(String hwName) {
         this.hwName = hwName;
@@ -29,6 +31,7 @@ public class MetaMotor {
         this.direction = direction;
         if (motor != null) {
             motor.setDirection(direction);
+            invalidatePowerCache();
         }
     }
 
@@ -40,6 +43,7 @@ public class MetaMotor {
         this.zeroPowerBehavior = zeroPowerBehavior;
         if (motor != null) {
             motor.setZeroPowerBehavior(zeroPowerBehavior);
+            invalidatePowerCache();
         }
     }
 
@@ -51,6 +55,11 @@ public class MetaMotor {
         this.maxPower = Range.clip(maxPower, 0.0, 1.0);
     }
 
+    public void powerWriteEpsilon(double powerWriteEpsilon) {
+        this.powerWriteEpsilon = Math.max(0.0, powerWriteEpsilon);
+        invalidatePowerCache();
+    }
+
     public MetaMotor() {}
 
     public void init(HardwareMap hwMap) {
@@ -60,6 +69,7 @@ public class MetaMotor {
         if (Double.isFinite(currentAlert)) {
             motor.setCurrentAlert(currentAlert, CurrentUnit.AMPS);
         }
+        invalidatePowerCache();
     }
 
     public DcMotorEx getMotor() {
@@ -70,7 +80,10 @@ public class MetaMotor {
     public void setPower(double power) {
         requireInitialized();
         double clippedPower = Range.clip(power, -maxPower, maxPower);
-        motor.setPower(clippedPower);
+        if (shouldWritePower(clippedPower)) {
+            motor.setPower(clippedPower);
+            lastAppliedPower = clippedPower;
+        }
     }
 
     public double getPower() {
@@ -96,6 +109,7 @@ public class MetaMotor {
     public void setMode(RunMode runMode) {
         requireInitialized();
         motor.setMode(runMode);
+        invalidatePowerCache();
     }
 
     public RunMode getMode() {
@@ -150,6 +164,10 @@ public class MetaMotor {
         return maxPower;
     }
 
+    public double getPowerWriteEpsilon() {
+        return powerWriteEpsilon;
+    }
+
     private void requireInitialized() {
         if (motor == null) {
             throw new IllegalStateException("MetaMotor has not been initialized");
@@ -157,5 +175,13 @@ public class MetaMotor {
     }
 
     public void invalidatePowerCache() {
+        lastAppliedPower = Double.NaN;
+    }
+
+    private boolean shouldWritePower(double clippedPower) {
+        return powerWriteEpsilon <= 0.0
+                || Double.isNaN(lastAppliedPower)
+                || (clippedPower == 0.0 && lastAppliedPower != 0.0)
+                || Math.abs(clippedPower - lastAppliedPower) >= powerWriteEpsilon;
     }
 }

@@ -181,6 +181,7 @@ public class Turret implements TelemetryProvider {
         turretHardware.zeroPowerBehavior(RobotConstants.TURRET_ZERO_POWER_BEHAVIOR);
         turretHardware.maxPower(RobotConstants.TURRET_LIMITS.getMaxPower());
         turretHardware.currentAlert(RobotConstants.TURRET_LIMITS.getCurrentAlertAmps());
+        turretHardware.powerWriteEpsilon(RobotConstants.TURRET_POWER_WRITE_EPSILON);
     }
 
     public void faceForward() {

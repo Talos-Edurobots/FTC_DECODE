@@ -33,6 +33,7 @@ public final class RobotConstants {
     public static final DcMotor.ZeroPowerBehavior DRIVETRAIN_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.BRAKE;
     public static final MotorLimits DRIVETRAIN_LIMITS = MotorLimits.defaults();
+    public static final double DRIVETRAIN_POWER_WRITE_EPSILON = 0.1;
 
     public static final String INTAKE_MOTOR_NAME = "intake";
     public static final GoBILDAMotorTypes INTAKE_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_1150_RPM;
@@ -49,6 +50,7 @@ public final class RobotConstants {
     public static final PIDFFCoefficients SHOOTER_VELOCITY_PIDF =
             new PIDFFCoefficients(.005, 0, 0, .02, 0.0052684109772247485, 0);
     public static final MotorLimits SHOOTER_LIMITS = MotorLimits.defaults();
+    public static final double SHOOTER_POWER_WRITE_EPSILON = 0.01;
     public static final String SHOOTER_FOLLOWER_MOTOR_NAME = "shooter2";
     public static final GoBILDAMotorTypes SHOOTER_FOLLOWER_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_6000_RPM;
     public static final DcMotorSimple.Direction SHOOTER_FOLLOWER_DIRECTION = DcMotorSimple.Direction.FORWARD;
@@ -60,6 +62,7 @@ public final class RobotConstants {
     public static final DcMotorSimple.Direction TURRET_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     public static final DcMotor.ZeroPowerBehavior TURRET_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.FLOAT;
+    public static final double TURRET_POWER_WRITE_EPSILON = 0.001;
     public static final double TURRET_EXTERNAL_GEAR_RATIO = 2.8;
     public static final double TURRET_HARD_STOP_START_TICKS = -367.0;
     public static final double TURRET_ZERO_OFFSET_TICKS = -TURRET_HARD_STOP_START_TICKS;
