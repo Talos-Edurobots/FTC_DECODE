@@ -63,11 +63,11 @@ public class MainTeleOp implements TelemetryProvider {
     private DriveTrain drivetrain;
     private boolean automatedDrive = false;
     private boolean isFar = false;
-    private boolean slowMode = false;
+    static boolean slowMode = false;
     private boolean useLimelight = defaultUseLimelight;
-    private boolean turretFaceForwardOverride = false;
+    static boolean turretFaceForwardOverride = false;
     private boolean useHang = false;
-    private boolean shooting = false;
+    static boolean shooting = false;
     private double lastLoopTime = 0.0;
     private double lastLoopDt = 0.0;
     private double lastHeadingRadians = 0.0;
@@ -298,21 +298,21 @@ public class MainTeleOp implements TelemetryProvider {
     public void collectTelemetry(TelemetryCollector collector, TelemetryMode mode) {
         LoopTimeStats.Snapshot loopStats = loopTimeStats.snapshot();
 
-        collector.add("system", "telemetry_mode", mode, TelemetryMode.COMPETITION,
-                TelemetryCostClass.CHEAP);
+//        collector.add("system", "telemetry_mode", mode, TelemetryMode.COMPETITION,
+//                TelemetryCostClass.CHEAP);
+//        collector.add("system", "avg fps", loopStats.averageMillis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+//        collector.add("system", "min fps", loopStats.worstMillis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+//        collector.add("system", "1% lows", loopStats.p99Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+//        collector.add("system", ".1% lows", loopStats.p999Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_hz", lastLoopDt > 0 ? 1 / lastLoopDt : 0.0,
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
-        collector.add("system", "loop_avg_ms", loopStats.averageMillis,
+        collector.add("system", "loop_avg_fps", 1000/loopStats.averageMillis,
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
-        collector.add("system", "loop_worst_ms", loopStats.worstMillis,
+        collector.add("system", "loop_worst_fps", 1000/loopStats.worstMillis,
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
-        collector.add("system", "loop_p99_ms", loopStats.p99Millis,
+        collector.add("system", "loop_1pct_low_fps", loopStats.onePercentLowHertz(),
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
-        collector.add("system", "loop_p999_ms", loopStats.p999Millis,
-                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
-        collector.add("system", "loop_1pct_low_hz", loopStats.onePercentLowHertz(),
-                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
-        collector.add("system", "loop_0_1pct_low_hz", loopStats.pointOnePercentLowHertz(),
+        collector.add("system", "loop_0_1pct_low_fps", loopStats.pointOnePercentLowHertz(),
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_stats_samples", loopStats.sampleCount,
                 TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);

@@ -10,6 +10,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants
 
 @Configurable
 public class Leds {
+    private static final double SERVO_WRITE_EPSILON = 1e-4;
+
     public static double speed = 1;
     public static boolean telemetryEnabled = false;
     public static double defaultBlinkOffColor = 0;
@@ -18,6 +20,8 @@ public class Leds {
 
     private Servo left;
     private Servo right;
+    private double lastAppliedLeft = Double.NaN;
+    private double lastAppliedRight = Double.NaN;
 
     private final SideState leftState = new SideState();
     private final SideState rightState = new SideState();
@@ -284,9 +288,27 @@ public class Leds {
     }
 
     private void apply(Servo servo, double color) {
-        if (servo != null) {
+        if (servo == null) {
+            return;
+        }
+        if (servo == left) {
+            if (shouldWrite(color, lastAppliedLeft)) {
+                servo.setPosition(color);
+                lastAppliedLeft = color;
+            }
+        } else if (servo == right) {
+            if (shouldWrite(color, lastAppliedRight)) {
+                servo.setPosition(color);
+                lastAppliedRight = color;
+            }
+        } else {
             servo.setPosition(color);
         }
+    }
+
+    private boolean shouldWrite(double color, double lastAppliedColor) {
+        return Double.isNaN(lastAppliedColor)
+                || Math.abs(color - lastAppliedColor) >= SERVO_WRITE_EPSILON;
     }
 
     private void addTelemetry(double dt) {

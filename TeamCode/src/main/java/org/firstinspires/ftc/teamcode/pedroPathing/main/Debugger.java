@@ -1155,6 +1155,7 @@ class KaTestOpMode extends OpMode {
     private boolean goingToPos2 = true;
     private double originalKp, originalKi, originalKd, originalKs, originalKv, originalKa;
     private double originalMaxVel, originalMaxAcc, originalMaxDec, originalMaxPower;
+    String tag = "ka";
 
     public KaTestOpMode(MotorConfig motor) {
     }
@@ -1176,12 +1177,29 @@ class KaTestOpMode extends OpMode {
         applyTuningConfigurables();
         turret = new Turret(hardwareMap);
         turret.init();
+        Log.d(tag, "power,aref,vref,xref,v_current,x_current_ticks,x_current_rads,pos1,pos2,to_pos_2,current");
     }
 
     @Override
     public void start() {
         turret.start();
         goingToPos2 = true;
+    }
+    public void log(TurretTelemetrySnapshot s, boolean atPose2) {
+        Log.d(tag, String.format("%.3f,%.3f,%.3f,%.3f,%.3f,%d,%.3f,%.3f,%.3f,%b,%.3f",
+                s.appliedPower,
+                s.referenceAccelerationTicksPerSecondSquared,
+                s.referenceVelocityTicksPerSecond,
+                s.referencePositionTicks,
+                s.measuredVelocityTicksPerSecond,
+                s.positionTicks,
+                s.measuredAngleRadians,
+                position1,
+                position2,
+                atPose2,
+                s.currentAmps
+                )
+        );
     }
 
     @Override
@@ -1196,7 +1214,7 @@ class KaTestOpMode extends OpMode {
         turret.setAngleRadians(targetRadians);
         turret.loop();
         TurretTelemetrySnapshot snapshot = turret.getTelemetrySnapshot(TelemetryMode.DEBUG, getRuntime());
-
+        if (gamepad1.left_bumper || gamepad1.right_bumper) log(snapshot, goingToPos2);
         telemetryM.addLine("Use gamepad1 A to switch turret target positions");
         telemetryM.addData("active target", goingToPos2 ? "position2" : "position1");
         telemetryM.addData("position1 degrees", position1);

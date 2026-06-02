@@ -79,10 +79,10 @@ public final class RobotConstants {
             );
     public static final MotorLimits TURRET_LIMITS = new MotorLimits(1.0, Double.POSITIVE_INFINITY);
     public static final double TURRET_MIN_ANGLE_RADIANS = -TURRET_ZERO_OFFSET_MECHANISM_RADIANS;
-    public static final double TURRET_MAX_ANGLE_RADIANS = Math.toRadians(120);
+    public static final double TURRET_MAX_ANGLE_RADIANS = Math.toRadians(90);
     public static final MotionProfilingCoefficients TURRET_CONFIGURABLE_PROFILE_DEFAULTS =
             new MotionProfilingCoefficients(
-                    new PIDFFCoefficients(0.005, 0, 0, 0.3, 0.005687094208999908, 0.0004),
+                    new PIDFFCoefficients(0.01, 0.00001, 0, 0.3, 0.005687094208999908, 0.0003),
                     1800,
                     3000,
                     2000
@@ -106,8 +106,7 @@ public final class RobotConstants {
     public static String LED_LEFT = "led_left";
     public static GoBildaPinpointDriver.EncoderDirection PINPOINT_FORWARD_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD;
     public static GoBildaPinpointDriver.EncoderDirection PINPOINT_STRAFE_DIRECTION  = GoBildaPinpointDriver.EncoderDirection.FORWARD;
-    public static double PINPOINT_FORWARD_POD_Y = 3.4; // in inches
-    public static double PINPOINT_STRAFE_POD_X = 4; // in inches
+
 
     public static IMU.Parameters IMU_PARAMETERS = new IMU.Parameters(
             new RevHubOrientationOnRobot(

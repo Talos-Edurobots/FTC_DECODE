@@ -20,6 +20,9 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue
 
 @Configurable
 public class Shooter implements TelemetryProvider {
+    private static final double VOLTAGE_SAMPLE_INTERVAL_SECONDS = 0.1;
+    private static final double SERVO_WRITE_EPSILON = 1e-4;
+
     private final HardwareMap hwmap;
     private VelocityControlledMotor shooterMotor;
     private OpenLoopMotor shooterFollowerMotor;
@@ -35,6 +38,9 @@ public class Shooter implements TelemetryProvider {
     private final LoopState loopState = new LoopState();
     private final ThrottledValue<Double> currentSampler = new ThrottledValue<>(0.1);
     private final ThrottledValue<Double> followerCurrentSampler = new ThrottledValue<>(0.1);
+    private final ElapsedTime batteryVoltageTimer = new ElapsedTime();
+    private double cachedBatteryVoltage = 12.0;
+    private double lastHoodPosition = Double.NaN;
 
     public boolean isImpactDetected() {
         return impactDetected;
@@ -75,8 +81,10 @@ public class Shooter implements TelemetryProvider {
         shooterFollowerMotor.init(hwmap);
 
         hoodServo = hwmap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
-        hoodServo.setPosition(.5);
+        applyHoodPosition(.5);
         hoodServo.setDirection(Servo.Direction.FORWARD);
+        cachedBatteryVoltage = readBatteryVoltage();
+        batteryVoltageTimer.reset();
         loopTimer.reset();
     }
 
@@ -126,10 +134,10 @@ public class Shooter implements TelemetryProvider {
         this.isRunning ^= true;
     }
     public void setHoodAngle(double pwm) {
-        hoodServo.setPosition(Range.clip(pwm, 0, .5));
+        applyHoodPosition(Range.clip(pwm, 0, .5));
     }
     public double getHoodAngle() {
-        return hoodServo.getPosition();
+        return Double.isNaN(lastHoodPosition) ? hoodServo.getPosition() : lastHoodPosition;
     }
     public boolean isBusy () {
         return Math.abs(targetVelocity - shooterMotor.getMeasuredVelocityTicksPerSecond()) > 70;
@@ -225,6 +233,23 @@ public class Shooter implements TelemetryProvider {
     }
 
     public double getBatteryVoltage() {
+        if (batteryVoltageTimer.seconds() < VOLTAGE_SAMPLE_INTERVAL_SECONDS) {
+            return cachedBatteryVoltage;
+        }
+        cachedBatteryVoltage = readBatteryVoltage();
+        batteryVoltageTimer.reset();
+        return cachedBatteryVoltage;
+    }
+
+    private void applyHoodPosition(double position) {
+        if (Double.isNaN(lastHoodPosition)
+                || Math.abs(position - lastHoodPosition) >= SERVO_WRITE_EPSILON) {
+            hoodServo.setPosition(position);
+            lastHoodPosition = position;
+        }
+    }
+
+    private double readBatteryVoltage() {
         double minVoltage = Double.POSITIVE_INFINITY;
         for (VoltageSensor sensor : hwmap.voltageSensor) {
             double voltage = sensor.getVoltage();

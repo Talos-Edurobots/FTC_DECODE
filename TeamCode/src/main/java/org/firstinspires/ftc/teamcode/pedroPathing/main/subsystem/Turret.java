@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.LoopState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MetaMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorCoefficientScaler;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotionState;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.MotionProfilingCoefficients;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.facade.ProfiledPositionMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.Angle;
@@ -27,6 +28,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TurretTelemetr
 @Configurable
 public class Turret implements TelemetryProvider {
     private static final double MAX_REASONABLE_LOOP_DT_SECONDS = 0.25;
+    private static final double VOLTAGE_SAMPLE_INTERVAL_SECONDS = 0.1;
     private static final PositionAimLut RED_POSITION_AIM_LUT = new PositionAimLut(
             PositionAimLut.sample(72.0, 72.0, 144.0, 144.0),
             PositionAimLut.sample(36.5, 131.5, 144.0, 133.9),
@@ -161,10 +163,23 @@ public class Turret implements TelemetryProvider {
     static final Pose RED_GOAL_POSE = new Pose(144, 137);
     final Pose BLUE_GOAL_POSE = new Pose(0, 140);
     private final ElapsedTime loopTimer = new ElapsedTime();
+    private final ElapsedTime batteryVoltageTimer = new ElapsedTime();
     private final LoopState loopState = new LoopState();
     private final ThrottledValue<Double> currentSampler = new ThrottledValue<>(0.1);
 
     private ControlMode controlMode = ControlMode.PROFILED;
+    private double cachedBatteryVoltage = 12.0;
+    private double appliedKp = Double.NaN;
+    private double appliedKi = Double.NaN;
+    private double appliedKd = Double.NaN;
+    private double appliedKs = Double.NaN;
+    private double appliedKv = Double.NaN;
+    private double appliedKa = Double.NaN;
+    private double appliedMaxVel = Double.NaN;
+    private double appliedMaxAcc = Double.NaN;
+    private double appliedMaxDec = Double.NaN;
+    private double appliedTargetToleranceDegrees = Double.NaN;
+    private double appliedMaxPower = Double.NaN;
     private double angleToGoal;
     private double targetMechanismAngleRadians = 0.0;
     private double manualExtraPower = 0.0;
@@ -243,6 +258,8 @@ public class Turret implements TelemetryProvider {
                 Angle.fromRadians(toRawMotorRadians(RobotConstants.TURRET_MAX_ANGLE_RADIANS))
         );
         setAngleRadians(RobotConstants.TURRET_MIN_ANGLE_RADIANS);
+        cachedBatteryVoltage = readBatteryVoltage();
+        batteryVoltageTimer.reset();
         loopTimer.reset();
     }
 
@@ -293,6 +310,20 @@ public class Turret implements TelemetryProvider {
     }
 
     private void applyProfileConfigurables() {
+        if (appliedKp == kp
+                && appliedKi == ki
+                && appliedKd == kd
+                && appliedKs == ks
+                && appliedKv == kv
+                && appliedKa == ka
+                && appliedMaxVel == maxVel
+                && appliedMaxAcc == maxAcc
+                && appliedMaxDec == maxDec
+                && appliedTargetToleranceDegrees == targetToleranceDegrees
+                && appliedMaxPower == maxPower) {
+            return;
+        }
+
         MotionProfilingCoefficients scaledCoefficients = MotorCoefficientScaler.fromLegacyTickSpace(
                 new MotionProfilingCoefficients(kp, ki, kd, ks, kv, ka, maxVel, maxAcc, maxDec),
                 encoderConverter
@@ -314,6 +345,17 @@ public class Turret implements TelemetryProvider {
                 mechanismDeltaToMotorRadians(Math.toRadians(targetToleranceDegrees))
         ));
         turret.setMaxPower(maxPower);
+        appliedKp = kp;
+        appliedKi = ki;
+        appliedKd = kd;
+        appliedKs = ks;
+        appliedKv = kv;
+        appliedKa = ka;
+        appliedMaxVel = maxVel;
+        appliedMaxAcc = maxAcc;
+        appliedMaxDec = maxDec;
+        appliedTargetToleranceDegrees = targetToleranceDegrees;
+        appliedMaxPower = maxPower;
     }
 
     private void updateLoopState() {
@@ -365,6 +407,7 @@ public class Turret implements TelemetryProvider {
                 ? currentSampler.get(nowSeconds, turret::getCurrentAmps)
                 : null;
         int positionTicks = turretHardware.getCurrentPositionTicks();
+        MotionState referenceState = turret.getReferenceState();
         return new TurretTelemetrySnapshot(
                 controlMode.name(),
                 positionAimLutEnabled,
@@ -377,10 +420,10 @@ public class Turret implements TelemetryProvider {
                 getMeasuredAngleRadians(),
                 turretHardware.getVelocityTicksPerSecond(),
                 turret.getPower(),
-                encoderConverter.angleToTicks(turret.getReferenceState().getPosition()),
-                encoderConverter.velocityToTicksPerSecond(turret.getReferenceState().getVelocity()),
+                encoderConverter.angleToTicks(referenceState.getPosition()),
+                encoderConverter.velocityToTicksPerSecond(referenceState.getVelocity()),
                 encoderConverter.accelerationToTicksPerSecondSquared(
-                        turret.getReferenceState().getAcceleration()
+                        referenceState.getAcceleration()
                 ),
                 turretHardware.isOverCurrent(),
                 positionTicks < getMinAngleTicks(),
@@ -508,6 +551,15 @@ public class Turret implements TelemetryProvider {
     }
 
     private double getBatteryVoltage() {
+        if (batteryVoltageTimer.seconds() < VOLTAGE_SAMPLE_INTERVAL_SECONDS) {
+            return cachedBatteryVoltage;
+        }
+        cachedBatteryVoltage = readBatteryVoltage();
+        batteryVoltageTimer.reset();
+        return cachedBatteryVoltage;
+    }
+
+    private double readBatteryVoltage() {
         double minVoltage = Double.POSITIVE_INFINITY;
         for (com.qualcomm.robotcore.hardware.VoltageSensor sensor : hwmap.voltageSensor) {
             double voltage = sensor.getVoltage();
