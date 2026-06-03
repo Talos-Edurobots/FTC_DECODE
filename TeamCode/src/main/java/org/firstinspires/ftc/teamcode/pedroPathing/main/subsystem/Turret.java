@@ -29,6 +29,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TurretTelemetr
 public class Turret implements TelemetryProvider {
     private static final double MAX_REASONABLE_LOOP_DT_SECONDS = 0.25;
     private static final double VOLTAGE_SAMPLE_INTERVAL_SECONDS = 0.1;
+    private static final double FIELD_WIDTH_INCHES = 144.0;
     private static final PositionAimLut RED_POSITION_AIM_LUT = new PositionAimLut(
             PositionAimLut.sample(72.0, 72.0, 144.0, 144.0),
             PositionAimLut.sample(36.5, 131.5, 144.0, 133.9),
@@ -40,8 +41,29 @@ public class Turret implements TelemetryProvider {
             PositionAimLut.sample(104.26,131.33,144.0,135.07)
     );
     private static final PositionAimLut BLUE_POSITION_AIM_LUT = new PositionAimLut(
-            // Add calibrated blue-alliance samples here: sample(robotX, robotY, aimX, aimY)
+            mirrorRedSampleForBlue(72.0, 72.0, 144.0, 144.0),
+            mirrorRedSampleForBlue(36.5, 131.5, 144.0, 133.9),
+            mirrorRedSampleForBlue(96.5, 9.6, 133.9, 144.0),
+            mirrorRedSampleForBlue(57.6, 20.2, 139.2, 144.0),
+            mirrorRedSampleForBlue(73.4, 9.1, 137.8, 144.0),
+            mirrorRedSampleForBlue(50.4, 108.0, 144.0, 135.8),
+            mirrorRedSampleForBlue(85.4, 97.9, 139.2, 144.0),
+            mirrorRedSampleForBlue(104.26, 131.33, 144.0, 135.07)
     );
+
+    private static PositionAimLut.Sample mirrorRedSampleForBlue(
+            double robotX,
+            double robotY,
+            double aimX,
+            double aimY
+    ) {
+        return PositionAimLut.sample(
+                FIELD_WIDTH_INCHES - robotX,
+                robotY,
+                FIELD_WIDTH_INCHES - aimX,
+                aimY
+        );
+    }
 
     private enum ControlMode {
         PROFILED,
@@ -428,6 +450,7 @@ public class Turret implements TelemetryProvider {
                 turretHardware.isOverCurrent(),
                 positionTicks < getMinAngleTicks(),
                 positionTicks > getMaxAngleTicks(),
+                turret.isAtTarget(),
                 currentAmps
         );
     }
@@ -468,6 +491,8 @@ public class Turret implements TelemetryProvider {
         collector.add("turret", "at_lower_limit", snapshot.atLowerLimit,
                 TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("turret", "at_upper_limit", snapshot.atUpperLimit,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("turret", "at_target_position", snapshot.atTargetPosition,
                 TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("turret", "current_amps", snapshot.currentAmps,
                 TelemetryMode.DEBUG, TelemetryCostClass.NON_BULK);

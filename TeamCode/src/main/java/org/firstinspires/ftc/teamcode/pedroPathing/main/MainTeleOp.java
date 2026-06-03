@@ -17,8 +17,10 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HoodAngleLut;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ShooterHoodLuts;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryCollector;
@@ -38,6 +40,9 @@ public class MainTeleOp implements TelemetryProvider {
     public static int frontVel = 1250;
     public static double hoodFarAngle = 0.1;
     public static double hoodCloseAngle = .1;
+    public static boolean useShooterHoodLuts = true;
+    public static double hoodLutTrim = 0.0;
+    public static int hoodLutNeighborCount = HoodAngleLut.DEFAULT_NEIGHBOR_COUNT;
     public static boolean defaultUseLimelight = false;
 
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -73,6 +78,9 @@ public class MainTeleOp implements TelemetryProvider {
     private double lastHeadingRadians = 0.0;
     private double lastVisionTx = 0.0;
     private boolean lastTurretTargetLock = false;
+    private double lastShooterDistanceFromGoal = 0.0;
+    private double lastShooterTargetVelocity = 0.0;
+    private double lastHoodTargetPosition = 0.0;
 
     public void init(OpMode opMode, boolean isBlue) {
         this.opMode = opMode;
@@ -101,8 +109,7 @@ public class MainTeleOp implements TelemetryProvider {
         shooter = new Shooter(hardwareMap);
         shooter.init();
         shooter.run(true);
-        Shooter.targetVelocity = frontVel;
-        shooter.setHoodAngle(hoodCloseAngle);
+        updateShooterAndHoodTargets(teleOpStartPose);
 
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(RobotConstants.IMU_PARAMETERS);
@@ -128,6 +135,9 @@ public class MainTeleOp implements TelemetryProvider {
         lastHeadingRadians = 0.0;
         lastVisionTx = 0.0;
         lastTurretTargetLock = false;
+        lastShooterDistanceFromGoal = 0.0;
+        lastShooterTargetVelocity = Shooter.targetVelocity;
+        lastHoodTargetPosition = shooter.getHoodAngle();
         loopTimeStats.reset();
 
         telemetryHub.clearProviders();
@@ -222,8 +232,10 @@ public class MainTeleOp implements TelemetryProvider {
         }
         if (opMode.gamepad1.xWasPressed()) {
             isFar ^= true;
-            Shooter.targetVelocity = isFar ? backVel : frontVel;
-            shooter.setHoodAngle(isFar ? hoodFarAngle : hoodCloseAngle);
+            if (!useShooterHoodLuts) {
+                Shooter.targetVelocity = isFar ? backVel : frontVel;
+                shooter.setHoodAngle(isFar ? hoodFarAngle : hoodCloseAngle);
+            }
         }
 
 //        if (opMode.gamepad1.options) {
@@ -234,14 +246,23 @@ public class MainTeleOp implements TelemetryProvider {
         if (opMode.gamepad1.dpadUpWasPressed()) {
             shooter.changeState();
         }
-        shooter.update();
 
         if (opMode.gamepad1.dpad_left) {
-            shooter.setHoodAngle(shooter.getHoodAngle() - dt * .8);
+            if (useShooterHoodLuts) {
+                hoodLutTrim -= dt * .8;
+            } else {
+                shooter.setHoodAngle(shooter.getHoodAngle() - dt * .8);
+            }
         }
         if (opMode.gamepad1.dpad_right) {
-            shooter.setHoodAngle(shooter.getHoodAngle() + dt * .8);
+            if (useShooterHoodLuts) {
+                hoodLutTrim += dt * .8;
+            } else {
+                shooter.setHoodAngle(shooter.getHoodAngle() + dt * .8);
+            }
         }
+        updateShooterAndHoodTargets(follower.getPose());
+        shooter.update();
 //        if (opMode.gamepad1.startWasPressed()) {
 //            follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
 //        }
@@ -287,6 +308,44 @@ public class MainTeleOp implements TelemetryProvider {
         }
         follower.update();
         telemetryHub.publish(telemetryM, telemetry, newTime);
+    }
+
+    private void updateShooterAndHoodTargets(Pose robotPose) {
+        if (robotPose == null) {
+            return;
+        }
+
+        if (!useShooterHoodLuts) {
+            lastShooterDistanceFromGoal = ShooterHoodLuts.distanceToGoal(robotPose, !isBlue);
+            lastShooterTargetVelocity = Shooter.targetVelocity;
+            lastHoodTargetPosition = shooter.getHoodAngle();
+            return;
+        }
+
+        double distanceFromGoal = ShooterHoodLuts.distanceToGoal(robotPose, !isBlue);
+        double targetVelocity = ShooterHoodLuts.SHOOTER_VELOCITY_LUT.getTargetVelocity(
+                distanceFromGoal
+        );
+        if (Double.isNaN(targetVelocity) || Double.isInfinite(targetVelocity)) {
+            targetVelocity = isFar ? backVel : frontVel;
+        }
+
+        hoodLutNeighborCount = Math.max(1, hoodLutNeighborCount);
+        double hoodPosition = ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(
+                distanceFromGoal,
+                shooter.getVelocity(),
+                hoodLutNeighborCount
+        );
+        if (Double.isNaN(hoodPosition) || Double.isInfinite(hoodPosition)) {
+            hoodPosition = isFar ? hoodFarAngle : hoodCloseAngle;
+        }
+        hoodPosition += hoodLutTrim;
+
+        Shooter.setTargetVelocity(targetVelocity);
+        shooter.setHoodAngle(hoodPosition);
+        lastShooterDistanceFromGoal = distanceFromGoal;
+        lastShooterTargetVelocity = targetVelocity;
+        lastHoodTargetPosition = shooter.getHoodAngle();
     }
 
     public void stop(HashMap blackboard) {
@@ -351,6 +410,16 @@ public class MainTeleOp implements TelemetryProvider {
 
         collector.add("robot", "shot_preset", isFar ? "far" : "close",
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("robot", "shooter_hood_luts_enabled", useShooterHoodLuts,
+                TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("robot", "shooter_distance_from_goal", lastShooterDistanceFromGoal,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("robot", "shooter_lut_target_tps", lastShooterTargetVelocity,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("robot", "hood_lut_target", lastHoodTargetPosition,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("robot", "hood_lut_trim", hoodLutTrim,
+                TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("robot", "slow_mode", slowMode, TelemetryMode.COMPETITION,
                 TelemetryCostClass.CHEAP);
         collector.add("robot", "turret_forward_override", turretFaceForwardOverride,

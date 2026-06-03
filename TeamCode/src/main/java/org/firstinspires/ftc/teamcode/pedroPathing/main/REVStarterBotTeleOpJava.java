@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 @TeleOp
+@Disabled
 public class REVStarterBotTeleOpJava extends LinearOpMode {
     private DcMotor flywheel;
     private DcMotor coreHex;

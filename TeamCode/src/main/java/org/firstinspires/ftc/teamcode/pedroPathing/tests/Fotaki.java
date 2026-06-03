@@ -5,6 +5,7 @@ import com.bylazar.lights.LightObject;
 import com.bylazar.lights.LightsManager;
 import com.bylazar.lights.PanelsLights;
 import com.bylazar.panels.Panels;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,6 +16,7 @@ import java.util.List;
 
 //@Configurable
 @TeleOp
+@Disabled
 public class Fotaki extends LinearOpMode {
     static double color = 0;
     LightsManager light = PanelsLights.INSTANCE.getLights();

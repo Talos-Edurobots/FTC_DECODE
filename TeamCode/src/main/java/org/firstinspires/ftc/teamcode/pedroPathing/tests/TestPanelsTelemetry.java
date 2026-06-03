@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.tests;
 
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -9,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 //todo check if PanelsTelemetry is working on the driver station
 
 @TeleOp(name = "panelsTelemetry", group = "testing")
+@Disabled
 public class TestPanelsTelemetry extends LinearOpMode {
     TelemetryManager pTel = PanelsTelemetry.INSTANCE.getTelemetry();
     @Override

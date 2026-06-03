@@ -4,12 +4,14 @@ import com.bylazar.gamepad.GamepadManager;
 import com.bylazar.gamepad.PanelsGamepad;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @TeleOp(name = "Test Panels Gamepad", group = "tests")
+@Disabled
 public class TestPanelsGamepad extends LinearOpMode {
     TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
     GamepadManager gamepad = PanelsGamepad.INSTANCE.getFirstManager();

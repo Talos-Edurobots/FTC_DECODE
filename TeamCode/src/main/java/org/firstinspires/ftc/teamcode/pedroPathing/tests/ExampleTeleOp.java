@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 
 //@Configurable
 @TeleOp
-@Disabled
+//@Disabled
 public class ExampleTeleOp extends OpMode {
     private Follower follower;
     public static Pose startingPose = new Pose(45, 98); //See ExampleAuto to understand how to use this

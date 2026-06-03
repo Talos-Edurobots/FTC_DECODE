@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -94,6 +95,15 @@ public class Shooter implements TelemetryProvider {
         loopState.set(dt, 1.0 / getBatteryVoltage());
         shooterMotor.setTargetVelocityTicksPerSecond(targetVelocity);
         calculateFilteredVelocity();
+        if (isBusy() && targetVelocity < shooterMotor.getMeasuredVelocityTicksPerSecond()) {
+            shooterMotor.getHardware().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            shooterFollowerMotor.getHardware().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            shooterMotor.setPower(0);
+            shooterFollowerMotor.setPower(0);
+            return;
+        }
+        shooterMotor.getHardware().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooterFollowerMotor.getHardware().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         setVelocity();
     }
     public void updateOpenLoopFeedforward() {

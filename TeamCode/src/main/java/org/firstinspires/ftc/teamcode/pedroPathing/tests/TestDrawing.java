@@ -7,11 +7,13 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 
 @TeleOp(name = "test drawing", group = "testing")
+@Disabled
 public class TestDrawing extends LinearOpMode {
     private static final FieldManager panelsField = PanelsField.INSTANCE.getField();
     private TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();

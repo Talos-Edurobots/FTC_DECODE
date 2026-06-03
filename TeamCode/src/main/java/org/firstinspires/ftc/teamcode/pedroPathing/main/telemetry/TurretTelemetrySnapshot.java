@@ -18,6 +18,7 @@ public final class TurretTelemetrySnapshot {
     public final boolean overCurrent;
     public final boolean atLowerLimit;
     public final boolean atUpperLimit;
+    public final boolean atTargetPosition;
     public final Double currentAmps;
 
     public TurretTelemetrySnapshot(String controlMode,
@@ -37,6 +38,7 @@ public final class TurretTelemetrySnapshot {
                                    boolean overCurrent,
                                    boolean atLowerLimit,
                                    boolean atUpperLimit,
+                                   boolean atTargetPosition,
                                    Double currentAmps) {
         this.controlMode = controlMode;
         this.lutEnabled = lutEnabled;
@@ -55,6 +57,7 @@ public final class TurretTelemetrySnapshot {
         this.overCurrent = overCurrent;
         this.atLowerLimit = atLowerLimit;
         this.atUpperLimit = atUpperLimit;
+        this.atTargetPosition = atTargetPosition;
         this.currentAmps = currentAmps;
     }
 }

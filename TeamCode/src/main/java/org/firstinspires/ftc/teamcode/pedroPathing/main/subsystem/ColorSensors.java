@@ -62,7 +62,7 @@ public class ColorSensors {
         return dist1 < 5;
     }
     public boolean is2Detected() {
-        return dist2 < 1;
+        return dist2 < 2;
     }
     public boolean is3Detected() {
         return dist3 < 5.5;

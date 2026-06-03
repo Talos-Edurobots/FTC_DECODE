@@ -138,6 +138,11 @@ public class ProfiledPositionMotor {
         return targetAngle;
     }
 
+    public boolean isAtTarget() {
+        return Math.abs(targetAngle.toRadians() - getMeasuredAngle().toRadians())
+                <= targetTolerance.toRadians();
+    }
+
     public void setTargetTolerance(Angle targetTolerance) {
         this.targetTolerance = Angle.fromRadians(Math.max(0.0, targetTolerance.toRadians()));
     }
