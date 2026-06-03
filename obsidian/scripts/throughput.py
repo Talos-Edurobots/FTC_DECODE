@@ -7,307 +7,547 @@ Original file is located at
     https://colab.research.google.com/drive/1LT70OFUSgeePIRE604WaVW7QDU1OGypT
 """
 
+download = False # Set to True to download all generated graphs
+
+# !pip uninstall pandas -y
+# !pip install pandas
+# # After running this cell, please go to 'Runtime' > 'Restart runtime' in the Colab menu.
+
+import os
 import pandas as pd
-import numpy as np
 
-file = "testThrouputWith2Wheels1.csv"
+# Get a list of all .csv files in the /content/sample_data/ directory
+csv_files = [os.path.join('/content/', f) for f in os.listdir('/content/') if f.endswith('.csv')]
 
-df = pd.read_csv(f'/content/{file}')
+if not csv_files:
+    print("No .csv files found in the /content/sample_data/ directory.")
+    file = None # Set file to None if no CSVs are found
+else:
+    if len(csv_files) == 1:
+        file = csv_files[0]
+        print(f"Found one .csv file: '{file}'.")
+    else:
+        file = csv_files[0] # For compatibility with subsequent cells, we'll process the first one by default
+        print(f"Found multiple .csv files: {csv_files}")
+        print(f"The notebook is currently set up to process only the first file: '{file}'.")
+        print("To process all files, you would need to modify subsequent cells to loop through `csv_files`.")
+
 pd.set_option('display.min_rows', 15)
-print(df.shape) # displays the number of rows and columns of the array
-df # prints the actual data
 
-# Using a Median Filter to ignore 'jumps' and snapping to 20-unit increments
-# This removes the 1140-1120-1140 jitter without adding the lag of alpha=0.3
-
-# 1. Apply a small rolling median to remove single-point outliers
-df['filtered_velocity'] = df['shooter_velocity'].rolling(window=3, center=True).median().fillna(df['shooter_velocity'])
-
-# 2. 'Smart' snapping: Round to the nearest 20 units to eliminate discretization noise
-df['filtered_velocity'] = (df['filtered_velocity'] / 20).round() * 20
-
-print("Applied Median Filter + 20-unit snapping to remove quantization noise.")
-display(df[['time', 'shooter_velocity', 'filtered_velocity']].head(10))
-
-import matplotlib.pyplot as plt
-
-plt.figure(figsize=(12, 6))
-plt.plot(df['time'], df['shooter_velocity'], label='Original Shooter Velocity', alpha=0.7)
-plt.plot(df['time'], df['filtered_velocity'], label=f'Filtered Velocity (alpha={alpha})', color='red')
-plt.xlabel('Time')
-plt.ylabel('Velocity')
-plt.title('Original vs. Smoothed Shooter Velocity')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-x = df['time'].values
-x= x.reshape(-1, 1)
-y = df['shooter_velocity'].values
-
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.metrics import mean_squared_error
-import matplotlib.pyplot as plt
-
-# Plot the original data
-plt.scatter(x, y, color='blue', label='data')
-
-# Add labels to the axes
-plt.xlabel('time')
-plt.ylabel('velocity')
-
-# Add a legend
-plt.legend()
-
-# Display the plot
-plt.show()
+# Loop through each CSV file found
+for file in csv_files:
+    print(f"\nProcessing file: {file}")
+    df = pd.read_csv(file)
+    print(f"Shape of DataFrame: {df.shape}") # displays the number of rows and columns of the array
+    # df # This would print each DataFrame in the loop, might be too verbose. Commented out for now.
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+from google.colab import files # Import for downloading files
 
-# 1. Split the dataset based on time difference > 1
-df['time_diff'] = df['time'].diff().fillna(0) # Changed 'applied_voltage' to 'time'
+pd.set_option('display.min_rows', 15)
 
-# Create a grouping ID based on the time gap
-df['group_id'] = (df['time'].diff() > 1).cumsum() # Changed 'applied_voltage' to 'time'
+# Create a directory to save the plots
+output_dir = 'exported_plots'
+os.makedirs(output_dir, exist_ok=True)
 
-groups = [group for _, group in df.groupby('group_id')]
-print(f'Detected {len(groups)} independent data segments.')
+# Loop through each CSV file and perform the analysis
+for file_path in csv_files:
+    base_file_name = os.path.basename(file_path).replace('.csv', '')
+    print(f"\n{'='*50}\nProcessing file: {file_path}\n{'='*50}")
 
-import matplotlib.pyplot as plt
+    # Load the DataFrame for the current file
+    df = pd.read_csv(file_path)
+    print(f"Shape of DataFrame: {df.shape}")
 
-plt.figure(figsize=(14, 7))
+    # --- 1. Median Filter and Snapping (from cell 3ec30a78) ---
+    print("\n--- Applying Median Filter and Snapping ---")
+    required_columns_filter = ['time', 'shooter_velocity']
+    if all(col in df.columns for col in required_columns_filter):
+        df['filtered_velocity'] = df['shooter_velocity'].rolling(window=3, center=True).median().fillna(df['shooter_velocity'])
+        df['filtered_velocity'] = (df['filtered_velocity'] / 20).round() * 20
+        print("Applied Median Filter + 20-unit snapping to remove quantization noise.")
+    else:
+        print(f"Skipping velocity filtering for {file_path}: DataFrame does not contain all required columns ({', '.join(required_columns_filter)}). Current columns: {list(df.columns)}")
+        df['filtered_velocity'] = df['shooter_velocity'] if 'shooter_velocity' in df.columns else np.nan
 
-# Tuning parameters to merge clusters
-MIN_DROP_DEPTH = 40
-COOLDOWN = 0.3 # Increased from 0.1 to 0.3 to group points from the same ball
+    # --- 3. Split the dataset based on time difference (from cell d160f2d1) ---
+    print("\n--- Splitting Dataset into Segments ---")
+    if 'time' in df.columns and not df.empty:
+        df['time_diff'] = df['time'].diff().fillna(0)
+        df['group_id'] = (df['time'].diff() > 1).cumsum()
+        groups = [group for _, group in df.groupby('group_id')]
+        print(f'Detected {len(groups)} independent data segments for {file_path}.')
+    else:
+        print(f"Skipping dataset splitting for {file_path}: 'time' column missing or DataFrame is empty.")
+        groups = [] # Ensure groups is defined as empty list
 
-for i, segment in enumerate(groups):
-    plt.subplot(len(groups), 1, i + 1)
+    # --- 4. Drop Detection using Minima (from cell 3195cb14) ---
+    print("\n--- Performing Drop Detection using Minima ---")
+    drops_detected_by_minima = 0
+    if groups:
+        fig_minima = plt.figure(figsize=(14, 7 * len(groups))) # Adjust figure size for multiple subplots
+        MIN_DROP_DEPTH = 40
+        COOLDOWN = 0.3
 
-    target = segment['shooter_target'].iloc[0] if 'shooter_target' in segment.columns else 1300
+        for i, segment in enumerate(groups):
+            plt.subplot(len(groups), 1, i + 1)
 
-    # 1. Identify all points deep enough to be a drop
-    depth_mask = (segment['filtered_velocity'] <= target - MIN_DROP_DEPTH)
+            target = segment['shooter_target'].iloc[0] if 'shooter_target' in segment.columns and not segment['shooter_target'].empty else 1300
 
-    # 2. Identify local minima (points lower than or equal to neighbors)
-    condition = (
-        depth_mask &
-        (segment['filtered_velocity'] <= segment['filtered_velocity'].shift(1).fillna(9999)) &
-        (segment['filtered_velocity'] <= segment['filtered_velocity'].shift(-1).fillna(9999))
-    )
+            if 'filtered_velocity' in segment.columns and 'time' in segment.columns:
+                depth_mask = (segment['filtered_velocity'] <= target - MIN_DROP_DEPTH)
+                condition = (
+                    depth_mask &
+                    (segment['filtered_velocity'] <= segment['filtered_velocity'].shift(1).fillna(9999)) &
+                    (segment['filtered_velocity'] <= segment['filtered_velocity'].shift(-1).fillna(9999))
+                )
+                potential_points = segment[condition].copy()
 
-    potential_points = segment[condition].copy()
+                final_drops = []
+                last_time = -1
+                for _, row in potential_points.iterrows():
+                    if row['time'] > last_time + COOLDOWN:
+                        final_drops.append(row)
+                        last_time = row['time']
 
-    # 3. Apply Cooldown to merge nearby detections into a single event
-    final_drops = []
-    last_time = -1
-    for _, row in potential_points.iterrows():
-        if row['time'] > last_time + COOLDOWN:
-            final_drops.append(row)
-            last_time = row['time']
+                significant_drops = pd.DataFrame(final_drops)
+                drops_detected_by_minima += len(significant_drops)
 
-    significant_drops = pd.DataFrame(final_drops)
+                print(f"Segment {i} for {file_path}: {len(significant_drops)} drops detected (using COOLDOWN={COOLDOWN}s).")
 
-    print(f"Segment {i}: {len(significant_drops)} drops detected (using COOLDOWN={COOLDOWN}s).")
+                plt.plot(segment['time'], segment['shooter_velocity'], label='Raw Data', color='gray', alpha=0.3)
+                plt.plot(segment['time'], segment['filtered_velocity'], label='Snapped Filter', color='blue', linewidth=2, marker='o', markersize=4, alpha=0.8)
+                plt.axhline(y=target, color='green', linestyle='--', label=f'Target ({target})', alpha=0.5)
 
-    plt.plot(segment['time'], segment['shooter_velocity'], label='Raw Data', color='gray', alpha=0.3)
-    plt.plot(segment['time'], segment['filtered_velocity'], label='Snapped Filter', color='blue', linewidth=2, marker='o', markersize=4, alpha=0.8)
-    plt.axhline(y=target, color='green', linestyle='--', label=f'Target ({target})', alpha=0.5)
+                if not significant_drops.empty:
+                    plt.scatter(significant_drops['time'], significant_drops['filtered_velocity'],
+                                color='red', s=350, marker='X', label='Detected Drop', zorder=20)
 
-    if not significant_drops.empty:
-        plt.scatter(significant_drops['time'], significant_drops['filtered_velocity'],
-                    color='red', s=350, marker='X', label='Detected Drop', zorder=20)
+                plt.title(f'Segment {i}: Drop Detection for {file_path}')
+                plt.xlabel('Time (s)')
+                plt.ylabel('Velocity')
+                plt.legend(loc='lower left', frameon=True, shadow=True)
+                plt.grid(True, alpha=0.3)
+            else:
+                print(f"Skipping segment {i} plotting for {file_path}: 'filtered_velocity' or 'time' column missing.")
 
-    plt.title(f'Segment {i}: Detection Results (3 Drops Expected)')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Velocity')
-    plt.legend(loc='lower left', frameon=True, shadow=True)
-    plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        save_path = os.path.join(output_dir, f'{base_file_name}_minima_drop_detection.png')
+        plt.savefig(save_path, dpi=500)
+        if download:
+            files.download(save_path)
+        plt.close(fig_minima)
+    else:
+        print(f"Skipping drop detection using minima for {file_path}: No segments to process.")
 
-plt.tight_layout()
-plt.show()
+    # --- NEW SECTION: Drop Detection using Velocity Slope Threshold (from cell 2d47b1c7) ----
+    if drops_detected_by_minima == 0:
+        print("\n--- Performing Drop Detection using Velocity Slope Threshold (Minima method found 0 drops) ---")
+        if groups:
+            fig_slope = plt.figure(figsize=(14, 6 * len(groups)))
+            SLOPE_TRIGGER = -500
+            COOLDOWN_SLOPE = 0.15
 
-SLOPE_TRIGGER = -500
-COOLDOWN = 0.15 # Reduced cooldown to capture events like the one at 37.20s
+            for i, segment in enumerate(groups):
+                plt.subplot(len(groups), 1, i + 1)
 
-# Ensure slope is calculated
-if 'filtered_velocity' in df.columns:
-    df['velocity_slope'] = np.gradient(df['filtered_velocity'], df['time'])
+                if 'filtered_velocity' in segment.columns and 'time' in segment.columns:
+                    # Ensure velocity_slope is calculated for the entire segment
+                    if 'velocity_slope' not in segment.columns:
+                        segment['velocity_slope'] = np.gradient(segment['filtered_velocity'], segment['time'])
 
-# Find indices where the slope is sharper than our threshold
-drops_by_slope = df[df['velocity_slope'] < SLOPE_TRIGGER].copy()
+                    drops_by_slope = segment[segment['velocity_slope'] < SLOPE_TRIGGER].copy()
 
-# Apply cooldown logic to group consecutive points into one event
-final_slope_events = []
-last_time = -1
-for _, row in drops_by_slope.iterrows():
-    if row['time'] > last_time + COOLDOWN:
-        final_slope_events.append(row)
-        last_time = row['time']
+                    final_slope_events = []
+                    potential_event_end_time = -np.inf # Initialize with a very small number
+                    last_point_in_current_event = None
 
-slope_events_df = pd.DataFrame(final_slope_events)
+                    for _, row in drops_by_slope.iterrows():
+                        if row['time'] <= potential_event_end_time:
+                            # This point is part of the current event, update the last point
+                            last_point_in_current_event = row
+                            potential_event_end_time = row['time'] + COOLDOWN_SLOPE # Extend the potential end
+                        else:
+                            # This point starts a new event, or is the first point
+                            if last_point_in_current_event is not None:
+                                final_slope_events.append(last_point_in_current_event)
+                            # Start a new event
+                            last_point_in_current_event = row
+                            potential_event_end_time = row['time'] + COOLDOWN_SLOPE
 
-plt.figure(figsize=(14, 6))
-plt.plot(df['time'], df['filtered_velocity'], label='Filtered Velocity', color='blue')
-plt.plot(df['time'], df['velocity_slope'], label='Slope (dv/dt)', color='purple', alpha=0.3)
+                    # Append the last event if it exists
+                    if last_point_in_current_event is not None:
+                        final_slope_events.append(last_point_in_current_event)
 
-if not slope_events_df.empty:
-    plt.scatter(slope_events_df['time'], slope_events_df['filtered_velocity'],
-                color='orange', s=200, marker='D', label='Slope Triggered Drop', zorder=25)
+                    slope_events_df = pd.DataFrame(final_slope_events)
 
-plt.axhline(y=SLOPE_TRIGGER, color='red', linestyle='--', label=f'Threshold ({SLOPE_TRIGGER})', alpha=0.5)
-plt.title(f'Drop Detection using Velocity Slope Threshold ({SLOPE_TRIGGER})')
-plt.xlabel('Time (s)')
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.show()
+                    plt.plot(segment['time'], segment['filtered_velocity'], label='Filtered Velocity', color='blue')
 
-print(f'Detected {len(slope_events_df)} drops using slope threshold.')
-print("Significant Negative Slopes found (including 37.20s region):")
-display(df[(df['time'] >= 37.1) & (df['time'] <= 37.3)][['time', 'velocity_slope']])
+                    if not slope_events_df.empty:
+                        plt.scatter(slope_events_df['time'], slope_events_df['filtered_velocity'],
+                                    color='red', s=350, marker='X', label='Slope Triggered Drop', zorder=25)
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+                    plt.title(f'Segment {i}: Drop Detection using Velocity Slope Threshold for {file_path}')
+                    plt.xlabel('Time (s)')
+                    plt.ylabel('Velocity')
+                    plt.legend()
+                    plt.grid(True, alpha=0.3)
 
-# 1. Calculate the gradient on RAW velocity to catch the sharpest possible impacts
-df['raw_velocity_slope'] = np.gradient(df['shooter_velocity'], df['time'])
+                    print(f'Segment {i} for {file_path}: Identified {len(slope_events_df)} drops using slope threshold.')
+                else:
+                    print(f"Skipping segment {i} plotting for {file_path}: Missing required columns or DataFrame is empty.")
+            plt.tight_layout()
+            save_path = os.path.join(output_dir, f'{base_file_name}_slope_drop_detection.png')
+            plt.savefig(save_path, dpi=500)
+            if download:
+                files.download(save_path)
+            plt.close(fig_slope)
+        else:
+            print(f"Skipping Drop Detection using Velocity Slope Threshold for {file_path}: No segments to process.")
+    else:
+        print(f"\n--- Skipping Drop Detection using Velocity Slope Threshold for {file_path}: Minima method found {drops_detected_by_minima} drops. ---")
 
-# 2. Parameters for universal detection
-RAW_SLOPE_TRIGGER = -800  # Sharp enough to be an impact, but loose enough to catch all balls
-GROUPING_WINDOW = 0.2     # Seconds: Group rapid sequential spikes into one ball event
+    # --- NEW SECTION: Acceleration Graph with Deceleration Threshold ---
+    print("\n--- Visualizing Acceleration and Deceleration Threshold ---")
+    if groups:
+        fig_accel_thresh = plt.figure(figsize=(14, 6 * len(groups)))
+        SLOPE_TRIGGER = -500 # Re-define for this section for clarity
 
-# 3. Find all potential impact points
-impact_candidates = df[df['raw_velocity_slope'] < RAW_SLOPE_TRIGGER].copy()
+        for i, segment in enumerate(groups):
+            plt.subplot(len(groups), 1, i + 1)
 
-# 4. Grouping Logic: Iterate and only pick the first spike of a sequence
-confirmed_events = []
-if not impact_candidates.empty:
-    last_event_time = -1
-    for _, row in impact_candidates.iterrows():
-        if row['time'] > last_event_time + GROUPING_WINDOW:
-            confirmed_events.append(row)
-            last_event_time = row['time']
+            if 'filtered_velocity' in segment.columns and 'time' in segment.columns:
+                # Ensure velocity_slope is calculated for the entire segment
+                if 'velocity_slope' not in segment.columns:
+                    segment['velocity_slope'] = np.gradient(segment['filtered_velocity'], segment['time'])
 
-events_df = pd.DataFrame(confirmed_events)
+                plt.plot(segment['time'], segment['velocity_slope'], label='Velocity Slope (dv/dt)', color='purple', alpha=0.7)
+                plt.axhline(y=SLOPE_TRIGGER, color='red', linestyle='--', label=f'Deceleration Threshold ({SLOPE_TRIGGER})', alpha=0.8)
 
-# 5. Full Dataset Visualization
-plt.figure(figsize=(15, 7))
-plt.plot(df['time'], df['shooter_velocity'], label='Raw Shooter Velocity', color='gray', alpha=0.4)
-plt.plot(df['time'], df['filtered_velocity'], label='Smoothed Trend', color='blue', alpha=0.8)
+                plt.title(f'Segment {i}: Acceleration and Deceleration Threshold for {file_path}')
+                plt.xlabel('Time (s)')
+                plt.ylabel('Acceleration (Velocity Slope)')
+                plt.legend()
+                plt.grid(True, alpha=0.3)
+            else:
+                print(f"Skipping segment {i} plotting for {file_path}: Missing required columns or DataFrame is empty.")
+        plt.tight_layout()
+        save_path = os.path.join(output_dir, f'{base_file_name}_acceleration_threshold.png')
+        plt.savefig(save_path, dpi=500)
+        if download:
+            files.download(save_path)
+        plt.close(fig_accel_thresh)
+    else:
+        print(f"Skipping Acceleration Graph for {file_path}: No segments to process.")
 
-if not events_df.empty:
-    plt.scatter(events_df['time'], events_df['shooter_velocity'],
-                color='red', s=150, marker='*', label='Detected Ball Impact', zorder=10)
+# # Using a Median Filter to ignore 'jumps' and snapping to 20-unit increments
+# # This removes the 1140-1120-1140 jitter without adding the lag of alpha=0.3
 
-plt.title(f'Universal Ball Detection: {len(events_df)} Events Found (Threshold: {RAW_SLOPE_TRIGGER})')
-plt.xlabel('Time (s)')
-plt.ylabel('Velocity')
-plt.grid(True, which='both', linestyle='--', alpha=0.5)
-plt.legend()
-plt.show()
+# required_columns = ['time', 'shooter_velocity']
 
-print(f"Summary: Identified {len(events_df)} ball events.")
-display(events_df[['time', 'shooter_velocity', 'raw_velocity_slope']])
+# if all(col in df.columns for col in required_columns):
+#     # 1. Apply a small rolling median to remove single-point outliers
+#     df['filtered_velocity'] = df['shooter_velocity'].rolling(window=3, center=True).median().fillna(df['shooter_velocity'])
 
-# Calculate slope using the RAW shooter velocity instead of the filtered one
-df['raw_velocity_slope'] = np.gradient(df['shooter_velocity'], df['time'])
+#     # 2. 'Smart' snapping: Round to the nearest 20 units to eliminate discretization noise
+#     df['filtered_velocity'] = (df['filtered_velocity'] / 20).round() * 20
 
-plt.figure(figsize=(14, 6))
-plt.plot(df['time'], df['shooter_velocity'], label='Raw Velocity', color='gray', alpha=0.5)
-plt.plot(df['time'], df['raw_velocity_slope'], label='Raw Slope (dv/dt)', color='red', alpha=0.7)
+#     print("Applied Median Filter + 20-unit snapping to remove quantization noise.")
+#     display(df[['time', 'shooter_velocity', 'filtered_velocity']].head(10))
+# else:
+#     print(f"Skipping velocity filtering: DataFrame does not contain all required columns ({', '.join(required_columns)}). Current columns: {list(df.columns)}")
 
-# Highlight where the raw slope exceeds a very sharp threshold
-RAW_SLOPE_TRIGGER = -1000
-sharp_spikes = df[df['raw_velocity_slope'] < RAW_SLOPE_TRIGGER]
+# import matplotlib.pyplot as plt
 
-if not sharp_spikes.empty:
-    plt.scatter(sharp_spikes['time'], sharp_spikes['shooter_velocity'],
-                color='black', s=100, label=f'Spikes < {RAW_SLOPE_TRIGGER}')
+# required_plot_columns = ['time', 'shooter_velocity', 'filtered_velocity']
 
-plt.axhline(y=RAW_SLOPE_TRIGGER, color='black', linestyle='--', label='Raw Slope Threshold')
-plt.title('Slope Analysis using RAW Sensor Data')
-plt.xlabel('Time (s)')
-plt.ylabel('Velocity / Slope')
-plt.legend()
-plt.grid(True, alpha=0.2)
-plt.show()
+# if all(col in df.columns for col in required_plot_columns):
+#     plt.figure(figsize=(12, 6))
+#     plt.plot(df['time'], df['shooter_velocity'], label='Original Shooter Velocity', alpha=0.7)
+#     plt.plot(df['time'], df['filtered_velocity'], label='Filtered Velocity', color='red')
+#     plt.xlabel('Time')
+#     plt.ylabel('Velocity')
+#     plt.title('Original vs. Smoothed Shooter Velocity')
+#     plt.legend()
+#     plt.grid(True)
+#     plt.show()
+# else:
+#     print(f"Skipping plotting: DataFrame does not contain all required columns ({', '.join(required_plot_columns)}). Current columns: {list(df.columns)}")
 
-print("Top 5 Sharpest RAW Slopes:")
-display(df.sort_values('raw_velocity_slope').head(5)[['time', 'shooter_velocity', 'raw_velocity_slope']])
+# x = df['time'].values
+# x= x.reshape(-1, 1)
+# y = df['shooter_velocity'].values
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+# import numpy as np
+# from sklearn.linear_model import LinearRegression
+# from sklearn.preprocessing import PolynomialFeatures
+# from sklearn.metrics import mean_squared_error
+# import matplotlib.pyplot as plt
 
-# Define the threshold for what we consider a 'drop' using the raw slope
-RAW_SLOPE_TRIGGER = -1000
-EVENT_COOLDOWN = 0.1  # seconds: any spikes within this window count as 1 ball
+# # Plot the original data
+# plt.scatter(x, y, color='blue', label='data')
 
-# 1. Find all points where the raw slope is sharp enough
-raw_spikes = df[df['raw_velocity_slope'] < RAW_SLOPE_TRIGGER].copy()
+# # Add labels to the axes
+# plt.xlabel('time')
+# plt.ylabel('velocity')
 
-# 2. Group sequential drops into a single event
-final_events = []
-if not raw_spikes.empty:
-    last_time = -1
-    for _, row in raw_spikes.iterrows():
-        # If this spike happens after the cooldown of the previous one, it's a new ball
-        if row['time'] > last_time + EVENT_COOLDOWN:
-            final_events.append(row)
-            last_time = row['time']
+# # Add a legend
+# plt.legend()
 
-events_df = pd.DataFrame(final_events)
+# # Display the plot
+# plt.show()
 
-# Visualization
-plt.figure(figsize=(14, 6))
-plt.plot(df['time'], df['shooter_velocity'], label='Raw Velocity', color='gray', alpha=0.4)
-plt.plot(df['time'], df['filtered_velocity'], label='Filtered (Snapped)', color='blue', linewidth=2)
+# import pandas as pd
+# import numpy as np
+# import matplotlib.pyplot as plt
 
-if not events_df.empty:
-    plt.scatter(events_df['time'], events_df['shooter_velocity'],
-                color='red', s=200, marker='*', label='Confirmed Ball Event', zorder=30)
+# # 1. Split the dataset based on time difference > 1
+# df['time_diff'] = df['time'].diff().fillna(0) # Changed 'applied_voltage' to 'time'
 
-plt.title(f'Detected {len(events_df)} Ball Events (Grouping Sequential Drops within {EVENT_COOLDOWN}s)')
-plt.xlabel('Time (s)')
-plt.ylabel('Velocity')
-plt.legend()
-plt.grid(True, alpha=0.2)
-plt.show()
+# # Create a grouping ID based on the time gap
+# df['group_id'] = (df['time'].diff() > 1).cumsum() # Changed 'applied_voltage' to 'time'
 
-print(f"Total Balls Detected: {len(events_df)}")
-display(events_df[['time', 'shooter_velocity', 'raw_velocity_slope']])
+# groups = [group for _, group in df.groupby('group_id')]
+# print(f'Detected {len(groups)} independent data segments.')
 
-import numpy as np
+# import matplotlib.pyplot as plt
 
-# Calculate the slope (gradient) of the filtered velocity
-# np.gradient gives the central difference
-df['velocity_slope'] = np.gradient(df['filtered_velocity'], df['time'])
+# plt.figure(figsize=(14, 7))
 
-plt.figure(figsize=(14, 8))
+# # Tuning parameters to merge clusters
+# MIN_DROP_DEPTH = 40
+# COOLDOWN = 0.3 # Increased from 0.1 to 0.3 to group points from the same ball
 
-# Plot Velocity
-plt.subplot(2, 1, 1)
-plt.plot(df['time'], df['filtered_velocity'], label='Filtered Velocity', color='blue', marker='o', markersize=3)
-plt.title('Velocity vs Slope Analysis')
-plt.ylabel('Velocity')
-plt.grid(True, alpha=0.3)
-plt.legend()
+# for i, segment in enumerate(groups):
+#     plt.subplot(len(groups), 1, i + 1)
 
-# Plot Slope
-plt.subplot(2, 1, 2)
-plt.plot(df['time'], df['velocity_slope'], label='Velocity Slope (dv/dt)', color='purple')
-plt.axhline(y=0, color='black', linestyle='--', alpha=0.5)
-plt.ylabel('Slope (units/sec)')
-plt.xlabel('Time (s)')
-plt.grid(True, alpha=0.3)
-plt.legend()
+#     target = segment['shooter_target'].iloc[0] if 'shooter_target' in segment.columns else 1300
 
-plt.tight_layout()
-plt.show()
+#     # 1. Identify all points deep enough to be a drop
+#     depth_mask = (segment['filtered_velocity'] <= target - MIN_DROP_DEPTH)
 
-display(df[['time', 'filtered_velocity', 'velocity_slope']].head(15))
+#     # 2. Identify local minima (points lower than or equal to neighbors)
+#     condition = (
+#         depth_mask &
+#         (segment['filtered_velocity'] <= segment['filtered_velocity'].shift(1).fillna(9999)) &
+#         (segment['filtered_velocity'] <= segment['filtered_velocity'].shift(-1).fillna(9999))
+#     )
+
+#     potential_points = segment[condition].copy()
+
+#     # 3. Apply Cooldown to merge nearby detections into a single event
+#     final_drops = []
+#     last_time = -1
+#     for _, row in potential_points.iterrows():
+#         if row['time'] > last_time + COOLDOWN:
+#             final_drops.append(row)
+#             last_time = row['time']
+
+#     significant_drops = pd.DataFrame(final_drops)
+
+#     print(f"Segment {i}: {len(significant_drops)} drops detected (using COOLDOWN={COOLDOWN}s).")
+
+#     plt.plot(segment['time'], segment['shooter_velocity'], label='Raw Data', color='gray', alpha=0.3)
+#     plt.plot(segment['time'], segment['filtered_velocity'], label='Snapped Filter', color='blue', linewidth=2, marker='o', markersize=4, alpha=0.8)
+#     plt.axhline(y=target, color='green', linestyle='--', label=f'Target ({target})', alpha=0.5)
+
+#     if not significant_drops.empty:
+#         plt.scatter(significant_drops['time'], significant_drops['filtered_velocity'],
+#                     color='red', s=350, marker='X', label='Detected Drop', zorder=20)
+
+#     plt.title(f'Segment {i}: Detection Results (3 Drops Expected)')
+#     plt.xlabel('Time (s)')
+#     plt.ylabel('Velocity')
+#     plt.legend(loc='lower left', frameon=True, shadow=True)
+#     plt.grid(True, alpha=0.3)
+
+# plt.tight_layout()
+# plt.show()
+
+# SLOPE_TRIGGER = -500
+# COOLDOWN = 0.15 # Reduced cooldown to capture events like the one at 37.20s
+
+# # Ensure slope is calculated
+# if 'filtered_velocity' in df.columns:
+#     df['velocity_slope'] = np.gradient(df['filtered_velocity'], df['time'])
+
+# # Find indices where the slope is sharper than our threshold
+# drops_by_slope = df[df['velocity_slope'] < SLOPE_TRIGGER].copy()
+
+# # Apply cooldown logic to group consecutive points into one event
+# final_slope_events = []
+# last_time = -1
+# for _, row in drops_by_slope.iterrows():
+#     if row['time'] > last_time + COOLDOWN:
+#         final_slope_events.append(row)
+#         last_time = row['time']
+
+# slope_events_df = pd.DataFrame(final_slope_events)
+
+# plt.figure(figsize=(14, 6))
+# plt.plot(df['time'], df['filtered_velocity'], label='Filtered Velocity', color='blue')
+# plt.plot(df['time'], df['velocity_slope'], label='Slope (dv/dt)', color='purple', alpha=0.3)
+
+# if not slope_events_df.empty:
+#     plt.scatter(slope_events_df['time'], slope_events_df['filtered_velocity'],
+#                 color='orange', s=200, marker='D', label='Slope Triggered Drop', zorder=25)
+
+# plt.axhline(y=SLOPE_TRIGGER, color='red', linestyle='--', label=f'Threshold ({SLOPE_TRIGGER})', alpha=0.5)
+# plt.title(f'Drop Detection using Velocity Slope Threshold ({SLOPE_TRIGGER})')
+# plt.xlabel('Time (s)')
+# plt.legend()
+# plt.grid(True, alpha=0.3)
+# plt.show()
+
+# print(f'Detected {len(slope_events_df)} drops using slope threshold.')
+# print("Significant Negative Slopes found (including 37.20s region):")
+# display(df[(df['time'] >= 37.1) & (df['time'] <= 37.3)][['time', 'velocity_slope']])
+
+# import pandas as pd
+# import numpy as np
+# import matplotlib.pyplot as plt
+
+# # 1. Calculate the gradient on RAW velocity to catch the sharpest possible impacts
+# df['raw_velocity_slope'] = np.gradient(df['shooter_velocity'], df['time'])
+
+# # 2. Parameters for universal detection
+# RAW_SLOPE_TRIGGER = -800  # Sharp enough to be an impact, but loose enough to catch all balls
+# GROUPING_WINDOW = 0.2     # Seconds: Group rapid sequential spikes into one ball event
+
+# # 3. Find all potential impact points
+# impact_candidates = df[df['raw_velocity_slope'] < RAW_SLOPE_TRIGGER].copy()
+
+# # 4. Grouping Logic: Iterate and only pick the first spike of a sequence
+# confirmed_events = []
+# if not impact_candidates.empty:
+#     last_event_time = -1
+#     for _, row in impact_candidates.iterrows():
+#         if row['time'] > last_event_time + GROUPING_WINDOW:
+#             confirmed_events.append(row)
+#             last_event_time = row['time']
+
+# events_df = pd.DataFrame(confirmed_events)
+
+# # 5. Full Dataset Visualization
+# plt.figure(figsize=(15, 7))
+# plt.plot(df['time'], df['shooter_velocity'], label='Raw Shooter Velocity', color='gray', alpha=0.4)
+# plt.plot(df['time'], df['filtered_velocity'], label='Smoothed Trend', color='blue', alpha=0.8)
+
+# if not events_df.empty:
+#     plt.scatter(events_df['time'], events_df['shooter_velocity'],
+#                 color='red', s=150, marker='*', label='Detected Ball Impact', zorder=10)
+
+# plt.title(f'Universal Ball Detection: {len(events_df)} Events Found (Threshold: {RAW_SLOPE_TRIGGER})')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Velocity')
+# plt.grid(True, which='both', linestyle='--', alpha=0.5)
+# plt.legend()
+# plt.show()
+
+# print(f"Summary: Identified {len(events_df)} ball events.")
+# # Only display columns if events_df is not empty to avoid KeyError
+# if not events_df.empty:
+#     display(events_df[['time', 'shooter_velocity', 'raw_velocity_slope']])
+# else:
+#     print("No events to display with specified columns.")
+
+# # Calculate slope using the RAW shooter velocity instead of the filtered one
+# df['raw_velocity_slope'] = np.gradient(df['shooter_velocity'], df['time'])
+
+# plt.figure(figsize=(14, 6))
+# plt.plot(df['time'], df['shooter_velocity'], label='Raw Velocity', color='gray', alpha=0.5)
+# plt.plot(df['time'], df['raw_velocity_slope'], label='Raw Slope (dv/dt)', color='red', alpha=0.7)
+
+# # Highlight where the raw slope exceeds a very sharp threshold
+# RAW_SLOPE_TRIGGER = -1000
+# sharp_spikes = df[df['raw_velocity_slope'] < RAW_SLOPE_TRIGGER]
+
+# if not sharp_spikes.empty:
+#     plt.scatter(sharp_spikes['time'], sharp_spikes['shooter_velocity'],
+#                 color='black', s=100, label=f'Spikes < {RAW_SLOPE_TRIGGER}')
+
+# plt.axhline(y=RAW_SLOPE_TRIGGER, color='black', linestyle='--', label='Raw Slope Threshold')
+# plt.title('Slope Analysis using RAW Sensor Data')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Velocity / Slope')
+# plt.legend()
+# plt.grid(True, alpha=0.2)
+# plt.show()
+
+# print("Top 5 Sharpest RAW Slopes:")
+# display(df.sort_values('raw_velocity_slope').head(5)[['time', 'shooter_velocity', 'raw_velocity_slope']])
+
+# import pandas as pd
+# import numpy as np
+# import matplotlib.pyplot as plt
+
+# # Define the threshold for what we consider a 'drop' using the raw slope
+# RAW_SLOPE_TRIGGER = -1000
+# EVENT_COOLDOWN = 0.1  # seconds: any spikes within this window count as 1 ball
+
+# # 1. Find all points where the raw slope is sharp enough
+# raw_spikes = df[df['raw_velocity_slope'] < RAW_SLOPE_TRIGGER].copy()
+
+# # 2. Group sequential drops into a single event
+# final_events = []
+# if not raw_spikes.empty:
+#     last_time = -1
+#     for _, row in raw_spikes.iterrows():
+#         # If this spike happens after the cooldown of the previous one, it's a new ball
+#         if row['time'] > last_time + EVENT_COOLDOWN:
+#             final_events.append(row)
+#             last_time = row['time']
+
+# events_df = pd.DataFrame(final_events)
+
+# # Visualization
+# plt.figure(figsize=(14, 6))
+# plt.plot(df['time'], df['shooter_velocity'], label='Raw Velocity', color='gray', alpha=0.4)
+# plt.plot(df['time'], df['filtered_velocity'], label='Filtered (Snapped)', color='blue', linewidth=2)
+
+# if not events_df.empty:
+#     plt.scatter(events_df['time'], events_df['shooter_velocity'],
+#                 color='red', s=200, marker='*', label='Confirmed Ball Event', zorder=30)
+
+# plt.title(f'Detected {len(events_df)} Ball Events (Grouping Sequential Drops within {EVENT_COOLDOWN}s)')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Velocity')
+# plt.legend()
+# plt.grid(True, alpha=0.2)
+# plt.show()
+
+# print(f"Total Balls Detected: {len(events_df)}")
+# display(events_df[['time', 'shooter_velocity', 'raw_velocity_slope']])
+
+# import numpy as np
+
+# # Calculate the slope (gradient) of the filtered velocity
+# # np.gradient gives the central difference
+# df['velocity_slope'] = np.gradient(df['filtered_velocity'], df['time'])
+
+# plt.figure(figsize=(14, 8))
+
+# # Plot Velocity
+# plt.subplot(2, 1, 1)
+# plt.plot(df['time'], df['filtered_velocity'], label='Filtered Velocity', color='blue', marker='o', markersize=3)
+# plt.title('Velocity vs Slope Analysis')
+# plt.ylabel('Velocity')
+# plt.grid(True, alpha=0.3)
+# plt.legend()
+
+# # Plot Slope
+# plt.subplot(2, 1, 2)
+# plt.plot(df['time'], df['velocity_slope'], label='Velocity Slope (dv/dt)', color='purple')
+# plt.axhline(y=0, color='black', linestyle='--', alpha=0.5)
+# plt.ylabel('Slope (units/sec)')
+# plt.xlabel('Time (s)')
+# plt.grid(True, alpha=0.3)
+# plt.legend()
+
+# plt.tight_layout()
+# plt.show()
+
+# display(df[['time', 'filtered_velocity', 'velocity_slope']].head(15))

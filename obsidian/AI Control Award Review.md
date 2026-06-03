@@ -1,460 +1,322 @@
-# AI note - Control Award review and action plan
+# Control Award documentation review
 
-This note was written by AI after reading the Obsidian notes, `doc/`, the control-related Java code, and the simulator / notebook scripts. Treat it as critique and planning material, not final portfolio text.
+This is a blunt review of the Obsidian vault and the robot data under `data/`. It is not final portfolio text. It is a correction list and evidence plan.
 
 ## Short verdict
 
-The codebase has real Control Award substance, but the portfolio structure should be more honest and more evidence-driven.
+The robot has real Control Award material. The documentation does not yet prove it well enough.
 
-The strongest story is not "we used PID." Many FTC teams use PID. The stronger story is:
+The strongest systems are:
 
-- the robot uses pose, encoders, sensors, and vision to reduce driver workload
-- the turret evolved through several control approaches
-- shooter velocity is closed-loop and measured
-- transfer/intake has sensor-based automation
-- telemetry is designed around cost, mode, and loop performance
-- simulator and debug OpModes are used to create/tune LUTs and collect data
+- shooter velocity control with encoder feedback and voltage-scaled feedforward
+- pose-based turret aiming with a profiled position controller
+- transfer/intake automation using three distance sensors and overcurrent protection
+- telemetry snapshots with competition/debug modes and throttled expensive values
+- simulator/LUT tooling for aiming calibration
 
-The weak point is evidence. The code can produce data, but the data is not yet organized into clean, repeatable experiments that a judge can understand quickly.
+The weak part is not the algorithms. The weak part is proof. The vault still uses too many claims like "consistent", "accurate", and "solved" without numbers attached. Judges do not need more buzzwords. They need measured before/after behavior, failure cases, and match relevance.
 
-## What I would claim confidently
+## Biggest problems
 
-These are supported by code and should be in the portfolio.
+### 1. The shooter evidence is strong, but the notes do not use it
 
-### 1. Motion-profiled turret control
+The shooter is currently the best evidence story in the repo.
 
-Code evidence:
+From the throughput drop data:
 
-- `TeamCode/.../subsystem/Turret.java`
-- `TeamCode/.../motor/facade/ProfiledPositionMotor.java`
-- `TeamCode/.../motor/math/controllers/TrapezoidalMotionProfileController.java`
+| Dataset                                          | Controller | Target | Average absolute velocity error | Within 70 ticks/s |
+| ------------------------------------------------ | ---------- | -----: | ------------------------------: | ----------------: |
+| `data/throuput/highVelWithControllerDrop.csv`    | yes        |   2000 |              about 21.5 ticks/s |             94.9% |
+| `data/throuput/highVelWithoutControllerDrop.csv` | no         |   2000 |             about 168.2 ticks/s |              6.8% |
+| `data/throuput/lowVelWIthControllerDrop.csv`     | yes        |   1300 |              about 22.2 ticks/s |             92.5% |
 
-Claim:
+This is the kind of evidence that wins arguments. The shooter note should lead with this instead of only explaining PIDFF.
 
-The turret does not directly slam motor power based only on position error. It generates a motion profile with reference position, velocity, and acceleration, then follows that reference with PIDFF control.
+What to say:
 
-Why judges care:
+> Closed-loop shooter control held the flywheel within our 70 ticks/s ready tolerance for about 95% of high-speed samples, compared with about 7% for open-loop high-speed control.
 
-- smoother aiming
-- less mechanical stress
-- faster target changes without gear skipping
-- better repeatability than raw power or simple P control
+What not to say:
 
-Evidence to collect:
+> We used PID and it made the shooter accurate.
 
-- turret target angle
-- measured angle
-- reference velocity
+That is too generic.
+
+### 2. Turret claims are ahead of turret evidence
+
+The turret system is impressive, but the data is not complete enough for the claims in the vault.
+
+The turret KA CSVs include:
+
+- power
+- acceleration reference
+- velocity reference
+- position reference
 - measured velocity
-- settle time
-- final error
+- measured position
+- current
+- target positions
 
-Useful graph:
+But they do not include time. Without time, you cannot honestly calculate settle time, response time, or recovery behavior from those files. You can show that the profile exists. You cannot prove "fast lock" or "settled in X seconds" from the current CSVs.
 
-- target angle vs measured angle
-- xref vs measured position
-- vref vs measured velocity
+Fix the logger before running more turret experiments. Add:
 
-### 2. Shooter velocity regulation
+- `time`
+- `trial_id`
+- `target_deg`
+- `measured_deg`
+- `error_deg`
+- `within_tolerance`
+- `peak_current`
 
-Code evidence:
+Minimum useful turret claim:
 
-- `TeamCode/.../subsystem/Shooter.java`
-- `TeamCode/.../motor/facade/VelocityControlledMotor.java`
-- `TeamCode/.../motor/math/controllers/PIDFFVelocityController.java`
+> The turret uses a trapezoidal reference and follows position, velocity, and acceleration targets instead of directly slamming power from position error.
 
-Claim:
+Stronger claim only after new data:
 
-The shooter uses encoder velocity feedback and feedforward, scaled by battery voltage, to keep the flywheel near target speed.
+> The turret settled within 1 degree in X seconds with Y degrees overshoot and Z amps peak current.
 
-Why judges care:
+### 3. The LUT is promising, not proven
 
-- shot distance and consistency depend on flywheel speed
-- battery sag and shot load affect speed
-- closed-loop velocity control lets the robot wait until the shooter is ready
+The code has `PositionAimLut`, and red-side samples exist. Blue-side samples are empty in `Turret.java`.
 
-Evidence to collect:
+That means the vault should not say the LUT "solved" aiming. It should say:
 
-- target velocity
-- measured velocity
-- spin-up time
-- velocity drop after each shot
-- recovery time after shot
-- success/failure of shots at different target velocities
+> We implemented a position-based virtual aim-point LUT for red-side calibration and are testing it as an aiming correction layer.
 
-Useful graph:
+The missing experiment is obvious:
 
-- target velocity vs measured velocity over time
-- detected shot drops
-- recovery time after each artifact
+1. Pick 6 field positions.
+2. Shoot 5 artifacts with normal goal-center aiming.
+3. Shoot 5 artifacts with LUT aiming.
+4. Record made/missed, robot pose, heading, turret target, turret measured angle, shooter velocity, and hood angle.
+5. Keep the bad results. Do not retune halfway through the before/after set.
 
-### 3. Transfer/intake automation
+Until that table exists, the LUT is an implementation, not a proven improvement.
 
-Code evidence:
+### 4. Vision relocalization is not a match feature yet
 
-- `TeamCode/.../subsystem/Transfer.java`
-- `TeamCode/.../subsystem/ColorSensors.java`
-- `TeamCode/.../subsystem/Intake.java`
-
-Claim:
-
-The transfer/intake is state-based. During collection, sensor detection or intake overcurrent automatically stops collection.
-
-Be precise:
-
-- The code uses `DistanceSensor`, even if the physical device is a color/distance sensor.
-- The current code updates the sensors at 10 Hz, not 5 Hz.
-
-Why judges care:
-
-- reduces driver reaction burden
-- prevents overfilling
-- helps avoid jams/current issues
-- shows use of external feedback
-
-Evidence to collect:
-
-- detection accuracy
-- false positives
-- false negatives
-- time from third artifact detection to intake stop
-- number of avoided jams/current alerts
-
-### 4. Structured telemetry system
-
-Code evidence:
-
-- `TeamCode/.../telemetry/TelemetryHub.java`
-- `TelemetryCollector.java`
-- `TelemetryMode.java`
-- `TelemetryCostClass.java`
-- `ThrottledValue.java`
-- `ShooterTelemetrySnapshot.java`
-- `TurretTelemetrySnapshot.java`
-
-Claim:
-
-Telemetry is treated as part of the control architecture, not random print statements. Competition telemetry is separated from debug telemetry, and expensive values like continuous current readings are throttled.
-
-Why judges care:
-
-- loop consistency matters for control quality
-- telemetry can slow match code
-- programmers can tune mechanisms without burying drivers in debug data
-
-Evidence to collect:
-
-- loop Hz in competition telemetry
-- loop Hz in debug telemetry
-- current reads throttled at 0.1 s or 0.2 s
-- example screenshots of competition vs debug telemetry
-
-## What I would not claim yet
-
-These exist partially, but they are not fully integrated or proven enough to describe as finished match systems.
-
-### 1. Do not claim full match vision relocalization yet
-
-The `VisionRelocalizationSubsystem` exists inside `Debugger.java`, not as a real subsystem used by `MainTeleOp` or `NewAuto`.
-
-That means the correct wording is:
-
-"We prototyped and tested vision-based relocalization using Limelight AprilTag data."
-
-Not:
-
-"The robot automatically relocalizes during every match shot."
-
-Action:
-
-- move `VisionRelocalizationSubsystem` into `subsystem/`
-- integrate it into `MainTeleOp`
-- optionally integrate it into auto
-- log accepted/rejected corrections
-- prove it improves pose accuracy or shot accuracy
-
-### 2. Do not overclaim the position aiming LUT
-
-The `PositionAimLut` implementation is good, but in `Turret.java`:
-
-- `positionAimLutEnabled` defaults to false
-- red has samples
-- blue LUT is empty
-
-Correct wording before more testing:
-
-"We implemented a position-based virtual aim-point LUT and are using it as a tunable aiming correction system."
-
-Stronger wording only after testing:
-
-"The LUT improved shot accuracy from X% to Y% across tested field positions."
-
-Action:
-
-- decide whether LUT is competition-enabled
-- add blue alliance mirroring or blue samples
-- log selected virtual aim point
-- run a before/after shot test
-
-### 3. Do not claim shoot-on-the-move as successful
-
-The code has a `lookToGoalWhileMoving` method, but the current model is a rough pose shift using full velocity vector and distance. It is not a strong physics model.
+The relocalization code is inside `Debugger.java`, not a normal subsystem used by match TeleOp or autonomous. `MainTeleOp` also defaults Limelight aiming off.
 
 Correct wording:
 
-"We experimented with shoot-on-the-move compensation, but removed it from match strategy because it reduced consistency."
+> We prototyped Limelight AprilTag relocalization and tested accepted/rejected pose corrections.
 
-This is actually a good engineering lesson if presented honestly.
+Incorrect wording:
 
-## Measurement classes already present
+> The robot uses vision relocalization during every match.
 
-You do have measurement tools. The problem is organization.
+To make the stronger claim, move the relocalization logic into `subsystem/`, integrate it into `MainTeleOp` or autonomous, and log:
 
-### Existing tools
+- Pinpoint pose before correction
+- Limelight pose
+- correction accepted/rejected
+- rejection reason
+- pose error before/after at taped field positions
 
-- `KeCharacterizationOpMode`
-  - logs shooter velocity vs applied voltage
-  - useful for feedforward tuning
+### 5. Shoot-on-the-move should be presented as a rejected design
 
-- `KaTestOpMode`
-  - logs turret velocity, applied voltage, current, power, position, xref, vref, aref, target position, time
-  - useful for turret profile tuning graphs
+The vault says SOTM was tested and removed. That is good. Keep it honest.
 
-- `TestThroughput`
-  - logs shooter velocity, shooter power, intake current, shooter current, target
-  - useful for detecting shot events and throughput
+The TeleOp call to `lookToGoalWhileMoving` is commented out. The current method uses a rough pose shift based on full robot velocity and distance. That is not a real projectile-flight-time model.
 
-- `CollectData`
-  - logs shot success/failure with pose, turret angle, shooter velocity, hood angle, velocity
-  - this is the most directly useful Control Award data collector
+Use this as an engineering lesson:
 
-- `ShooterTelemetrySnapshot`
-  - target velocity
-  - measured velocity
-  - filtered velocity
-  - applied power
-  - hood angle
-  - busy/ready
-  - impact detected
-  - current
+> We tested shoot-on-the-move compensation, but it reduced consistency and slowed cycles, so we removed it from match strategy.
 
-- `TurretTelemetrySnapshot`
-  - control mode
-  - LUT status
-  - target angle
-  - measured angle
-  - aim point
-  - reference velocity
-  - reference acceleration
-  - overcurrent
-  - current
+Do not imply it is a working feature.
 
-## Measurement problem
+### 6. The data folder is useful but messy
 
-Most measurement is currently emitted through `Log.d` and then analyzed manually in Colab-style scripts. That works for programming, but it is weak for portfolio evidence unless the process is documented clearly.
+Current problems:
+
+- `data/throuput` is misspelled.
+- `lowVelWithoutControllerDrop.csv` is empty.
+- `lowVelWIthControllerDrop.csv` has inconsistent capitalization.
+- The acceleration datasets were moved to `data/shooter acceleration`, while related drop datasets are still under `data/throuput`.
+- Several files start mid-run instead of at a clean test start.
+- CSVs have no date, battery label, OpMode, trial number, robot setup, or notes.
+
+For programming, this is survivable. For award evidence, it is weak.
 
 Recommended structure:
 
 ```text
-obsidian/
-  control-award/
-    experiments/
-      shooter_velocity_test.md
-      turret_profile_test.md
-      lut_aiming_test.md
-      transfer_detection_test.md
-    results/
-      shooter_velocity_summary.md
-      turret_profile_summary.md
-      lut_accuracy_summary.md
+data/control-award/
+  shooter_velocity/
+    2026-06-03_high_closed_loop_drop.csv
+    2026-06-03_high_open_loop_drop.csv
+    summary.md
+  turret_profile/
+    2026-06-03_0_to_60_trial_01.csv
+    summary.md
+  lut_accuracy/
+    2026-06-03_before_after_lut.csv
+    summary.md
+  transfer_detection/
+    2026-06-03_detection_trials.csv
+    summary.md
 ```
 
-Each experiment note should have:
+Every CSV should include enough metadata to be understandable without asking the programmer who ran the test.
 
-- goal
-- robot setup
-- code / OpMode used
-- variables recorded
-- number of trials
-- result table
-- conclusion
-- what changed in the robot because of the test
+### 7. The scripts are not reproducible evidence tools
 
-## Add this to code if possible
+The scripts in `obsidian/scripts` look like exported Colab notebooks. They hardcode `/content` paths, use `display()`, mount Google Drive, and expect filenames that do not match the current repo.
 
-### 1. Reusable CSV experiment logger
+That is fine for rough exploration. It is not good documentation.
 
-Add a small logger so all debug OpModes write consistent CSV rows instead of scattered `Log.d` strings.
-
-Suggested class:
+Rewrite them as local scripts that accept command-line paths:
 
 ```text
-TeamCode/.../main/experiments/CsvExperimentLogger.java
+python obsidian/scripts/analyze_shooter_velocity.py data/control-award/shooter_velocity/file.csv
+python obsidian/scripts/analyze_turret_profile.py data/control-award/turret_profile/file.csv
 ```
 
-Suggested API:
+Each script should save:
 
-```java
-logger.header("time,targetVelocity,measuredVelocity,power,hood,success");
-logger.row(now, targetVelocity, measuredVelocity, power, hood, success);
-```
+- one graph image
+- one small markdown summary
+- the computed numbers used in the portfolio
 
-Even if it still writes to Logcat, the class gives structure and makes the experiment process easier to explain.
+## Broken or weak notes
 
-### 2. Shot trial logger
+### `obsidian/subsystem/Shooter.md`
 
-Extend `CollectData` or replace it with a cleaner `ShotAccuracyExperiment`.
+This note is unfinished and has an unclosed code fence. It should be finished before exporting anything.
 
-Record:
+Add:
 
-- trial number
-- timestamp
-- alliance
-- robot x
-- robot y
-- robot heading
-- robot velocity
-- turret target angle
-- turret measured angle
-- turret error
-- virtual aim point x/y
-- shooter target velocity
-- shooter measured velocity
-- hood position
-- shot success
+- the measured closed-loop vs open-loop table
+- the `isBusy()` tolerance
+- what happens before feeding
+- recovery/drop detection explanation
+- one graph from the throughput data
 
-This is the most important dataset for winning Control Award.
+### `obsidian/New review.md`
 
-### 3. Turret settle test
+This looks like an accidental duplicate of the shooter note and also has an unclosed code fence. Delete it or replace it with a real top-level review. Do not keep duplicate half-notes.
 
-Create a test that commands the turret through fixed angles and logs:
+### `obsidian/subsystem/Turret.md`
 
-- target angle
-- measured angle
-- time to within 1 degree
+This note has the right iteration structure, but the wording is too loose.
+
+Fix these:
+
+- "The limelight doesn't create errors" is false.
+- "Consistent and accurate aiming" needs numbers or should be softened.
+- "sensor fusion" must be explained exactly or removed.
+- "LUT solves the aiming issues" should become "LUT is being tested to correct position-dependent aiming error."
+
+Better structure:
+
+- V1: Limelight-on-turret aiming, failed because of FOV, target choice, and mechanical stress.
+- V2: pose-based aiming with motion profiling, improved mechanics but still suffered from odometry drift and single target-point aiming.
+- V3: fixed Limelight relocalization prototype plus position-based virtual aim LUT, promising but needs before/after shot data.
+
+### `obsidian/subsystem/Intake and Transfer.md`
+
+This note is too short and has sloppy wording.
+
+Fix:
+
+- "states the turret should be" should be "states the transfer should be in."
+- "allerts" should be "alerts."
+- mention the real code behavior: three `DistanceSensor` readings, 10 Hz update rate, 0.4 s full debounce, stop on full or intake overcurrent.
+
+### `obsidian/Simulator.md`
+
+One sentence is not enough. This is a major part of the LUT story.
+
+Add:
+
+- coordinate system
+- how robot pose is selected
+- how virtual aim points are chosen
+- how samples are exported
+- how samples move into `PositionAimLut`
+- limitations of simulator tuning versus live shot testing
+
+### `obsidian/LUTS/Turret LUT.md`
+
+This note needs to explain that the LUT maps robot field position to a virtual aim point. It should also admit that live shot accuracy is the real validation, not the simulator screenshot.
+
+### `obsidian/Main structure.md`
+
+This is basically empty. Either fill it with the architecture map or delete it.
+
+## What to claim confidently
+
+### Shooter velocity control
+
+Supported by code and data.
+
+Claim:
+
+> The shooter uses encoder velocity feedback, PIDFF, and voltage-scaled feedforward. In high-speed testing, closed-loop control held velocity near target far better than open-loop feedforward alone.
+
+Evidence:
+
+- target vs measured velocity graph
+- closed-loop vs open-loop error table
+- ready tolerance percentage
+
+### Transfer automation
+
+Supported by code, but needs trial data.
+
+Claim:
+
+> During collection, three distance sensors detect fullness and the intake stops automatically when the robot is full or overcurrent is detected.
+
+Evidence still needed:
+
+- 20 collection trials
+- false positives
+- false negatives
+- stop response time
+- jam/current events
+
+### Motion-profiled turret
+
+Supported by code, partially supported by data.
+
+Claim:
+
+> The turret follows a trapezoidal motion profile with PIDFF instead of direct raw position control.
+
+Evidence still needed:
+
+- timed settle tests
+- final angle error
 - overshoot
 - peak current
 
-Use this to prove motion profiling helped.
+### Telemetry architecture
 
-### 4. Shooter recovery test
+Supported by code, needs loop-rate evidence.
 
-Use the existing shooter impact detection to measure:
+Claim:
 
-- velocity before shot
-- velocity drop
-- recovery time to within tolerance
-- whether next shot was fired too early
+> Competition telemetry is separated from debug telemetry, and expensive readings are throttled to protect loop consistency.
 
-This proves the velocity controller has match value.
+Evidence still needed:
 
-## Structure recommendation for Obsidian
+- competition loop Hz
+- debug loop Hz
+- screenshot/example of each mode
 
-Current notes are too flat. They should be reorganized around the award story.
-
-Recommended folders:
-
-```text
-obsidian/
-  Control Award/
-    00 Control Award Summary.md
-    01 System Architecture.md
-    02 Turret Aiming.md
-    03 Shooter Velocity.md
-    04 Transfer Automation.md
-    05 Telemetry and Measurements.md
-    06 Experiments and Results.md
-    07 Judge Talking Points.md
-  Control Award/Experiments/
-    Shooter Velocity Test.md
-    Turret Motion Profile Test.md
-    Position LUT Shot Accuracy Test.md
-    Transfer Sensor Reliability Test.md
-    Vision Relocalization Test.md
-```
-
-## Suggested portfolio page structure
-
-Use one polished Control Award page, not many disconnected paragraphs.
-
-### Section 1 - Control system overview
-
-Small table:
-
-| System                | Feedback                   | Control method            | Match impact                         |
-| --------------------- | -------------------------- | ------------------------- | ------------------------------------ |
-| Turret                | pose + encoder             | geometry + profiled PIDFF | automatic aiming                     |
-| Shooter               | encoder velocity + voltage | PIDFF velocity loop       | consistent shots                     |
-| Transfer              | 3 sensors + current alert  | state machine             | fewer jams                           |
-| Telemetry             | structured snapshots       | modes + throttling        | better loop consistency              |
-| Vision relocalization | AprilTag pose              | filtered correction       | prototype / future unless integrated |
-
-### Section 2 - Main innovation
-
-Make turret + shooter the main story.
-
-Use this chain:
-
-```text
-Pinpoint pose -> aim geometry / LUT -> turret motion profile -> shooter velocity ready -> transfer feeds artifact
-```
-
-### Section 3 - Engineering iteration
-
-Use V1 / V2 / V3, but be honest.
-
-V1:
-
-- Limelight-on-turret aiming
-- easy to implement
-- failed due to FOV, mechanical stress, and aiming at tag center
-
-V2:
-
-- pose-based turret aiming with motion profile
-- improved speed and removed FOV problem
-- failed because odometry drift and single target point were not enough
-
-V3:
-
-- position-based virtual aim LUT
-- vision relocalization prototype
-- telemetry-driven tuning
-- SOTM removed because it hurt consistency
-
-### Section 4 - Evidence
-
-Do not write this without numbers.
-
-Minimum numbers to collect:
-
-- shooter spin-up time
-- shooter average velocity error
-- shooter recovery time after shot
-- turret average settle time
-- turret final angle error
-- LUT shot accuracy before/after
-- transfer full detection accuracy
-- loop Hz in competition vs debug telemetry
-
-## Things to fix in the existing notes
-
-- `Shooter.md` is unfinished. Finish it.
-- `Intake and Transfer.md` says "states the turret should be." That should be transfer/intake.
-- `Turret.md` says "Limelight doesn't create errors." That is false. Say it has useful absolute feedback but also latency, FOV, calibration, lighting, and bad-frame risks.
-- `Trapezoidal Motion Profiling.md` formula should not use `signum(kv)` for static feedforward. It should use direction of motion/reference, such as `sign(v_ref)`, or fallback to position error when reference velocity is zero.
-- `Simulator.md` needs more than one sentence. Explain coordinate system, controls, LUT export, and how samples move into robot code.
-- `Turret LUT.md` should say it maps robot field position to virtual aim point, not just "position-target aiming position pairs."
-
-## Judge-facing wording to avoid
+## Judge-facing language to avoid
 
 Avoid:
 
 - "The Limelight doesn't create errors."
 - "The LUT solved the problem."
 - "The turret is consistent and accurate."
-- "SOTM works" if you removed it.
-- "Sensor fusion" unless you can explain exactly what is fused and where in code.
+- "SOTM works."
+- "Sensor fusion" unless you can point to the exact code and explain the filter.
+- "It worked."
 
 Use:
 
@@ -462,35 +324,24 @@ Use:
 - "We rejected..."
 - "We disabled..."
 - "This improved X by Y..."
-- "The current limitation is..."
+- "The limitation is..."
 - "The fallback is..."
 
-Judges trust teams that can explain tradeoffs and failures.
+## Priority action list
 
-## Most important next action
+1. Finish `Shooter.md` with the actual closed-loop vs open-loop numbers.
+2. Fix or delete `New review.md`.
+3. Rewrite `Turret.md` so it stops overclaiming.
+4. Add time and trial metadata to turret logs.
+5. Run the LUT before/after shot accuracy test.
+6. Rename and reorganize the data folder for Control Award evidence.
+7. Rewrite analysis scripts so they run locally from repo data.
+8. Add transfer detection trial results.
+9. Add telemetry loop-rate results.
+10. Only then write final judge-facing portfolio text.
 
-Run the shot accuracy experiment.
+## Final take
 
-Suggested test:
+The codebase is more serious than the vault makes it look. Right now the documentation undersells the shooter, overclaims the turret/LUT/vision side, and leaves too much evidence trapped in messy CSVs and Colab-style scripts.
 
-1. Pick 6 field positions.
-2. At each position, shoot 5 artifacts using normal center-goal aiming.
-3. Record successes.
-4. Enable/adjust LUT.
-5. Shoot 5 more artifacts from each position.
-6. Record successes.
-7. Make one table and one field diagram.
-
-That one experiment can turn the portfolio from "we wrote advanced code" into "we engineered a measured improvement."
-
-## Final recommendation
-
-Write the portfolio yourself, but base it on measured claims:
-
-- what feedback the robot uses
-- what control algorithm uses that feedback
-- what problem it solved
-- what evidence proves it helped
-- what failed and what you changed
-
-The current codebase can support a strong Control Award submission. The missing work is not another fancy algorithm. The missing work is disciplined proof.
+Be ruthless with the wording. If there is no number, call it a prototype, a design decision, or a lesson learned. If there is a number, put it in a table and make it the center of the story.

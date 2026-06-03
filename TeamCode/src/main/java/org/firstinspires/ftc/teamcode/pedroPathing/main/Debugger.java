@@ -1156,6 +1156,7 @@ class KaTestOpMode extends OpMode {
     private double originalKp, originalKi, originalKd, originalKs, originalKv, originalKa;
     private double originalMaxVel, originalMaxAcc, originalMaxDec, originalMaxPower;
     String tag = "ka";
+    int count = 0;
 
     public KaTestOpMode(MotorConfig motor) {
     }
@@ -1177,7 +1178,7 @@ class KaTestOpMode extends OpMode {
         applyTuningConfigurables();
         turret = new Turret(hardwareMap);
         turret.init();
-        Log.d(tag, "power,aref,vref,xref,v_current,x_current_ticks,x_current_rads,pos1,pos2,to_pos_2,current");
+        Log.d(tag, "time,power,aref,vref,xref,v_current,x_current_ticks,x_current_rads,pos1,pos2,to_pos_2,current");
     }
 
     @Override
@@ -1186,7 +1187,8 @@ class KaTestOpMode extends OpMode {
         goingToPos2 = true;
     }
     public void log(TurretTelemetrySnapshot s, boolean atPose2) {
-        Log.d(tag, String.format("%.3f,%.3f,%.3f,%.3f,%.3f,%d,%.3f,%.3f,%.3f,%b,%.3f",
+        Log.d(tag, String.format("%.3f%.3f,%.3f,%.3f,%.3f,%.3f,%d,%.3f,%.3f,%.3f,%b,%.3f,%d",
+                getRuntime(),
                 s.appliedPower,
                 s.referenceAccelerationTicksPerSecondSquared,
                 s.referenceVelocityTicksPerSecond,
@@ -1197,7 +1199,8 @@ class KaTestOpMode extends OpMode {
                 position1,
                 position2,
                 atPose2,
-                s.currentAmps
+                s.currentAmps,
+                count
                 )
         );
     }
@@ -1206,6 +1209,7 @@ class KaTestOpMode extends OpMode {
     public void loop() {
         if (gamepad1.aWasPressed()) {
             goingToPos2 ^= true;
+            count++;
         }
 
         double targetDegrees = goingToPos2 ? position2 : position1;
