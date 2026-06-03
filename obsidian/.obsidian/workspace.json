@@ -13,15 +13,26 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "subsystem/Turret.md",
+                "file": "AI Control Award Review.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Turret"
+              "title": "AI Control Award Review"
+            }
+          },
+          {
+            "id": "b19a51f8a36c7228",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -183,13 +194,20 @@
       "bases:Create new base": false
     }
   },
-  "active": "403eae66048fa8fe",
+  "active": "b19a51f8a36c7228",
   "lastOpenFiles": [
-    "data",
-    "subsystem/Shooter.md",
+    "New review.md",
+    "motor package.md",
+    "Main structure.md",
+    "Control Award Robot Data Instructions.md",
     "AI Control Award Definition.md",
     "AI Control Award Review.md",
-    "Control Award Robot Data Instructions.md",
+    "subsystem/Turret.md",
+    "LUTS/Turret LUT.md",
+    "TurretLUT_img.png",
+    "Simulator.md",
+    "data",
+    "subsystem/Shooter.md",
     "scripts/turret_position_lut_samples.json",
     "scripts/field.png",
     "scripts/simulator.py",
@@ -199,15 +217,9 @@
     "scripts/ka_test_visualization.py",
     "scripts",
     "controllers/Trapezoidal Motion Profiling.md",
-    "subsystem/Turret.md",
     "controllers/PID + FF.md",
     "subsystem/Intake and Transfer.md",
-    "motor package.md",
-    "TurretLUT_img.png",
     "controllers/kv.png",
-    "LUTS/Turret LUT.md",
-    "Main structure.md",
-    "Simulator.md",
     "controllers/velocity vs vref.png",
     "controllers/pos vs xref.png",
     "Pasted image 20260526000226.png",
@@ -216,7 +228,6 @@
     "AEK.md",
     "controllers",
     "Untitled 1.md",
-    "LUTS",
-    "subsystem"
+    "LUTS"
   ]
 }
