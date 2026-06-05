@@ -21,14 +21,12 @@ The PID part reacts to velocity error. The feedforward part predicts how much po
 
 The shooter has 2 motors. Only the main motor is closed-loop from encoder velocity. The second motor is a follower and copies the same power, so both wheels apply the same output while the controller uses one clean feedback source.
 
-### Match behavior
+### Match behavior (Automation)
+We have developed the 
 
-In TeleOp we use close/far presets. The driver switches preset and the code changes:
-
-- shooter target velocity
-- hood servo position
 
 The robot also calculates `shooter.isBusy()`:
 
 ```text
 busy = abs(target velocity - measured velocity) > 70 ticks/s
+```
