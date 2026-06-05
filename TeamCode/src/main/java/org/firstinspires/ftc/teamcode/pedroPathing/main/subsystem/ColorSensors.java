@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class ColorSensors {
-    private static final double DEFAULT_UPDATE_HZ = 10.0;
+    private static final double DEFAULT_UPDATE_HZ = 15.0;
 
     HardwareMap hwmap;
     DistanceSensor color1, color2, color3;
