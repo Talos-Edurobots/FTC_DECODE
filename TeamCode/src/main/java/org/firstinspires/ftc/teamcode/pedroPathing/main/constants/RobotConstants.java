@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.GoBILDAMotorTypes;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.MotionProfilingCoefficients;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.coefficients.PIDFFCoefficients;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.config.MotorLimits;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.math.units.AngularVelocity;
 
 public final class RobotConstants {
     private RobotConstants(){}
@@ -56,6 +57,7 @@ public final class RobotConstants {
     public static final DcMotorSimple.Direction SHOOTER_FOLLOWER_DIRECTION = DcMotorSimple.Direction.FORWARD;
     public static final DcMotor.ZeroPowerBehavior SHOOTER_FOLLOWER_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.FLOAT;
+    public static final float SHOOTER_IDLE_TPS = 700;
 
     public static final String TURRET_MOTOR_NAME = "turret";
     public static final GoBILDAMotorTypes TURRET_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_312_RPM;

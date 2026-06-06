@@ -30,6 +30,12 @@ public class Shooter implements TelemetryProvider {
     private Servo hoodServo;
     private double dt = 0;
     private boolean isRunning = true;
+
+    public void setIdle(boolean atIdle) {
+        isAtIdle = atIdle;
+    }
+
+    private boolean isAtIdle = false;
     public static double alpha = .2;
     public static double dropThreshold = 100;
     public static double debounceTime = .5;
@@ -104,7 +110,11 @@ public class Shooter implements TelemetryProvider {
         }
         shooterMotor.getHardware().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shooterFollowerMotor.getHardware().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        setVelocity();
+        if (!isAtIdle) {
+            setVelocity();
+            return;
+        }
+        idle();
     }
     public void updateOpenLoopFeedforward() {
         dt = loopTimer.seconds();
@@ -165,6 +175,14 @@ public class Shooter implements TelemetryProvider {
     }
     public void floatShooter() {
         setPower(0);
+    }
+    private void idle(){
+        setTargetVelocity(RobotConstants.SHOOTER_IDLE_TPS);
+        if (targetVelocity > getVelocity()) {
+            floatShooter();
+            return;
+        }
+        setVelocity();
     }
 
     private double calculateOpenLoopFeedforwardPower(double targetVelocityTicksPerSecond) {

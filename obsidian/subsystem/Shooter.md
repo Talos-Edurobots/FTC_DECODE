@@ -20,6 +20,8 @@ $$
 
 The robot considers the shooter ready when measured velocity is within 70 ticks/s of the target. This state is shown through LEDs and telemetry. Feeding is still commanded by the driver; the current code does not automatically block a shot while the shooter is busy.
 
+We tuned feedforward from logged voltage-versus-velocity data. `ke_kv_calculator.py` fits the relationship between applied voltage and flywheel speed so `k_v` can be chosen from measured behavior instead of guesswork.
+
 ## Measured result
 
 | Test | Average absolute error | Within 70 ticks/s |

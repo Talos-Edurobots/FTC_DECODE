@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HoodAngleLut;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ShooterHoodLuts;
@@ -44,6 +45,7 @@ public class MainTeleOp implements TelemetryProvider {
     public static double hoodLutTrim = 0.0;
     public static int hoodLutNeighborCount = HoodAngleLut.DEFAULT_NEIGHBOR_COUNT;
     public static boolean defaultUseLimelight = false;
+    public static boolean logTelemetry = false;
 
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private final TelemetryHub telemetryHub = new TelemetryHub();
@@ -198,38 +200,33 @@ public class MainTeleOp implements TelemetryProvider {
             useHang ^= true;
         }
 
-        LLResult result = limelight.getLatestResult();
-        boolean isTurretTarget = result != null && result.getTx() != 0 && Math.abs(result.getTx()) < 3;
-        lastTurretTargetLock = isTurretTarget;
-        lastVisionTx = result == null ? 0.0 : result.getTx();
-        double color1 = shooter.isBusy() ? .28 : isTurretTarget ? .5 : .333;
-        double color2 = isFar ? .555 : .722;
-        if (isTurretTarget && shooter.isBusy()) {
-            leds.blinkLeft(0.2, dt, 1, 0);
-        } else {
-            leds.setLeft(color1);
+        if (transfer.getState() == Transfer.TransferState.SHOOT && transfer.isEmpty()) {
+            transfer.collect();
+            leds.blink(Leds.Side.BOTH, 0.28, 3);
         }
-        if (transfer.getState() == Transfer.TransferState.STOP) {
-            leds.blinkRight(0.2, dt, color2, 1);
-        } else {
-            leds.setRight(color2);
+        else if (transfer.getState() == Transfer.TransferState.SHOOT) {
+            leds.setBoth(0.5);
         }
+        else if (transfer.getState() == Transfer.TransferState.COLLECT) {
+            leds.setBoth(0.33);
+        }
+        else if (transfer.getState() == Transfer.TransferState.STOP && shooter.isBusy()) {
+            leds.pulse(Leds.Side.BOTH, 0.71, 0.3);
+        } else if (transfer.getState() == Transfer.TransferState.STOP && !shooter.isBusy()) {
+            leds.pulse(Leds.Side.BOTH, 0.5, .3);
+        }
+        leds.update(dt);
 
         turret.manualControl(opMode.gamepad1.left_trigger - opMode.gamepad1.right_trigger);
         if (turretFaceForwardOverride) {
             turret.faceForward();
             turret.loop();
-        } else if (useLimelight) {
-            turret.limelightAim(result);
         } else {
 //            turret.lookToGoalWhileMoving(follower.getPose(), follower.getVelocity(), !isBlue);
             turret.lookToGoal(follower.getPose(), !isBlue);
             turret.loop();
         }
 
-        if (opMode.gamepad1.dpadDownWasPressed()) {
-            useLimelight ^= true;
-        }
         if (opMode.gamepad1.xWasPressed()) {
             isFar ^= true;
             if (!useShooterHoodLuts) {
@@ -261,7 +258,12 @@ public class MainTeleOp implements TelemetryProvider {
                 shooter.setHoodAngle(shooter.getHoodAngle() + dt * .8);
             }
         }
-        updateShooterAndHoodTargets(follower.getPose());
+        if (transfer.getState() != Transfer.TransferState.COLLECT) {
+            updateShooterAndHoodTargets(follower.getPose());
+        }
+        else {
+            shooter.setIdle(true);
+        }
         shooter.update();
 //        if (opMode.gamepad1.startWasPressed()) {
 //            follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
@@ -340,7 +342,7 @@ public class MainTeleOp implements TelemetryProvider {
             hoodPosition = isFar ? hoodFarAngle : hoodCloseAngle;
         }
         hoodPosition += hoodLutTrim;
-
+        shooter.setIdle(false);
         Shooter.setTargetVelocity(targetVelocity);
         shooter.setHoodAngle(hoodPosition);
         lastShooterDistanceFromGoal = distanceFromGoal;

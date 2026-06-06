@@ -81,6 +81,9 @@ public class Transfer {
     public boolean isFull() {
         return colorSensors.isFull();
     }
+    public boolean isEmpty() {
+        return colorSensors.isEmpty();
+    }
 
     public boolean isOverCurrent() {
         return intake.isOverCurrent();

@@ -30,19 +30,19 @@ shooter / turret / transfer state -> LEDs + Panels telemetry
 | Drive           | Field-centric drive with acceleration limiting; stick click enables 25% slow mode                         |
 | Collect         | Transfer enters `COLLECT`; intake stops automatically when full or overcurrent                            |
 | Shoot           | Holding the bumper opens the gate and runs the transfer                                                   |
-| Localize        | A fixed Limelight above the intake uses AprilTags to correct accumulated odometry drift                  |
+| Localize        | A fixed Limelight above the intake uses AprilTags to correct accumulated odometry drift                   |
 | Aim             | Turret continuously calculates its angle from corrected robot pose and the interpolated virtual aim point |
 | Select fallback | Driver can use a face-forward override or fixed close/far values if the LUT system is disabled            |
 | Read status     | LEDs show shooter/target and transfer states; telemetry exposes detailed debug values                     |
 
 ### Iteration evidence
 
-| Earlier robot | Current robot |
-| --- | --- |
-| Driver timed multiple flickers and watched artifact position | One transfer state machine controls collection, stopping, and feeding |
-| Two fixed velocity/hood combinations | Velocity and hood change continuously from pose and measured shooter velocity |
-| Turret camera could lose the target while rotating | Fixed Limelight relocalizes the robot while pose/LUT aiming controls the turret |
-| Turret aimed at one fixed field target | Position LUT changes the virtual aim point across the field |
+| Earlier robot                                                | Current robot                                                                                        |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Driver timed multiple flickers and watched artifact position | One transfer state machine controls collection, stopping, and feeding                                |
+| Two fixed velocity/hood combinations                         | Velocity and hood change continuously from pose and measured shooter velocity                        |
+| Turret camera could lose the target while rotating           | Fixed Limelight relocalizes the pinpoint odometry computer while pose/LUT aiming controls the turret |
+| Turret aimed at one fixed field target                       | Position LUT changes the virtual aim point across the field                                          |
 
 ### Visuals
 
@@ -54,15 +54,15 @@ shooter / turret / transfer state -> LEDs + Panels telemetry
 
 ### Main statement
 
-The scoring system adapts all three shot variables to field position instead of relying on two fixed presets.
+The strongest technical page should show how the scoring system evolved into one corrected-pose control pipeline, not just list every subsystem.
 
-| System | Input / feedback | Algorithm | Output |
-| --- | --- | --- | --- |
-| Localization | Pinpoint odometry + fixed Limelight AprilTag pose | Observation validation + pose correction | Corrected field pose |
-| Turret | Corrected field pose + turret encoder | 2D inverse-distance LUT, geometry, trapezoidal profile, PIDFF | Turret angle |
-| Shooter | Corrected goal distance + flywheel encoder + battery voltage | Linear distance LUT + velocity PIDFF | Flywheel velocity |
-| Hood | Corrected goal distance + measured flywheel velocity | 2D inverse-distance LUT | Hood servo position |
-| Transfer | Three distance sensors + intake current | `STOP`, `COLLECT`, `SHOOT` state machine | Intake and gate commands |
+| System       | Input / feedback                                             | Algorithm                                                     | Output                   |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------- | ------------------------ |
+| Localization | Pinpoint odometry + fixed Limelight AprilTag pose            | Observation validation + pose correction                      | Corrected field pose     |
+| Turret       | Corrected field pose + turret encoder                        | 2D inverse-distance LUT, geometry, trapezoidal profile, PIDFF | Turret angle             |
+| Shooter      | Corrected goal distance + flywheel encoder + battery voltage | Linear distance LUT + velocity PIDFF                          | Flywheel velocity        |
+| Hood         | Corrected goal distance + measured flywheel velocity         | 2D inverse-distance LUT                                       | Hood servo position      |
+| Transfer     | Three distance sensors + intake current                      | `STOP`, `COLLECT`, `SHOOT` state machine                      | Intake and gate commands |
 
 ### Portfolio text
 
@@ -74,22 +74,61 @@ The turret LUT stores calibrated pairs of robot position and virtual aim point. 
 
 The driver can trim the hood during testing or use fixed close/far values if the LUT system is disabled. A face-forward turret override remains available, while corrected-pose/LUT aiming is the default.
 
+### What should actually be on Page 2
+
+Use three compact blocks instead of one long paragraph.
+
+#### Block A - Turret evolution
+
+| Version | Main idea                                                                       | Why it changed                                                                                                      |
+| ------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| V1      | Limelight mounted on the turret directly measured target error                  | Lost target with turret rotation, stressed mechanics, and still aimed poorly from some field positions              |
+| V2      | Pinpoint pose plus trapezoidal motion profiling aimed to one fixed field target | Removed camera FOV dependence and mechanical stress, but odometry drift and one fixed target still limited accuracy |
+| V3      | Fixed Limelight relocalization plus position aim LUT                            | Corrected odometry drift and changed the virtual aim point across the field                                         |
+
+Judge message: the turret design did not just become more complicated. Each version removed a specific control failure from the previous one.
+
+#### Block B - Shooter controller
+
+Keep one short formula callout:
+
+$$
+power = PID(v_{target}-v_{measured}) +
+{k_s\,sign(v_{target}) + k_v v_{target} \over V_{battery}}
+$$
+
+One sentence under it:
+
+```text
+Encoder feedback corrects velocity error, while voltage-scaled feedforward predicts the power needed to hold speed before error grows.
+```
+
+#### Block C - Tuning and evidence
+
+Use one caption-sized note for tuning:
+
+```text
+We tuned feedforward constants from logged voltage-versus-velocity data using `ke_kv_calculator.py`, then verified the result with closed-loop error and recovery graphs.
+```
+
+This belongs on the page because it proves engineering process, but it should stay small. Judges will care more about the measured improvement than the script name.
+
 ### Shooter result
 
-| Test | Average absolute error | Within 70 ticks/s |
-| --- | ---: | ---: |
-| Closed loop, 2000 ticks/s | about 21.5 ticks/s | 94.9% |
-| Open loop, 2000 ticks/s | about 168.2 ticks/s | 6.8% |
-| Closed loop, 1300 ticks/s | about 22.2 ticks/s | 92.5% |
+| Test                      | Average absolute error | Within 70 ticks/s |
+| ------------------------- | ---------------------: | ----------------: |
+| Closed loop, 2000 ticks/s |     about 21.5 ticks/s |             94.9% |
+| Open loop, 2000 ticks/s   |    about 168.2 ticks/s |              6.8% |
+| Closed loop, 1300 ticks/s |     about 22.2 ticks/s |             92.5% |
 
 Caption: Encoder feedback and voltage-scaled feedforward made flywheel speed substantially more repeatable than open-loop control.
 
 ### Visuals
 
 - Adaptive scoring pipeline diagram.
+- Turret V1 -> V2 -> V3 evolution strip.
 - One shooter closed-loop/open-loop graph.
-- Small turret motion-profile graph.
-- Small LUT field visualization.
+- One small formula callout box.
 - Small localization diagram showing Pinpoint prediction and Limelight correction.
 
 ## Page 3 - Validation and engineering process
@@ -153,9 +192,10 @@ These tools belong in the portfolio only when connected to the engineering proce
 ## Space priority
 
 1. Corrected-pose adaptive scoring pipeline.
-2. Limelight relocalization evidence.
-3. Shooter closed-loop evidence.
-4. Before/after scoreable field coverage.
-5. Driver and transfer automation.
-6. Turret profile and telemetry evidence.
-7. Development tools as one small footer row.
+2. Turret V1 -> V2 -> V3 evolution.
+3. Limelight relocalization evidence.
+4. Shooter closed-loop evidence.
+5. Before/after scoreable field coverage.
+6. Driver and transfer automation.
+7. Turret profile and telemetry evidence.
+8. Development tools as one small footer row.

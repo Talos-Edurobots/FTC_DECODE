@@ -12,9 +12,10 @@ public class ColorSensors {
     HardwareMap hwmap;
     DistanceSensor color1, color2, color3;
     double dist1, dist2, dist3;
-    boolean wasFull;
+    boolean wasFull, wasEmpty;
     double updatePeriodSeconds = 1.0 / DEFAULT_UPDATE_HZ;
-    ElapsedTime timer = new ElapsedTime();
+    ElapsedTime fullTimer = new ElapsedTime();
+    ElapsedTime emptyTimer = new ElapsedTime();
     ElapsedTime updateTimer = new ElapsedTime();
 
     public ColorSensors() {}
@@ -44,8 +45,10 @@ public class ColorSensors {
         dist1 = color1.getDistance(DistanceUnit.CM);
         dist2 = color2.getDistance(DistanceUnit.CM);
         dist3 = color3.getDistance(DistanceUnit.CM);
-        if (!wasFull)  timer.reset();
+        if (!wasFull)  fullTimer.reset();
+        if (!wasEmpty) emptyTimer.reset();
         wasFull = is1Detected() && is2Detected() && is3Detected();
+        wasEmpty = !is1Detected() && !is2Detected() && !is3Detected();
         updateTimer.reset();
     }
 
@@ -68,10 +71,13 @@ public class ColorSensors {
         return dist3 < 5.5;
     }
     public boolean isFull() {
-        return timer.seconds() > 0.4;
+        return fullTimer.seconds() > 0.4;
+    }
+    public boolean isEmpty() {
+        return emptyTimer.seconds() > 0.5;
     }
     public double getFullTIme() {
-        return timer.seconds();
+        return fullTimer.seconds();
     }
     public double getColor1() {
         return dist1;

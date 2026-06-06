@@ -64,10 +64,24 @@ public final class TelemetryCollector {
     }
 
     public void publish(TelemetryManager panelsTelemetry, Telemetry telemetry) {
+        StringBuilder logBuilder = null;
+        if (org.firstinspires.ftc.teamcode.pedroPathing.main.MainTeleOp.logTelemetry) {
+            logBuilder = new StringBuilder();
+            logBuilder.append(nowSeconds);
+        }
+
         for (Map.Entry<String, Object> entry : pendingFields.entrySet()) {
             panelsTelemetry.addData(entry.getKey(), entry.getValue());
             telemetry.addData(entry.getKey(), entry.getValue());
+            if (logBuilder != null) {
+                logBuilder.append(",").append(entry.getKey()).append(",").append(entry.getValue());
+            }
         }
+
+        if (logBuilder != null && pendingFields.size() > 0) {
+            android.util.Log.d("Telemetry", logBuilder.toString());
+        }
+
         panelsTelemetry.update(telemetry);
     }
 
