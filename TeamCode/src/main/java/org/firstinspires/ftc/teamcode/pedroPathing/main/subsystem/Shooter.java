@@ -99,7 +99,12 @@ public class Shooter implements TelemetryProvider {
         dt = loopTimer.seconds();
         loopTimer.reset();
         loopState.set(dt, 1.0 / getBatteryVoltage());
+        if (isAtIdle) {
+            idle();
+            return;
+        }
         shooterMotor.setTargetVelocityTicksPerSecond(targetVelocity);
+        setVelocity();
         calculateFilteredVelocity();
         if (isBusy() && targetVelocity < shooterMotor.getMeasuredVelocityTicksPerSecond()) {
             shooterMotor.getHardware().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -110,11 +115,6 @@ public class Shooter implements TelemetryProvider {
         }
         shooterMotor.getHardware().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shooterFollowerMotor.getHardware().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        if (!isAtIdle) {
-            setVelocity();
-            return;
-        }
-        idle();
     }
     public void updateOpenLoopFeedforward() {
         dt = loopTimer.seconds();

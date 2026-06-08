@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -12,6 +13,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
@@ -33,7 +35,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryProvi
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue;
 
 import java.util.HashMap;
-
+@Configurable
 public class MainTeleOp implements TelemetryProvider {
     private static final int DRIVER_STATION_TELEMETRY_INTERVAL_MS = 100;
 
@@ -68,6 +70,7 @@ public class MainTeleOp implements TelemetryProvider {
     private Limelight3A limelight;
     private Leds leds;
     private DriveTrain drivetrain;
+    private Pose3D llPose;
     private boolean automatedDrive = false;
     private boolean isFar = false;
     static boolean slowMode = false;
@@ -161,8 +164,8 @@ public class MainTeleOp implements TelemetryProvider {
     }
 
     public void start() {
+        limelight.pipelineSwitch(1);
         limelight.start();
-//        follower.startTeleopDrive(true);
         transfer.collect();
         transfer.update();
         turret.start();
@@ -203,14 +206,11 @@ public class MainTeleOp implements TelemetryProvider {
         if (transfer.getState() == Transfer.TransferState.SHOOT && transfer.isEmpty()) {
             transfer.collect();
             leds.blink(Leds.Side.BOTH, 0.28, 3);
-        }
-        else if (transfer.getState() == Transfer.TransferState.SHOOT) {
+        } else if (transfer.getState() == Transfer.TransferState.SHOOT) {
             leds.setBoth(0.5);
-        }
-        else if (transfer.getState() == Transfer.TransferState.COLLECT) {
+        } else if (transfer.getState() == Transfer.TransferState.COLLECT) {
             leds.setBoth(0.33);
-        }
-        else if (transfer.getState() == Transfer.TransferState.STOP && shooter.isBusy()) {
+        } else if (transfer.getState() == Transfer.TransferState.STOP && shooter.isBusy()) {
             leds.pulse(Leds.Side.BOTH, 0.71, 0.3);
         } else if (transfer.getState() == Transfer.TransferState.STOP && !shooter.isBusy()) {
             leds.pulse(Leds.Side.BOTH, 0.5, .3);
@@ -260,8 +260,7 @@ public class MainTeleOp implements TelemetryProvider {
         }
         if (transfer.getState() != Transfer.TransferState.COLLECT) {
             updateShooterAndHoodTargets(follower.getPose());
-        }
-        else {
+        } else {
             shooter.setIdle(true);
         }
         shooter.update();
@@ -271,6 +270,15 @@ public class MainTeleOp implements TelemetryProvider {
 
 //        Drawing.drawRobot(follower.getPose(), turret.getAngleToGoal());
 //        Drawing.sendPacket();
+
+        LLResult llResult = null;
+        limelight.updateRobotOrientation(follower.getPose().getHeading());
+        if (follower.getVelocity().getMagnitude() < 0.1) {
+            llResult = limelight.getLatestResult();
+            if (llResult.isValid()) {
+                llPose = llResult.getBotpose_MT2();
+            }
+        }
 
         if (opMode.gamepad2.x) {
             follower.activateAllPIDFs();
@@ -365,6 +373,7 @@ public class MainTeleOp implements TelemetryProvider {
 //        collector.add("system", "min fps", loopStats.worstMillis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", "1% lows", loopStats.p99Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", ".1% lows", loopStats.p999Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("system", "limelight_pose", llPose, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_hz", lastLoopDt > 0 ? 1 / lastLoopDt : 0.0,
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_avg_fps", 1000/loopStats.averageMillis,
