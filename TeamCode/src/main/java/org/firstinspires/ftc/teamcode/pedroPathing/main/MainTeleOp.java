@@ -272,11 +272,13 @@ public class MainTeleOp implements TelemetryProvider {
 //        Drawing.sendPacket();
 
         LLResult llResult = null;
-        limelight.updateRobotOrientation(follower.getPose().getHeading());
+        limelight.updateRobotOrientation(Math.toDegrees(follower.getPose().getHeading()));
         if (follower.getVelocity().getMagnitude() < 0.1) {
             llResult = limelight.getLatestResult();
             if (llResult.isValid()) {
                 llPose = llResult.getBotpose_MT2();
+                double llPoseX = llPose.getPosition().x;
+                double llPoseY = llPose.getPosition().y;
             }
         }
 
