@@ -1,39 +1,64 @@
-## V1 PIDF based turret with limelight aiming
-On out first iteration the turret had a limelight 3A on top of it that was scanning the april tag on the goal
-### Pros
-- The code implementation was easy
-- The limelight doesn't create errors 
-### Cons
-- The turret's gears would skip
-- The turret was slow so that there would not create mechanical stress and lock to the goal accurately 
-- The limelight has a limited FOV, so the turret would lose track with the goal consistently
-- The turret didn't aim correctly to all the field coordinates, because aiming at the center of the April tag doesn't necessarily mean correct aiming 
+# Turret aiming evolution
 
-## V2 Trapezoidal Motion Profiling based turret with pinpoint aiming and shoot on the move
-The Turret uses a [[Trapezoidal Motion Profiling]] to move to a desired angle. Using trigonometry we can calculate the angle in radians that the turret should be at any robot and target position. We set a goal position for each goal and the turret aims there using this equation:
+## V1 - Limelight mounted on the turret
+
+The Limelight measured horizontal target error and a PID controller rotated the turret.
+
+**What worked:** simple implementation and direct target feedback.
+
+**Why we changed it:** limited field of view caused target loss, target visibility was not guaranteed, and slow movement was needed to reduce gear stress. Aiming at one visible tag point also did not produce the correct shot from every field position.
+
+## V2 - Pose aiming and trapezoidal motion profiling
+
+Pedro Pathing pose and field geometry calculate the required turret angle:
 
 $$
-θ=atan2(x_{target}-x_{robot},y_{target}-y_{robot})-heading_{robot}
+\theta_{turret}=atan2(y_{target}-y_{robot},x_{target}-x_{robot})-\theta_{robot}
 $$
-Also, we implemented SOTM that we tested on the [[Simulator]], but we found out that it is inconsistent, we didn't use it and it made our cycles slower.
-### Pros
-- The turret is fast without mechanical stress
-- The turret doesn't lose track of the goal, because at any time the pinpoint knows the robot's position
-### Cons
-- Motion profiling required more time and effort implementing, debugging and tuning
-- The pinpoint drifts noticeably and the shots would not make it to the goal after a while
-- It didn't solve the aiming problem from V1. The turret still aims to a single target position for every point of the field
-- The limelight is not used
-- Inconsistent SOTM 
 
-## V3 Motion Profiling with sensor fusion and interpolated lookup table
-The limelight is used again, but fixed under the turret. It is used to update the pinpoint's reading using a low pass lifter. That makes position readings much more accurate. Also the interpolated LUT analyzed on [[Turret LUT]] solves the aiming issues from previous iterations. We also decided to throw away SOTM because it didn't work for us
+A trapezoidal profile generates position, velocity, and acceleration references. PIDFF follows those references while limiting acceleration and mechanical stress.
 
-### Pros
-- Consistent and accurate aiming
-- Keeps the pros from the previous iteration
-- The turret locks to the goal faster, because we removed the SOTM feature
-### Cons
-- sensor fusion can make noisy so it may be inconsistent
-- more code complexity, more time for implementation needed
-- No SOTM
+**Improvement:** the turret can aim even when the target is outside the camera view and no longer depends on rotating the whole robot.
+
+**Remaining problem:** one fixed target point did not account for position-dependent shot behavior. Odometry drift can also move the calculated aim away from the real goal.
+
+We prototyped shoot-on-the-move compensation in the [[Simulator]], but it was inconsistent and slowed cycles, so the match call remains disabled.
+
+## V3 - Fixed Limelight relocalization and interpolated position aim LUT
+
+The Limelight is mounted above the intake, outside the turret. Because it no longer rotates with the turret, its camera transform relative to the robot remains fixed. AprilTag observations provide an independent field-pose measurement that corrects accumulated Pinpoint odometry drift.
+
+Vision observations are validated before changing the robot pose. Frames without a valid tag solution, with excessive ambiguity, or with an implausibly large jump are rejected. Accepted observations correct the pose used by the aiming system instead of directly commanding the turret.
+
+The corrected pose feeds a `PositionAimLut` for both alliances. Each sample maps a robot field position to a calibrated virtual aim point. The three nearest samples are weighted by inverse squared distance, and the resulting aim point is converted to a turret angle. Blue-side samples are mirrored from the calibrated red-side set.
+
+This architecture is active in match TeleOp. The driver can still:
+
+- force the turret forward
+
+The Limelight therefore improves every pose-dependent scoring calculation rather than only measuring turret angle.
+
+## Portfolio claim
+
+> A fixed Limelight above the intake corrects Pinpoint odometry drift using validated AprilTag poses. The corrected pose feeds a position-dependent virtual aim-point LUT, field geometry, encoder feedback, and profiled PIDFF turret control.
+
+## Validation
+
+Use a before/after field map:
+
+- **Before:** fixed target point plus two fixed shot combinations.
+- **After:** interpolated turret aim point, shooter velocity, and hood position.
+- Mark every tested pose as scoreable or not scoreable.
+- Report the increase in scoreable area or scoreable grid cells.
+- Physically spot-check representative and boundary poses.
+- At taped field points, compare pose error before and after accepted Limelight corrections.
+- Record rejected observations and their rejection reason.
+
+Timed settle tests are only needed if the portfolio claims a numerical lock time, overshoot, or final angle error.
+
+## Limitations
+
+- AprilTags are not always visible, so Pinpoint odometry continues between corrections.
+- Vision observations must be rejected when their quality or pose jump is unsafe.
+- Shoot-on-the-move is not a current match feature.
+- The simulator alone does not prove real-world reliability.

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.main;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
@@ -12,12 +13,14 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HoodAngleLut;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ShooterHoodLuts;
@@ -32,7 +35,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryProvi
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue;
 
 import java.util.HashMap;
-
+@Configurable
 public class MainTeleOp implements TelemetryProvider {
     private static final int DRIVER_STATION_TELEMETRY_INTERVAL_MS = 100;
 
@@ -44,6 +47,7 @@ public class MainTeleOp implements TelemetryProvider {
     public static double hoodLutTrim = 0.0;
     public static int hoodLutNeighborCount = HoodAngleLut.DEFAULT_NEIGHBOR_COUNT;
     public static boolean defaultUseLimelight = false;
+    public static boolean logTelemetry = false;
 
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private final TelemetryHub telemetryHub = new TelemetryHub();
@@ -66,6 +70,7 @@ public class MainTeleOp implements TelemetryProvider {
     private Limelight3A limelight;
     private Leds leds;
     private DriveTrain drivetrain;
+    private Pose3D llPose;
     private boolean automatedDrive = false;
     private boolean isFar = false;
     static boolean slowMode = false;
@@ -159,8 +164,8 @@ public class MainTeleOp implements TelemetryProvider {
     }
 
     public void start() {
+        limelight.pipelineSwitch(1);
         limelight.start();
-//        follower.startTeleopDrive(true);
         transfer.collect();
         transfer.update();
         turret.start();
@@ -198,38 +203,30 @@ public class MainTeleOp implements TelemetryProvider {
             useHang ^= true;
         }
 
-        LLResult result = limelight.getLatestResult();
-        boolean isTurretTarget = result != null && result.getTx() != 0 && Math.abs(result.getTx()) < 3;
-        lastTurretTargetLock = isTurretTarget;
-        lastVisionTx = result == null ? 0.0 : result.getTx();
-        double color1 = shooter.isBusy() ? .28 : isTurretTarget ? .5 : .333;
-        double color2 = isFar ? .555 : .722;
-        if (isTurretTarget && shooter.isBusy()) {
-            leds.blinkLeft(0.2, dt, 1, 0);
-        } else {
-            leds.setLeft(color1);
+        if (transfer.getState() == Transfer.TransferState.SHOOT && transfer.isEmpty()) {
+            transfer.collect();
+            leds.blink(Leds.Side.BOTH, 0.28, 3);
+        } else if (transfer.getState() == Transfer.TransferState.SHOOT) {
+            leds.setBoth(0.5);
+        } else if (transfer.getState() == Transfer.TransferState.COLLECT) {
+            leds.setBoth(0.33);
+        } else if (transfer.getState() == Transfer.TransferState.STOP && shooter.isBusy()) {
+            leds.pulse(Leds.Side.BOTH, 0.71, 0.3);
+        } else if (transfer.getState() == Transfer.TransferState.STOP && !shooter.isBusy()) {
+            leds.pulse(Leds.Side.BOTH, 0.5, .3);
         }
-        if (transfer.getState() == Transfer.TransferState.STOP) {
-            leds.blinkRight(0.2, dt, color2, 1);
-        } else {
-            leds.setRight(color2);
-        }
+        leds.update(dt);
 
         turret.manualControl(opMode.gamepad1.left_trigger - opMode.gamepad1.right_trigger);
         if (turretFaceForwardOverride) {
             turret.faceForward();
             turret.loop();
-        } else if (useLimelight) {
-            turret.limelightAim(result);
         } else {
 //            turret.lookToGoalWhileMoving(follower.getPose(), follower.getVelocity(), !isBlue);
             turret.lookToGoal(follower.getPose(), !isBlue);
             turret.loop();
         }
 
-        if (opMode.gamepad1.dpadDownWasPressed()) {
-            useLimelight ^= true;
-        }
         if (opMode.gamepad1.xWasPressed()) {
             isFar ^= true;
             if (!useShooterHoodLuts) {
@@ -261,7 +258,11 @@ public class MainTeleOp implements TelemetryProvider {
                 shooter.setHoodAngle(shooter.getHoodAngle() + dt * .8);
             }
         }
-        updateShooterAndHoodTargets(follower.getPose());
+        if (transfer.getState() != Transfer.TransferState.COLLECT) {
+            updateShooterAndHoodTargets(follower.getPose());
+        } else {
+            shooter.setIdle(true);
+        }
         shooter.update();
 //        if (opMode.gamepad1.startWasPressed()) {
 //            follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
@@ -269,6 +270,17 @@ public class MainTeleOp implements TelemetryProvider {
 
 //        Drawing.drawRobot(follower.getPose(), turret.getAngleToGoal());
 //        Drawing.sendPacket();
+
+        LLResult llResult = null;
+        limelight.updateRobotOrientation(Math.toDegrees(follower.getPose().getHeading()));
+        if (follower.getVelocity().getMagnitude() < 0.1) {
+            llResult = limelight.getLatestResult();
+            if (llResult.isValid()) {
+                llPose = llResult.getBotpose_MT2();
+                double llPoseX = llPose.getPosition().x;
+                double llPoseY = llPose.getPosition().y;
+            }
+        }
 
         if (opMode.gamepad2.x) {
             follower.activateAllPIDFs();
@@ -340,7 +352,7 @@ public class MainTeleOp implements TelemetryProvider {
             hoodPosition = isFar ? hoodFarAngle : hoodCloseAngle;
         }
         hoodPosition += hoodLutTrim;
-
+        shooter.setIdle(false);
         Shooter.setTargetVelocity(targetVelocity);
         shooter.setHoodAngle(hoodPosition);
         lastShooterDistanceFromGoal = distanceFromGoal;
@@ -363,6 +375,7 @@ public class MainTeleOp implements TelemetryProvider {
 //        collector.add("system", "min fps", loopStats.worstMillis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", "1% lows", loopStats.p99Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", ".1% lows", loopStats.p999Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("system", "limelight_pose", llPose, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_hz", lastLoopDt > 0 ? 1 / lastLoopDt : 0.0,
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_avg_fps", 1000/loopStats.averageMillis,

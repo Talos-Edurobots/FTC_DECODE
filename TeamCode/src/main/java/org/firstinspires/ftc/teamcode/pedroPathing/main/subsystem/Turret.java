@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -328,6 +329,7 @@ public class Turret implements TelemetryProvider {
             turret.resetController();
             controlMode = ControlMode.PROFILED;
         }
+        if (turretHardware.isOverCurrent()) turretHardware.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.update(loopState);
     }
 

@@ -1,32 +1,43 @@
-## Shooter Velocity Control
+# Shooter and hood control
 
-The shooter solves the problem that flywheel shots change when the battery voltage drops or when an artifact slows the wheel down. Instead of giving the shooter a fixed power, we control it by target velocity.
+The shooter uses target velocity instead of fixed motor power, so it can correct for battery voltage changes and flywheel slowdown after a shot.
 
-| Part                       | What it does                                                                                    |
-| -------------------------- | ----------------------------------------------------------------------------------------------- |
-| Main shooter motor encoder | Measures real flywheel velocity                                                                 |
-| [[PID + FF]] controller    | Corrects velocity error and predicts needed power                                               |
-| Battery voltage sensor     | Scales feedforward so power is not tuned only for one battery voltage                           |
-| Follower shooter motor     | Mirrors the controlled motor power                                                              |
-| Hood servo                 | Changes shot angle for close/far shots                                                          |
-| Telemetry snapshot         | Logs target velocity, measured velocity, filtered velocity, power, current, voltage, busy state |
-
-The main shooter motor uses `VelocityControlledMotor`. Every loop it reads encoder velocity, compares it to `Shooter.targetVelocity`, and outputs motor power using PID feedback + feedforward:
+| Component | Role |
+| --- | --- |
+| Main motor encoder | Measures flywheel velocity |
+| PIDFF controller | Corrects velocity error and predicts required power |
+| Battery sensor | Scales feedforward for the current voltage |
+| Follower motor | Copies the controlled motor output |
+| Shooter velocity LUT | Linearly interpolates target velocity from goal distance |
+| Hood LUT | Interpolates servo position from distance and measured flywheel velocity |
 
 $$
-power = PID(v_{target}-v_{measured}) + {k_s sign(v_{target}) + k_v v_{target} \over V_{battery}}
+power = PID(v_{target}-v_{measured}) +
+{k_s\,sign(v_{target}) + k_v v_{target} \over V_{battery}}
 $$
 
-The PID part reacts to velocity error. The feedforward part predicts how much power the flywheel should need before the error happens. This matters because the shooter should not wait until it is already slow to start correcting.
+`MainTeleOp` updates both LUT targets every loop from the robot pose corrected by fixed-Limelight AprilTag relocalization. The velocity LUT replaces the previous two fixed speeds with a continuous distance-based target. The hood LUT uses measured velocity as well as corrected distance, so its angle can compensate when the flywheel is below or above its expected speed. The driver can apply a live hood trim during calibration.
 
-The shooter has 2 motors. Only the main motor is closed-loop from encoder velocity. The second motor is a follower and copies the same power, so both wheels apply the same output while the controller uses one clean feedback source.
+The robot considers the shooter ready when measured velocity is within 70 ticks/s of the target. This state is shown through LEDs and telemetry. Feeding is still commanded by the driver; the current code does not automatically block a shot while the shooter is busy.
 
-### Match behavior (Automation)
-We have developed the 
+We tuned feedforward from logged voltage-versus-velocity data. `ke_kv_calculator.py` fits the relationship between applied voltage and flywheel speed so `k_v` can be chosen from measured behavior instead of guesswork.
 
+## Measured result
 
-The robot also calculates `shooter.isBusy()`:
+| Test | Average absolute error | Within 70 ticks/s |
+| --- | ---: | ---: |
+| Closed loop, 2000 ticks/s | about 21.5 ticks/s | 94.9% |
+| Open loop, 2000 ticks/s | about 168.2 ticks/s | 6.8% |
+| Closed loop, 1300 ticks/s | about 22.2 ticks/s | 92.5% |
 
-```text
-busy = abs(target velocity - measured velocity) > 70 ticks/s
-```
+Closed-loop high-speed control reduced average velocity error by about 87% compared with open loop.
+
+## Portfolio claim
+
+> Goal distance sets a continuously interpolated flywheel target, encoder feedback and voltage-scaled PIDFF hold that speed, and a second LUT adjusts hood position using both distance and measured velocity.
+
+## Evidence still needed
+
+- A clear hood-LUT visualization or sample table.
+- Scoreable field coverage before and after enabling all three LUTs.
+- Physical spot-checks of representative simulator poses.

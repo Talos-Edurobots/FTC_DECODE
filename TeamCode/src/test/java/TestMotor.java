@@ -32,8 +32,8 @@ public class TestMotor {
     public void testVelocityUnitConverter() {
         GoBILDAMotorTypes motorType = GoBILDAMotorTypes.MOTOR_6000_RPM;
         EncoderConverter encoder = new EncoderConverter(motorType);
-        AngularVelocity vel = AngularVelocity.fromRpm(6000);
-        assertEquals(2800, encoder.velocityToTicksPerSecond(vel), 10);
+        AngularVelocity vel = encoder.ticksPerSecondToVelocity(2000);
+        assertEquals(4285, vel.toRpm(), 10);
     }
     @Test
     public void testAngleUnitConverter() {

@@ -1,144 +1,100 @@
-# Control Award Robot Data Instructions
+# Control Award evidence checklist
 
-Execute in order. Do not freestyle.
+Record the date, code revision, battery voltage, OpMode, alliance, field setup, and simulator version for every test.
 
-## Before touching robot
+## 1. Shooter velocity
 
-- Charge 2 robot batteries.
-- Open Logcat / driver station logging.
-- Have a spreadsheet ready.
-- Record: date, battery voltage, code branch, OpMode, alliance, field setup.
-- Video every test from a fixed angle.
-- Save every log with the test name.
+Use the existing acceleration and shot-drop data to report:
 
-## Output you must leave with
+- average absolute velocity error
+- percentage within the 70 ticks/s ready tolerance
+- spin-up and recovery time where timestamps are available
+- closed-loop versus open-loop result
 
-Fill these numbers:
+## 2. LUT scoreable field coverage
 
-| System     | Required result                                                           |
-| ---------- | ------------------------------------------------------------------------- |
-| Shooter    | spin-up time, average velocity error, max error, recovery time after shot |
-| Turret     | settle time, final angle error, overshoot, peak current                   |
-| LUT aiming | shots made before LUT, shots made after LUT, per field position           |
-| Transfer   | detection success, false positives, false negatives, stop response time   |
-| Telemetry  | loop Hz in competition mode, loop Hz in debug mode                        |
-| Vision     | accepted corrections, rejected corrections, pose error before/after       |
+This is the main LUT validation.
 
-If a number is missing, run the test again.
+Before testing both alliances, verify that the shooter/hood distance helper uses the correct alliance goal. The current helper ignores its `isRed` argument.
 
-## Test 1 - Shooter velocity
+1. Define a grid over every robot pose that is mechanically reachable and strategically useful.
+2. Use one fixed heading rule and one scoring-success definition.
+3. Run the old system: fixed goal target plus two fixed velocity/hood pairs.
+4. Mark each grid cell as scoreable or not scoreable.
+5. Run the current system with turret, shooter velocity, and hood LUTs enabled.
+6. Mark the same cells and overlay the two maps.
+7. Report scoreable cells, estimated scoreable area, and percentage increase.
+8. Save failures and boundary cells.
 
-Use `TestThroughput` or shooter debug OpMode.
+| Configuration | Grid cells tested | Scoreable cells | Scoreable area | Coverage |
+| --- | ---: | ---: | ---: | ---: |
+| Before LUTs |  |  |  |  |
+| After LUTs |  |  |  |  |
 
-1. Set target velocity to normal match value.
-2. Start shooter from stopped.
-3. Log target velocity, measured velocity, power, time, current.
-4. Record time until velocity is within shooting tolerance.
-5. Fire 10 artifacts, one at a time.
-6. For each shot, record velocity before shot, minimum velocity after shot, recovery time.
-7. Repeat for 2 battery voltages if possible: fresh and used.
+### Physical spot-check
 
-Result table:
+Verify at least:
 
-| Trial | Target vel | Spin-up s | Vel before | Min vel | Recovery s | Made shot? |
-| --- | --- | --- | --- | --- | --- | --- |
+- one near pose
+- one far pose
+- one pose from each side of the goal
+- two poses near the predicted coverage boundary
+- one pose predicted not to score
 
-## Test 2 - Turret motion profile
+The simulator establishes coverage; physical tests check that the model matches the robot.
 
-Use `KaTestOpMode`.
+## 3. Turret profile
 
-1. Command turret to fixed angles: `-60`, `-30`, `0`, `30`, `60` degrees.
-2. Run 3 trials per angle.
-3. Log target position, measured position, xref, vref, aref, velocity, current, time.
-4. Record time until turret is within 1 degree.
-5. Record final error, overshoot, peak current.
-6. Watch for gear skip. If it skips, write the exact angle and current.
+Only needed for numerical motion claims. Log timestamp, target angle, measured angle, reference position/velocity/acceleration, power, and current.
 
-Result table:
+| Target | Settle time | Final error | Overshoot | Peak current |
+| ---: | ---: | ---: | ---: | ---: |
+|  |  |  |  |  |
 
-| Target deg | Trial | Settle s | Final error deg | Overshoot deg | Peak current |
-| --- | --- | --- | --- | --- | --- |
+## 4. Limelight relocalization
 
-## Test 3 - Shot accuracy before/after LUT
+Place the robot at taped field poses whose coordinates and headings are known. Introduce normal odometry drift by driving before each measurement.
 
-This is the most important test.
+1. Record the Pinpoint pose and error before vision correction.
+2. Record tag ID, tag count, ambiguity/quality, and Limelight pose.
+3. Record whether the observation was accepted or rejected.
+4. If accepted, record corrected pose and remaining error.
+5. If rejected, record the exact rejection reason.
+6. Include trials with no visible tag and deliberately poor observations.
 
-1. Pick 6 field positions.
-2. Mark them with tape.
-3. Disable LUT.
-4. Shoot 5 artifacts from each position.
-5. Record made/missed.
-6. Enable LUT.
-7. Shoot 5 artifacts from the same positions.
-8. Record made/missed.
-9. For each position, record robot x, robot y, heading, turret target, turret measured, shooter velocity, hood angle.
+| Trial | Known pose | Pinpoint error before | Vision accepted | Error after | Rejection reason |
+| --- | --- | ---: | --- | ---: | --- |
+|  |  |  |  |  |  |
 
-Result table:
+Report median and maximum pose error before and after accepted corrections, plus the number of accepted and rejected observations.
 
-| Position | X | Y | Heading | No LUT made/5 | LUT made/5 | Notes |
-| --- | --- | --- | --- | --- | --- | --- |
+## 5. Transfer automation
 
-Stop condition:
+Run 20 realistic collection trials. Record correct full detection, automatic stop, false positive, false negative, response time, and overcurrent events.
 
-- If LUT is worse at a position, keep that data.
-- Adjust LUT only after finishing the full before/after set.
+| Trial | Full detected | Stopped | Response ms | False stop | Missed stop | Overcurrent |
+| --- | --- | --- | ---: | --- | --- | --- |
+|  |  |  |  |  |  |  |
 
-## Test 4 - Transfer automation
+## 6. Telemetry cost
 
-Use normal intake/transfer code.
+Run 60 seconds in competition mode and 60 seconds in debug mode.
 
-1. Run 20 collection trials.
-2. In each trial, feed artifacts normally.
-3. Record whether each sensor detects correctly.
-4. Record whether intake stops when 3 artifacts are collected.
-5. Record false stop, missed stop, jam, current alert.
-6. Record response time from third artifact detection to intake stop.
+| Mode | Average loop Hz | 1% low Hz | 0.1% low Hz |
+| --- | ---: | ---: | ---: |
+| Competition |  |  |  |
+| Debug |  |  |  |
 
-Result table:
-
-| Trial | Detected 3? | Stopped? | Response ms | False positive? | False negative? | Jam/current? |
-| --- | --- | --- | --- | --- | --- | --- |
-
-## Test 5 - Telemetry cost
-
-1. Run normal TeleOp in competition telemetry mode for 60 seconds.
-2. Record average loop Hz and lowest loop Hz.
-3. Run debug/trace telemetry for 60 seconds.
-4. Record average loop Hz and lowest loop Hz.
-5. Screenshot both telemetry modes.
-
-Result table:
-
-| Mode | Avg loop Hz | Min loop Hz | Notes |
-| --- | --- | --- | --- |
-
-## Test 6 - Vision relocalization
-
-Only run if Limelight relocalization is connected.
-
-1. Put robot at 5 known taped positions.
-2. Record Pinpoint pose before vision correction.
-3. Run vision correction.
-4. Record accepted/rejected correction.
-5. Record pose after correction.
-6. Measure error from taped position before and after.
-
-Result table:
-
-| Position | Pinpoint error before | Accepted? | Error after | Rejected reason |
-| --- | --- | --- | --- | --- |
-
-## Final command
-
-Before leaving, create one summary:
+## Final evidence summary
 
 ```text
-Shooter improved/failed because: ___
-Turret improved/failed because: ___
-LUT improved/failed because: ___
-Transfer improved/failed because: ___
-Telemetry proved: ___
-Vision status: competition / prototype / failed
+Shooter closed-loop improvement:
+Scoreable coverage before and after LUTs:
+Physical LUT spot-check result:
+Limelight pose error before and after:
+Accepted/rejected vision observations:
+Turret profile result:
+Transfer reliability:
+Telemetry loop-rate result:
+Rejected feature and lesson learned: shoot-on-the-move
 ```
-
-No adjectives without numbers. No "it worked". Use the tables.

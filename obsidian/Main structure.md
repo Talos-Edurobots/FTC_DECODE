@@ -1,195 +1,201 @@
-# Programming page structure
+# Programming portfolio - final three-page content
 
-## Page 10 - Driver Automation Architecture
+This is the content that should appear in the portfolio, not an outline of the writing process. Keep each page visual and use short captions instead of paragraphs.
 
-Goal: explain how code reduced driver workload during a full scoring cycle.
+## Page 1 - Driver automation
 
-Use this page to show that the robot is not only easier to code, but easier to drive under pressure.
+### Main statement
 
-### Main message
+Our software lets the driver choose when to collect and shoot while the robot handles localization correction, field-centric driving, turret aiming, shooter velocity, hood position, full-capacity detection, and status feedback.
 
-Our code turns repeated driver actions into automatic subsystem behavior:
-
-```text
-driver intent -> subsystem automation -> sensor feedback -> LEDs / ready state
-```
-
-### Include
-
-| Section           | Content                                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------------------ |
-| Driver automation | turret auto-aligns, shooter/hood presets change together, intake stops when full, LEDs show ready/full state |
-| Code structure    | `MainTeleOp`, subsystems, motor package, telemetry                                                           |
-| Cycle comparison  | Nationals robot vs current robot button presses                                                              |
-| Why it matters    | fewer driver decisions, faster cycles, less timing error, easier driving under pressure                      |
-
-### Driver automation table
-
-| Driver problem             | Automation                                                  |
-| -------------------------- | ----------------------------------------------------------- |
-| Aim while driving          | turret aims to the goal using robot pose / Limelight mode   |
-| Choose shot setup          | one preset changes shooter velocity and hood angle together |
-| Know when shooter is ready | LEDs show shooter busy / ready state                        |
-| Avoid overfilling          | intake/transfer stops when sensors detect full robot        |
-| Feed artifacts             | current transfer system handles the cycle as one action     |
-
-### Small text block
+### Control flow
 
 ```text
-We focused on reducing the number of decisions the driver must make during a cycle. The driver chooses the strategy, but the robot handles repeated timing-sensitive actions: aiming the turret, changing shooter/hood presets, stopping intake when full, and using LEDs to show when the robot is ready.
+Pinpoint odometry + fixed Limelight AprilTag observations
+   `-> validated pose relocalization -> corrected robot pose
+
+corrected robot pose
+   |-> turret position LUT -> virtual aim point -> profiled turret controller
+   |-> distance LUT -> shooter velocity -> PIDFF flywheel controller
+   `-> distance + measured velocity LUT -> hood position
+
+3 distance sensors + intake current -> transfer state machine
+shooter / turret / transfer state -> LEDs + Panels telemetry
 ```
 
-### Cycle comparison
+### Driver workload table
 
-| Robot version | Driver cycle actions |
-| --- | --- |
-| Nationals - March 15 | press right flicker, release, press left flicker, release, open intake, wait, observe which flicker got artifact, press matching flicker, release |
-| Current robot | press one action to collect/feed cycle |
+| Driver intent   | Robot response                                                                                            |
+| --------------- | --------------------------------------------------------------------------------------------------------- |
+| Drive           | Field-centric drive with acceleration limiting; stick click enables 25% slow mode                         |
+| Collect         | Transfer enters `COLLECT`; intake stops automatically when full or overcurrent                            |
+| Shoot           | Holding the bumper opens the gate and runs the transfer                                                   |
+| Localize        | A fixed Limelight above the intake uses AprilTags to correct accumulated odometry drift                   |
+| Aim             | Turret continuously calculates its angle from corrected robot pose and the interpolated virtual aim point |
+| Select fallback | Driver can use a face-forward override or fixed close/far values if the LUT system is disabled            |
+| Read status     | LEDs show shooter/target and transfer states; telemetry exposes detailed debug values                     |
 
-Claim:
+### Iteration evidence
 
-```text
-The redesign changed the cycle from a sequence of manual timing decisions into a mostly automated scoring pipeline. This reduced driver workload and made cycles more repeatable.
-```
+| Earlier robot                                                | Current robot                                                                                        |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Driver timed multiple flickers and watched artifact position | One transfer state machine controls collection, stopping, and feeding                                |
+| Two fixed velocity/hood combinations                         | Velocity and hood change continuously from pose and measured shooter velocity                        |
+| Turret camera could lose the target while rotating           | Fixed Limelight relocalizes the pinpoint odometry computer while pose/LUT aiming controls the turret |
+| Turret aimed at one fixed field target                       | Position LUT changes the virtual aim point across the field                                          |
 
 ### Visuals
 
-- One current cycle flow diagram.
-- One before/after button-count comparison.
-- LED state icons/colors if there is space.
-- No code screenshots unless absolutely needed.
+- One current scoring-cycle diagram.
+- One before/after driver-action comparison.
+- Small LED legend.
 
-### Avoid
+## Page 2 - Adaptive scoring control
 
-- Listing every class.
-- Long explanations of Java structure.
-- Saying "we used PID" without saying what problem it solved.
+### Main statement
 
-## Page 11 - Feedback Control Systems
+The strongest technical page should show how the scoring system evolved into one corrected-pose control pipeline, not just list every subsystem.
 
-Goal: this is the main Control Award page.
+| System       | Input / feedback                                             | Algorithm                                                     | Output                   |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------- | ------------------------ |
+| Localization | Pinpoint odometry + fixed Limelight AprilTag pose            | Observation validation + pose correction                      | Corrected field pose     |
+| Turret       | Corrected field pose + turret encoder                        | 2D inverse-distance LUT, geometry, trapezoidal profile, PIDFF | Turret angle             |
+| Shooter      | Corrected goal distance + flywheel encoder + battery voltage | Linear distance LUT + velocity PIDFF                          | Flywheel velocity        |
+| Hood         | Corrected goal distance + measured flywheel velocity         | 2D inverse-distance LUT                                       | Hood servo position      |
+| Transfer     | Three distance sensors + intake current                      | `STOP`, `COLLECT`, `SHOOT` state machine                      | Intake and gate commands |
 
-This page must show feedback -> algorithm -> match effect.
+### Portfolio text
 
-### Main table
+The Limelight is fixed above the intake instead of rotating with the turret. It observes field AprilTags and corrects accumulated Pinpoint odometry drift. Invalid or implausible observations are rejected before correction, so one poor frame cannot abruptly move the robot pose. The corrected pose is shared by the turret, shooter, and hood calculations.
 
-| System    | Feedback                           | Control method            | Match effect                                             |
-| --------- | ---------------------------------- | ------------------------- | -------------------------------------------------------- |
-| Shooter   | encoder velocity + battery voltage | PIDFF velocity control    | faster spin-up, low overshoot, fast recovery after shots |
-| Turret    | robot pose + turret encoder        | geometry + profiled PIDFF | aligns itself without rotating the whole robot           |
-| Transfer  | 3 distance sensors + current alert | state machine             | stops intake when full / jam risk                        |
-| Telemetry | snapshots + loop timing            | competition/debug modes   | tuning data without flooding drivers                     |
+Previously, two fixed velocity-angle pairs only worked in limited regions. `MainTeleOp` calculates corrected distance to the goal every loop. A linear LUT sets flywheel velocity, while a second LUT selects hood position using both distance and measured flywheel velocity. This lets the hood compensate when real velocity differs from the requested velocity.
 
-### Shooter block
+The turret LUT stores calibrated pairs of robot position and virtual aim point. The three nearest samples are weighted by inverse squared distance, then geometry converts the interpolated aim point into a turret angle. A trapezoidal motion profile and PIDFF controller move the turret without abrupt acceleration.
 
-Use the current data:
+The driver can trim the hood during testing or use fixed close/far values if the LUT system is disabled. A face-forward turret override remains available, while corrected-pose/LUT aiming is the default.
 
-| Test | Target | Result |
-| --- | ---: | --- |
-| closed-loop high speed | 2000 ticks/s | avg error `21.5`, max error `120` |
-| open-loop high speed | 2000 ticks/s | avg error `168.2`, max error `240` |
-| closed-loop low speed | 1300 ticks/s | avg error `22.2`, max error `100` |
-| shot recovery | 1300-2000 ticks/s | recovery about `0.08-0.14s` |
+### What should actually be on Page 2
 
-Claim:
+Use three compact blocks instead of one long paragraph.
 
-```text
-The shooter uses encoder feedback and voltage-scaled feedforward to reach target speed quickly without large overshoot. After an artifact slows the flywheel, the controller brings velocity back into shooting range before the next shot.
-```
+#### Block A - Turret evolution
 
-### Turret block
+| Version | Main idea                                                                       | Why it changed                                                                                                      |
+| ------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| V1      | Limelight mounted on the turret directly measured target error                  | Lost target with turret rotation, stressed mechanics, and still aimed poorly from some field positions              |
+| V2      | Pinpoint pose plus trapezoidal motion profiling aimed to one fixed field target | Removed camera FOV dependence and mechanical stress, but odometry drift and one fixed target still limited accuracy |
+| V3      | Fixed Limelight relocalization plus position aim LUT                            | Corrected odometry drift and changed the virtual aim point across the field                                         |
 
-Show the evolution:
+Judge message: the turret design did not just become more complicated. Each version removed a specific control failure from the previous one.
 
-```text
-V1: Limelight on turret -> easy aiming, but FOV loss and gear skipping
-V2: pose-based aiming + motion profile -> smoother and faster
-V3: position LUT / vision correction prototype -> corrects field-position aiming errors
-```
+#### Block B - Shooter controller
 
-Use a small graph if available:
+Keep one short formula callout:
 
-- target angle vs measured angle
-- xref vs measured position
-- vref vs measured velocity
+$$
+power = PID(v_{target}-v_{measured}) +
+{k_s\,sign(v_{target}) + k_v v_{target} \over V_{battery}}
+$$
 
-### Transfer block
-
-Show this only if you have test results. If not, keep it short:
+One sentence under it:
 
 ```text
-The transfer is controlled by a state machine. Sensor feedback detects when the robot is full, and current alerts help stop collection before jams become worse.
+Encoder feedback corrects velocity error, while voltage-scaled feedforward predicts the power needed to hold speed before error grows.
 ```
 
-### Avoid
+#### Block C - Tuning and evidence
 
-- Overclaiming vision as match-ready if it is still debug/prototype.
-- Saying the LUT solved aiming unless you have before/after shot data.
+Use one caption-sized note for tuning:
 
-## Page 12 - Measured Performance
+```text
+We tuned feedforward constants from logged voltage-versus-velocity data using `ke_kv_calculator.py`, then verified the result with closed-loop error and recovery graphs.
+```
 
-Goal: prove the programming claims with graphs and test results.
+This belongs on the page because it proves engineering process, but it should stay small. Judges will care more about the measured improvement than the script name.
 
-This page should be mostly numbers and graphs.
+### Shooter result
 
-### Layout
+| Test                      | Average absolute error | Within 70 ticks/s |
+| ------------------------- | ---------------------: | ----------------: |
+| Closed loop, 2000 ticks/s |     about 21.5 ticks/s |             94.9% |
+| Open loop, 2000 ticks/s   |    about 168.2 ticks/s |              6.8% |
+| Closed loop, 1300 ticks/s |     about 22.2 ticks/s |             92.5% |
 
-| Area | What to show |
+Caption: Encoder feedback and voltage-scaled feedforward made flywheel speed substantially more repeatable than open-loop control.
+
+### Visuals
+
+- Adaptive scoring pipeline diagram.
+- Turret V1 -> V2 -> V3 evolution strip.
+- One shooter closed-loop/open-loop graph.
+- One small formula callout box.
+- Small localization diagram showing Pinpoint prediction and Limelight correction.
+
+## Page 3 - Validation and engineering process
+
+### Main statement
+
+We validate controls by measuring their match effect, not only whether the code follows a target.
+
+### LUT validation: scoreable field coverage
+
+The LUT improvement is best represented as an area, because aiming success at a field point is effectively pass/fail: a correctly calibrated shot enters the goal, while an incorrect angle or trajectory misses.
+
+1. Define a grid of reachable robot poses and test them in the simulator.
+2. Test the previous system using its two fixed velocity/hood pairs and fixed turret target.
+3. Mark each pose as scoreable or not scoreable.
+4. Repeat with turret, shooter velocity, and hood LUTs enabled.
+5. Overlay the two maps and calculate scoreable area or scoreable grid-cell count.
+6. Physically spot-check boundary and representative poses before claiming match reliability.
+
+| Configuration | What the map should show |
 | --- | --- |
-| Shooter acceleration | graph: closed-loop vs open-loop spin-up from rest |
-| Shooter recovery | graph: velocity drop after shot and recovery to target |
-| Turret profile | graph/table: settle time, final error, overshoot |
-| LUT aiming | table: no LUT made/5 vs LUT made/5 from 6 positions |
-| Transfer | table: detection success, false positives, false negatives |
-| Driver workload | table: Nationals button sequence vs current cycle action |
-| Telemetry | loop Hz competition vs debug |
+| Before LUTs | Limited scoring regions around the two calibrated shot combinations |
+| After LUTs | Larger continuous scoring region from interpolated velocity, hood, and virtual turret aim |
 
-### Shooter graphs already useful
+Use two field heatmaps with the same scale. Label the added scoreable area and include a few boundary failures rather than hiding them.
 
-Use these from `obsidian/graphs/`:
+### Other evidence
 
-- `shooter acceleration/comparison_keStartWithcontroller_vs_keStartWithoutController.png`
-- `shooter acceleration/comparison_keHighSpeedWithController_vs_keHighSpeedWithoutController.png`
-- `drop/highVelWithControllerDrop_acceleration_threshold.png`
-- `drop/lowVelWIthControllerDrop_acceleration_threshold.png`
-
-### Data still missing
-
-| Missing result | Needed for |
+| Evidence | Portfolio conclusion |
 | --- | --- |
-| turret settle time / final error | prove motion-profiled turret control |
-| LUT before/after shot accuracy | prove position LUT improves aiming |
-| transfer 20-trial sensor test | prove automation reliability |
-| loop Hz competition/debug | prove telemetry design does not hurt match loop |
-| vision accepted/rejected corrections | only if claiming vision relocalization |
+| Shooter acceleration and recovery graphs | Closed-loop control reaches and recovers target velocity consistently |
+| Turret target vs measured angle | Profiled control follows a smooth reference within the chosen tolerance |
+| 20 transfer trials | Full detection and overcurrent protection stop collection reliably |
+| Competition vs debug loop rate | Tiered and throttled telemetry preserves loop performance |
+| Known-position relocalization test | Valid AprilTag observations reduce pose error without accepting large false corrections |
+| Driver-action comparison | Automation reduces repeated timing decisions |
 
-### Final result wording
+### Development tools
 
-Use this format:
-
-```text
-Problem -> Feedback -> Control method -> Result -> Evidence
-```
-
-Example:
+Include one compact line or icon row, not a separate section:
 
 ```text
-The shooter missed when velocity changed after shots. We used encoder velocity and battery voltage in a PIDFF controller. Compared with open loop, average velocity error at 2000 ticks/s dropped from 168.2 to 21.5 ticks/s, and recovery after shot drops was about 0.08-0.14s.
+Android Studio: code and debugging | Panels: live tuning and graphs |
+Google Colab/Python: data analysis | Pedro Pathing: localization and path following |
+Custom simulator: LUT calibration and field-coverage validation
 ```
 
-### Avoid
+These tools belong in the portfolio only when connected to the engineering process. The important story is what each tool enabled, not a list of software logos.
 
-- Big paragraphs.
-- Raw code.
-- Graphs without a one-line conclusion.
-- Claims without numbers.
+### Evidence still needed
 
-## Priority if space is tight
+- Fix or verify alliance-specific goal distance for the shooter and hood LUTs.
+- Record pose error before and after Limelight relocalization at known field points.
+- Report accepted/rejected vision observations and rejection reasons.
+- Generate before/after scoreable-area maps and report the area or grid-cell increase.
+- Spot-check simulator predictions at representative and boundary field poses.
+- Add timed turret settle/error data if a numerical turret-performance claim is used.
+- Run transfer reliability trials.
+- Record competition/debug loop-rate results.
 
-1. Shooter velocity control with graphs and numbers.
-2. Driver automation / button-count reduction.
-3. Turret aiming evolution + motion profile.
-4. LUT before/after shot accuracy.
-5. Transfer automation.
-6. Telemetry architecture.
-7. Vision relocalization only as prototype unless fully tested in match code.
+## Space priority
+
+1. Corrected-pose adaptive scoring pipeline.
+2. Turret V1 -> V2 -> V3 evolution.
+3. Limelight relocalization evidence.
+4. Shooter closed-loop evidence.
+5. Before/after scoreable field coverage.
+6. Driver and transfer automation.
+7. Turret profile and telemetry evidence.
+8. Development tools as one small footer row.
