@@ -1,6 +1,7 @@
 distance_from_goal, robot_x, robot_y, target_velocity_tps, measured_velocity_tps, hood_log_velocity_tps, hood_servo_position, shooter_ready, turret_at_target, transfer_state
 79.91,   72.00,   72.00,              1250.0,                1260.0,                1250.0,               0.000, true         , true            , SHOOT
-79.91,   72.00,   72.00,              1200.0,                1200.0,                1200.0,               0.188, true         , true            , SHOOT             80.70,   72.00,   72.00,              1200.0,                1200.0,                1200.0,               0.188, true         , true            , SHOOT
+79.91,   72.00,   72.00,              1200.0,                1200.0,                1200.0,               0.188, true         , true            , SHOOT             
+80.70,   72.00,   72.00,              1200.0,                1200.0,                1200.0,               0.188, true         , true            , SHOOT
 46.69,   47.00,   94.00,              1100.0,                1100.0,                1100.0,               0.291, true         , true            , SHOOT
 46.69,   47.00,   94.00,              1050.0,                1040.0,                1050.0,               0.437, true         , true            , SHOOT
 33.53,   47.00,  118.00,               970.0,                 980.0,                 970.0,               0.500, true         , true            , SHOOT
