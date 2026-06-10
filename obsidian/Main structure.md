@@ -148,23 +148,23 @@ The LUT improvement is best represented as an area, because aiming success at a 
 5. Overlay the two maps and calculate scoreable area or scoreable grid-cell count.
 6. Physically spot-check boundary and representative poses before claiming match reliability.
 
-| Configuration | What the map should show |
-| --- | --- |
-| Before LUTs | Limited scoring regions around the two calibrated shot combinations |
-| After LUTs | Larger continuous scoring region from interpolated velocity, hood, and virtual turret aim |
+| Configuration | What the map should show                                                                  |
+| ------------- | ----------------------------------------------------------------------------------------- |
+| Before LUTs   | Limited scoring regions around the two calibrated shot combinations                       |
+| After LUTs    | Larger continuous scoring region from interpolated velocity, hood, and virtual turret aim |
 
 Use two field heatmaps with the same scale. Label the added scoreable area and include a few boundary failures rather than hiding them.
 
 ### Other evidence
 
-| Evidence | Portfolio conclusion |
-| --- | --- |
-| Shooter acceleration and recovery graphs | Closed-loop control reaches and recovers target velocity consistently |
-| Turret target vs measured angle | Profiled control follows a smooth reference within the chosen tolerance |
-| 20 transfer trials | Full detection and overcurrent protection stop collection reliably |
-| Competition vs debug loop rate | Tiered and throttled telemetry preserves loop performance |
-| Known-position relocalization test | Valid AprilTag observations reduce pose error without accepting large false corrections |
-| Driver-action comparison | Automation reduces repeated timing decisions |
+| Evidence                                 | Portfolio conclusion                                                                    |
+| ---------------------------------------- | --------------------------------------------------------------------------------------- |
+| Shooter acceleration and recovery graphs | Closed-loop control reaches and recovers target velocity consistently                   |
+| Turret target vs measured angle          | Profiled control follows a smooth reference within the chosen tolerance                 |
+| 20 transfer trials                       | Full detection and overcurrent protection stop collection reliably                      |
+| Competition vs debug loop rate           | Tiered and throttled telemetry preserves loop performance                               |
+| Known-position relocalization test       | Valid AprilTag observations reduce pose error without accepting large false corrections |
+| Driver-action comparison                 | Automation reduces repeated timing decisions                                            |
 
 ### Development tools
 
