@@ -13,7 +13,9 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
@@ -37,7 +39,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue
 import java.util.HashMap;
 @Configurable
 public class MainTeleOp implements TelemetryProvider {
-    private static final int DRIVER_STATION_TELEMETRY_INTERVAL_MS = 100;
+    private static final int DRIVER_STATION_TELEMETRY_INTERVAL_MS = 200;
 
     public static int backVel = 1500;
     public static int frontVel = 1250;
@@ -86,6 +88,7 @@ public class MainTeleOp implements TelemetryProvider {
     private double lastShooterDistanceFromGoal = 0.0;
     private double lastShooterTargetVelocity = 0.0;
     private double lastHoodTargetPosition = 0.0;
+    double botPoseX, botPoseY, botHeading;
 
     public void init(OpMode opMode, boolean isBlue) {
         this.opMode = opMode;
@@ -220,12 +223,16 @@ public class MainTeleOp implements TelemetryProvider {
         turret.manualControl(opMode.gamepad1.left_trigger - opMode.gamepad1.right_trigger);
         if (turretFaceForwardOverride) {
             turret.faceForward();
-            turret.loop();
+
         } else {
 //            turret.lookToGoalWhileMoving(follower.getPose(), follower.getVelocity(), !isBlue);
             turret.lookToGoal(follower.getPose(), !isBlue);
-            turret.loop();
+
         }
+        if (opMode.gamepad1.yWasPressed()) {
+            turret.setResetting(true);
+        }
+        turret.loop();
 
         if (opMode.gamepad1.xWasPressed()) {
             isFar ^= true;
@@ -264,21 +271,27 @@ public class MainTeleOp implements TelemetryProvider {
             shooter.setIdle(true);
         }
         shooter.update();
-//        if (opMode.gamepad1.startWasPressed()) {
-//            follower.setPose(new Pose(follower.getPose().getX(), follower.getPose().getY(), Math.toRadians(180)));
+
+
+        LLResult llResult;
+//        double pinpointHeading = Math.toDegrees(follower.getHeading());
+//        limelight.updateRobotOrientation(pinpointHeading);
+//        if (follower.getVelocity().getMagnitude() < 0.1) {
+//            llResult = limelight.getLatestResult();
+//            if (llResult.isValid()) {
+//                llPose = llResult.getBotpose_MT2();
+//                double PoseX = llPose.getPosition().x * 39.3701;
+//                double PoseY = llPose.getPosition().y * 39.3701;
+//                follower.setPose(new Pose(PoseX, PoseY, follower.getPose().getHeading()));
+//            }
 //        }
 
-//        Drawing.drawRobot(follower.getPose(), turret.getAngleToGoal());
-//        Drawing.sendPacket();
-
-        LLResult llResult = null;
-        limelight.updateRobotOrientation(Math.toDegrees(follower.getPose().getHeading()));
         if (follower.getVelocity().getMagnitude() < 0.1) {
             llResult = limelight.getLatestResult();
             if (llResult.isValid()) {
-                llPose = llResult.getBotpose_MT2();
-                double llPoseX = llPose.getPosition().x;
-                double llPoseY = llPose.getPosition().y;
+                botPoseX = llResult.getBotpose().getPosition().x * 39.3701;
+                botPoseY = llResult.getBotpose().getPosition().y * 39.3701;
+                botHeading = llResult.getBotpose().getOrientation().getYaw(AngleUnit.RADIANS);
             }
         }
 
@@ -376,6 +389,9 @@ public class MainTeleOp implements TelemetryProvider {
 //        collector.add("system", "1% lows", loopStats.p99Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", ".1% lows", loopStats.p999Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
         collector.add("system", "limelight_pose", llPose, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "limelight x", botPoseX, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "limelight_y", botPoseY, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "limelight_radians", botHeading, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_hz", lastLoopDt > 0 ? 1 / lastLoopDt : 0.0,
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_avg_fps", 1000/loopStats.averageMillis,

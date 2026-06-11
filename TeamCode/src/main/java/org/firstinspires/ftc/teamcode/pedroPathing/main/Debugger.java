@@ -1166,6 +1166,7 @@ class TurretStickTeleOp extends OpMode {
 @Configurable
 class KaTestOpMode extends OpMode {
     public static double kp, ki, kd, ks, kv, ka, maxVel, maxAcc, maxDec, maxPower;
+    public static double manualKp, manualKi, manualKd, manualKs;
     public static boolean feedforwardEnabled = true;
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
     private Turret turret;
@@ -1173,6 +1174,7 @@ class KaTestOpMode extends OpMode {
     public static double position2 = 30;
     private boolean goingToPos2 = true;
     private double originalKp, originalKi, originalKd, originalKs, originalKv, originalKa;
+    private double originalManualKp, originalManualKi, originalManualKd, originalManualKs;
     private double originalMaxVel, originalMaxAcc, originalMaxDec, originalMaxPower;
     String tag = "ka";
     int count = 0;
@@ -1185,11 +1187,14 @@ class KaTestOpMode extends OpMode {
     public void init() {
         originalKp = Turret.getKp(); originalKi = Turret.getKi(); originalKd = Turret.getKd();
         originalKs = Turret.getKs(); originalKv = Turret.getKv(); originalKa = Turret.getKa();
+        originalManualKp = Turret.getManualKp(); originalManualKi = Turret.getManualKi(); 
+        originalManualKd = Turret.getManualKd(); originalManualKs = Turret.getManualKs();
         originalMaxPower = Turret.getMaxPower();
         originalMaxVel = Turret.getMaxVel();
         originalMaxAcc = Turret.getMaxAcc();
         originalMaxDec = Turret.getMaxDec();
         kp = Turret.getKp(); ki = Turret.getKi(); kd = Turret.getKd(); ks = Turret.getKs(); kv = Turret.getKv(); ka = Turret.getKa();
+        manualKp = Turret.getManualKp(); manualKi = Turret.getManualKi(); manualKd = Turret.getManualKd(); manualKs = Turret.getManualKs();
         maxPower = Turret.getMaxPower();
         maxVel = Turret.getMaxVel();
         maxAcc = Turret.getMaxAcc();
@@ -1261,6 +1266,10 @@ class KaTestOpMode extends OpMode {
         telemetryM.addData("ks", feedforwardEnabled ? ks : 0.0);
         telemetryM.addData("kv", feedforwardEnabled ? kv : 0.0);
         telemetryM.addData("ka", feedforwardEnabled ? ka : 0.0);
+        telemetryM.addData("manualKp", manualKp);
+        telemetryM.addData("manualKi", manualKi);
+        telemetryM.addData("manualKd", manualKd);
+        telemetryM.addData("manualKs", manualKs);
         telemetryM.addData("target radians", targetRadians);
         telemetryM.addData("target degrees", targetDegrees);
         telemetryM.addData("measured degrees", Math.toDegrees(turret.getMeasuredAngleRadians()));
@@ -1276,6 +1285,10 @@ class KaTestOpMode extends OpMode {
         Turret.setKs(feedforwardEnabled ? ks : 0.0);
         Turret.setKv(feedforwardEnabled ? kv : 0.0);
         Turret.setKa(feedforwardEnabled ? ka : 0.0);
+        Turret.setManualKp(manualKp);
+        Turret.setManualKi(manualKi);
+        Turret.setManualKd(manualKd);
+        Turret.setManualKs(manualKs);
         Turret.setMaxVel(maxVel);
         Turret.setMaxAcc(maxAcc);
         Turret.setMaxDec(maxDec);
@@ -1290,6 +1303,10 @@ class KaTestOpMode extends OpMode {
         Turret.setKs(originalKs);
         Turret.setKv(originalKv);
         Turret.setKa(originalKa);
+        Turret.setManualKp(originalManualKp);
+        Turret.setManualKi(originalManualKi);
+        Turret.setManualKd(originalManualKd);
+        Turret.setManualKs(originalManualKs);
         Turret.setMaxVel(originalMaxVel);
         Turret.setMaxAcc(originalMaxAcc);
         Turret.setMaxDec(originalMaxDec);
