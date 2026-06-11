@@ -62,6 +62,7 @@ public class MainTeleOp implements TelemetryProvider {
     private Telemetry telemetry;
     private OpMode opMode;
     private boolean isBlue;
+    static boolean useTurret = true;
 
     private HardwareManager hardwareManager;
     private Transfer transfer;
@@ -88,7 +89,7 @@ public class MainTeleOp implements TelemetryProvider {
     private double lastShooterDistanceFromGoal = 0.0;
     private double lastShooterTargetVelocity = 0.0;
     private double lastHoodTargetPosition = 0.0;
-    double botPoseX, botPoseY, botHeading;
+    double botPoseX, botPoseY, botHeading, rawPoseX, rawPoseY, rawHeading;
 
     public void init(OpMode opMode, boolean isBlue) {
         this.opMode = opMode;
@@ -232,8 +233,8 @@ public class MainTeleOp implements TelemetryProvider {
         if (opMode.gamepad1.yWasPressed()) {
             turret.setResetting(true);
         }
-        turret.loop();
 
+        if (useTurret) turret.loop();
         if (opMode.gamepad1.xWasPressed()) {
             isFar ^= true;
             if (!useShooterHoodLuts) {
@@ -289,9 +290,12 @@ public class MainTeleOp implements TelemetryProvider {
         if (follower.getVelocity().getMagnitude() < 0.1) {
             llResult = limelight.getLatestResult();
             if (llResult.isValid()) {
-                botPoseX = llResult.getBotpose().getPosition().x * 39.3701;
-                botPoseY = llResult.getBotpose().getPosition().y * 39.3701;
-                botHeading = llResult.getBotpose().getOrientation().getYaw(AngleUnit.RADIANS);
+                rawPoseX = llResult.getBotpose().getPosition().x;
+                rawPoseY = llResult.getBotpose().getPosition().y;
+                rawHeading = llResult.getBotpose().getOrientation().getYaw();
+                botPoseX = rawPoseX * 39.3701;
+                botPoseY = rawPoseY * 39.3701;
+                botHeading = rawHeading;
             }
         }
 
@@ -322,10 +326,10 @@ public class MainTeleOp implements TelemetryProvider {
             slowMode ^= true;
         }
         double mult = slowMode ? 0.25 : 1;
-        double forward = -opMode.gamepad1.left_stick_y * mult;
-        double strafe = opMode.gamepad1.left_stick_x * mult;
+        double forward = opMode.gamepad1.left_stick_y * mult;
+        double strafe = -opMode.gamepad1.left_stick_x * mult;
         double rotate = opMode.gamepad1.right_stick_x * mult;
-        double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        double heading = follower.getPose().getHeading();
         lastHeadingRadians = heading;
 
         if (!automatedDrive) {
@@ -388,6 +392,9 @@ public class MainTeleOp implements TelemetryProvider {
 //        collector.add("system", "min fps", loopStats.worstMillis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", "1% lows", loopStats.p99Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", ".1% lows", loopStats.p999Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("system", "raw_limelight x", rawPoseX, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "raw_limelight y", rawPoseY, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "raw_limelight heading", rawHeading, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "limelight_pose", llPose, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "limelight x", botPoseX, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "limelight_y", botPoseY, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);

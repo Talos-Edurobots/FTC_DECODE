@@ -119,10 +119,10 @@ public class Turret implements TelemetryProvider {
     static double kv = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().kv();
     static double ka = RobotConstants.TURRET_CONFIGURABLE_PROFILE_DEFAULTS.getPidCoef().ka();
     
-    static double manualKp = kp;
-    static double manualKi = ki;
-    static double manualKd = kd;
-    static double manualKs = ks;
+    static double manualKp = 0.02;
+    static double manualKi = 0.00001;
+    static double manualKd = 0.6;
+    static double manualKs = 0.5;
     
     public static void setManualKp(double manualKp) { Turret.manualKp = manualKp; }
     public static void setManualKi(double manualKi) { Turret.manualKi = manualKi; }
@@ -182,7 +182,7 @@ public class Turret implements TelemetryProvider {
     static double manualMaxPower = .2, ramp = 1;
     public static double movingShotLeadFactor = 0.01;
     public static double pidSwitchThresholdDegrees = 5.0;
-    public static boolean autoSwitchToPid = true;
+    public static boolean autoSwitchToPid = false;
     public static boolean positionAimLutEnabled = true;
     public static int positionAimLutNeighborCount = 3;
     private final HardwareMap hwmap;
@@ -346,7 +346,7 @@ public class Turret implements TelemetryProvider {
     }
     public void loop() {
         if (isResetting) {
-            turretHardware.setPower(.5);
+            turretHardware.setPower(-1);
             if (turretHardware.isOverCurrent()) {
                 isResetting = false;
                 turretHardware.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

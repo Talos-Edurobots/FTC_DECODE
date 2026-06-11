@@ -451,7 +451,7 @@ public class FarAuto {
 
         hang = new Hang();
         hang.init(hwMap);
-        hang.update(1, 0);
+
         turret = new Turret(hwMap);
         turret.init();
 

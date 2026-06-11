@@ -883,9 +883,9 @@ class FlickerAnalogControl extends OpMode{
 
 class HangControl extends OpMode {
     Hang hang = new Hang();
+    boolean isActive = false;
     TelemetryManager telemetryM  = PanelsTelemetry.INSTANCE.getTelemetry();
-    static double power = 1;
-    static double degrees = 90;
+
     @Override
     public void init() {
         hang.init(hardwareMap);
@@ -893,7 +893,8 @@ class HangControl extends OpMode {
 
     @Override
     public void loop() {
-        hang.update(power, (int) ((gamepad1.right_trigger - gamepad1.left_trigger) * degrees));
+        if (gamepad1.aWasPressed()) isActive ^= true;
+        hang.setState(isActive);
         telemetryM.update(telemetry);
     }
 }
