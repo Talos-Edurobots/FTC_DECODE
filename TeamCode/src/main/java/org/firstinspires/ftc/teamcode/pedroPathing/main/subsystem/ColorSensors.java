@@ -48,7 +48,7 @@ public class ColorSensors {
         if (!wasFull)  fullTimer.reset();
         if (!wasEmpty) emptyTimer.reset();
         wasFull = is1Detected() && is2Detected() && is3Detected();
-        wasEmpty = !is1Detected() && !is2Detected() && !is3Detected();
+        wasEmpty = !is1Detected() /*&& !is2Detected()*/ && !is3Detected();
         updateTimer.reset();
     }
 
@@ -62,7 +62,7 @@ public class ColorSensors {
     }
 
     public boolean is1Detected() {
-        return dist1 < 5;
+        return dist1 < 7;
     }
     public boolean is2Detected() {
         return dist2 < 2;

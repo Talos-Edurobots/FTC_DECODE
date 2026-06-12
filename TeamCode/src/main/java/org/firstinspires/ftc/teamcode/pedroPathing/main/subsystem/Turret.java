@@ -346,7 +346,7 @@ public class Turret implements TelemetryProvider {
     }
     public void loop() {
         if (isResetting) {
-            turretHardware.setPower(-1);
+//            turretHardware.setPower(-.5);
             if (turretHardware.isOverCurrent()) {
                 isResetting = false;
                 turretHardware.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

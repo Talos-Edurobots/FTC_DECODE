@@ -21,8 +21,8 @@ public final class ShooterHoodLuts {
             HoodAngleLut.sample(79.91, 1250.0, 0.000),
             HoodAngleLut.sample(79.91, 1200.0, 0.188),
             HoodAngleLut.sample(33.53, 970.0, 0.500),
-            HoodAngleLut.sample(118.60, 1500.0, 0.000),
-            HoodAngleLut.sample(108.52, 1420.0, 0.000)
+            HoodAngleLut.sample(118.60, 1500.0, 0.100),
+            HoodAngleLut.sample(108.52, 1420.0, 0.100)
             );
 
     private ShooterHoodLuts() {}

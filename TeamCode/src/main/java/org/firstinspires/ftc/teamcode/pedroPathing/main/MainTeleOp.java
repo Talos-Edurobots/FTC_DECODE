@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HoodAngleLut;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
@@ -90,6 +91,7 @@ public class MainTeleOp implements TelemetryProvider {
     private double lastShooterTargetVelocity = 0.0;
     private double lastHoodTargetPosition = 0.0;
     double botPoseX, botPoseY, botHeading, rawPoseX, rawPoseY, rawHeading;
+    Hang hang;
 
     public void init(OpMode opMode, boolean isBlue) {
         this.opMode = opMode;
@@ -119,6 +121,9 @@ public class MainTeleOp implements TelemetryProvider {
         shooter.init();
         shooter.run(true);
         updateShooterAndHoodTargets(teleOpStartPose);
+
+        hang = new Hang();
+        hang.init(hardwareMap);
 
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(RobotConstants.IMU_PARAMETERS);
@@ -205,6 +210,7 @@ public class MainTeleOp implements TelemetryProvider {
                 shooter.run(false);
             }
             useHang ^= true;
+            hang.setState(useHang);
         }
 
         if (transfer.getState() == Transfer.TransferState.SHOOT && transfer.isEmpty()) {
@@ -218,6 +224,9 @@ public class MainTeleOp implements TelemetryProvider {
             leds.pulse(Leds.Side.BOTH, 0.71, 0.3);
         } else if (transfer.getState() == Transfer.TransferState.STOP && !shooter.isBusy()) {
             leds.pulse(Leds.Side.BOTH, 0.5, .3);
+        }
+        if (useHang) {
+            leds.rgb(dt);
         }
         leds.update(dt);
 
@@ -293,9 +302,9 @@ public class MainTeleOp implements TelemetryProvider {
                 rawPoseX = llResult.getBotpose().getPosition().x;
                 rawPoseY = llResult.getBotpose().getPosition().y;
                 rawHeading = llResult.getBotpose().getOrientation().getYaw();
-                botPoseX = rawPoseX * 39.3701;
-                botPoseY = rawPoseY * 39.3701;
-                botHeading = rawHeading;
+                botPoseX = (rawPoseX * 39.3701) + 72;
+                botPoseY = (rawPoseY * 39.3701) + 72;
+                botHeading = Math.toRadians(rawHeading);
             }
         }
 
@@ -399,6 +408,8 @@ public class MainTeleOp implements TelemetryProvider {
         collector.add("system", "limelight x", botPoseX, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "limelight_y", botPoseY, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "limelight_radians", botHeading, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "transfer empty", transfer.isEmpty(), TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
+        collector.add("system", "transfer full", transfer.isFull(), TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_hz", lastLoopDt > 0 ? 1 / lastLoopDt : 0.0,
                 TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "loop_avg_fps", 1000/loopStats.averageMillis,
