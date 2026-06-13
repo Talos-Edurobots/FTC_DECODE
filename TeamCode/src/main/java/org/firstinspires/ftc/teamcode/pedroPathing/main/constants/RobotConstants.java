@@ -79,7 +79,7 @@ public final class RobotConstants {
                     4500,
                     4500
             );
-    public static final MotorLimits TURRET_LIMITS = new MotorLimits(1.0, Double.POSITIVE_INFINITY);
+    public static final MotorLimits TURRET_LIMITS = new MotorLimits(1.0, 4);
     public static final double TURRET_MIN_ANGLE_RADIANS = -TURRET_ZERO_OFFSET_MECHANISM_RADIANS+Math.toRadians(5);
     public static final double TURRET_MAX_ANGLE_RADIANS = Math.toRadians(90);
     public static final MotionProfilingCoefficients TURRET_CONFIGURABLE_PROFILE_DEFAULTS =

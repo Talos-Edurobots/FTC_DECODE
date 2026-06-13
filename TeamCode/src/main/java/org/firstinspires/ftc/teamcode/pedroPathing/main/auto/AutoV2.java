@@ -98,7 +98,7 @@ public class AutoV2 {
                 .build();
 
         openGateFromScore = follower.pathBuilder()
-                .addPath(new BezierCurve(scorePose, openGateWithGrabControlPose, grabFromGate2ndPhasePose))
+                .addPath(new BezierCurve(scorePose, openGateWithGrabControlPose, gateOpenWithGrabPose))
                 .setLinearHeadingInterpolation(scorePose.getHeading(), grabFromGate2ndPhasePose.getHeading())
 //                .addPath(new BezierLine(scorePose, gateIntermediatePose))
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), gateIntermediatePose.getHeading())

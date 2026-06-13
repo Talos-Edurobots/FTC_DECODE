@@ -346,18 +346,24 @@ public class Turret implements TelemetryProvider {
     }
     public void loop() {
         if (isResetting) {
-//            turretHardware.setPower(-.5);
+            turretHardware.setPower(-.5);
             if (turretHardware.isOverCurrent()) {
                 isResetting = false;
+
+                // 1. Reset the encoder
                 turretHardware.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                // 2. Set the mode back so it can move again
+                turretHardware.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                // 3. Prevent violent swinging by updating targets and resetting controllers
+                profiledController.resetController();
+                manualIntegral = 0;
             }
             return;
         }
 
         updateLoopState();
         applyProfileConfigurables();
-
-        if (turretHardware.isOverCurrent()) turretHardware.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         double errorRad = targetMechanismAngleRadians - getMeasuredAngleRadians();
         double errorDeg = Math.toDegrees(errorRad);
