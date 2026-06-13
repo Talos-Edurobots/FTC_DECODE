@@ -41,7 +41,7 @@ public final class RobotConstants {
     public static final DcMotorSimple.Direction INTAKE_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
     public static final DcMotor.ZeroPowerBehavior INTAKE_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.FLOAT;
-    public static final MotorLimits INTAKE_LIMITS = new MotorLimits(1.0, 7.0);
+    public static final MotorLimits INTAKE_LIMITS = new MotorLimits(1.0, 6.0);
 
     public static final String SHOOTER_MOTOR_NAME = "shooter";
     public static final GoBILDAMotorTypes SHOOTER_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_6000_RPM;
