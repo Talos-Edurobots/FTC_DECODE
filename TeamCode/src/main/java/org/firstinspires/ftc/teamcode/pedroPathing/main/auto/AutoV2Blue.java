@@ -16,4 +16,7 @@ public class AutoV2Blue extends OpMode {
     public void loop() {
         auto.loop();
     }
+
+    @Override
+    public void stop(){}
 }
