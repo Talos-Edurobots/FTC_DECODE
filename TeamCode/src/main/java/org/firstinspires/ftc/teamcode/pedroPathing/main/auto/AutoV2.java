@@ -47,10 +47,10 @@ public class AutoV2 {
     private Pose gateWithoutGrabPoseControl2 = new Pose(42, 60); // Position of the gate that we need to open to access the artifacts.
     private  Pose scorePose = new Pose(60, 78, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private Pose gateOpenWithGrabPose = new Pose(19, 61.5, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
-    private Pose gateGrabPose = new Pose( 11.5, 55.5, Math.toRadians(150));
+    private Pose gateGrabPose = new Pose( 14, 56, Math.toRadians(150));
     private Pose scoreFromGrabGateControlPose = new Pose(48, 50);
     private Pose grabFromGate2ndPhaseControlPose = new Pose(24, 48);
-    private Pose grabFromGate2ndPhasePose = new Pose(10, 53, Math.toRadians(180));
+    private Pose grabFromGate2ndPhasePose = new Pose(12, 53, Math.toRadians(180));
     private Pose openGateWithGrabControlPose = new Pose( 41, 67);
     private Pose gateIntermediatePose = new Pose(40, 60, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediateControlPose = new Pose(54, 67, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
@@ -80,6 +80,7 @@ public class AutoV2 {
         grabFromGate.setLinearHeadingInterpolation(gateOpenWithGrabPose.getHeading(), gateGrabPose.getHeading());
 
         grabFromGate2ndPhase = new Path(new BezierCurve(gateGrabPose, grabFromGate2ndPhaseControlPose, grabFromGate2ndPhasePose));
+        grabFromGate2ndPhase.setLinearHeadingInterpolation(gateGrabPose.getHeading(), grabFromGate2ndPhasePose.getHeading());
 
 
     /* Here is an example for Constant Interpolation
@@ -99,7 +100,7 @@ public class AutoV2 {
 
         openGateFromScore = follower.pathBuilder()
                 .addPath(new BezierCurve(scorePose, openGateWithGrabControlPose, gateOpenWithGrabPose))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), grabFromGate2ndPhasePose.getHeading())
+                .setLinearHeadingInterpolation(scorePose.getHeading(), gateOpenWithGrabPose.getHeading())
 //                .addPath(new BezierLine(scorePose, gateIntermediatePose))
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), gateIntermediatePose.getHeading())
 //                .addPath(new BezierLine(gateIntermediatePose, gateOpenWithGrabPose))
@@ -118,13 +119,13 @@ public class AutoV2 {
         transferBusy = true;
         switch (transferState) {
             case 0:
-                shooter.setHoodAngle(ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(distance, shooter.getVelocity()));
                 transfer.setState(Transfer.TransferState.SHOOT);
                 setTransferState(1);
                 break;
             case 1:
-                if (transferTimer.getElapsedTimeSeconds() > 1) {
-                    transfer.setState(Transfer.TransferState.STOP);
+                if (transferTimer.getElapsedTimeSeconds() > .8) {
+                    shooter.setHoodAngle(ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(distance, shooter.getVelocity()));
+//                    transfer.setState(Transfer.TransferState.STOP);
                     transferBusy = false;
                     setTransferState(0);
                 }
@@ -157,6 +158,7 @@ public class AutoV2 {
             case 0:
                 follower.followPath(scorePreload);
                 shooter.run(true);
+                transfer.setState(Transfer.TransferState.STOP);
                 prepareForShot(scorePreloadPose);
                 setPathState(1);
                 break;
@@ -358,7 +360,7 @@ public class AutoV2 {
                 }
                 break;
             case 3:
-                if ((!follower.isBusy() && transfer.isFull()) || cycleTimer.getElapsedTimeSeconds() > 2) {
+                if (!follower.isBusy() || transfer.isFull()) {
                     follower.followPath(scoreFromGate);
                     prepareForShot(scorePose);
                     transfer.setState(Transfer.TransferState.STOP);

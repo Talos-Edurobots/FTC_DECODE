@@ -178,6 +178,7 @@ public class MainTeleOp implements TelemetryProvider {
         transfer.collect();
         transfer.update();
         turret.start();
+        turret.setResetting(true);
         lastLoopTime = opMode.getRuntime();
         loopTimeStats.reset();
     }

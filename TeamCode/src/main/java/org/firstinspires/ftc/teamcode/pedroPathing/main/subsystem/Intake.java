@@ -55,7 +55,10 @@ public class Intake {
                 break;
             case KEEP:
                 motor.setPower(.3);
-            if (!isOverCurrent()) overCurrentTimer.reset();
+                break;
+        }
+        if (!isOverCurrent()) {
+            overCurrentTimer.reset();
         }
     }
     public boolean isOverCurrentForInterval(double interval) {

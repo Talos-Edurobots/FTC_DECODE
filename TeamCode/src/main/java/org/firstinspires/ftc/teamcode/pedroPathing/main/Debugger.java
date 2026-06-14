@@ -296,7 +296,17 @@ class ShooterHoodLutDebug extends OpMode {
             runShooter ^= true;
         }
         if (gamepad1.yWasPressed()) {
-            feedTransfer ^= true;
+            switch (transfer.getState()) {
+                case SHOOT:
+                    transfer.setState(Transfer.TransferState.COLLECT);
+                    break;
+                case COLLECT:
+                    transfer.setState(Transfer.TransferState.STOP);
+                    break;
+                case STOP:
+                    transfer.setState(Transfer.TransferState.SHOOT);
+                    break;
+            }
         }
         if (gamepad1.bWasPressed()) {
             useMeasuredVelocityForHoodLog ^= true;
@@ -307,11 +317,11 @@ class ShooterHoodLutDebug extends OpMode {
         shooter.run(runShooter);
         shooter.update();
 
-        if (feedTransfer) {
-            transfer.shoot();
-        } else {
-            transfer.stop();
-        }
+//        if (feedTransfer) {
+//            transfer.shoot();
+//        } else {
+//            transfer.stop();
+//        }
         transfer.update();
 
         turret.lookToGoal(robotPose, isRedAlliance);

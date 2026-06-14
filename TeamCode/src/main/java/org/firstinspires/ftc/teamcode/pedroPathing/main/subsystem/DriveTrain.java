@@ -66,7 +66,6 @@ public class DriveTrain {
     }
 
     private double rampPower(double current, double target, double dt) {
-        if (target < current) return target;
         double maxPowerChange = RobotConstants.DrivetrainMaxAcceleration * dt;
         double diff = target - current;
         if (Math.abs(diff) > maxPowerChange) {

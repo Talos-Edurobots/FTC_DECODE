@@ -12,7 +12,9 @@ public final class ShooterHoodLuts {
         ShooterVelocityLut.sample(80.70, 1200.0),
         ShooterVelocityLut.sample(46.69, 1050.0),
         ShooterVelocityLut.sample(118.60, 1400.0),
-        ShooterVelocityLut.sample(108.52, 1370.0)
+        ShooterVelocityLut.sample(108.52, 1370.0),
+        ShooterVelocityLut.sample(140, 1480)
+
     );
 
     public static final HoodAngleLut HOOD_ANGLE_LUT = new HoodAngleLut(
@@ -21,8 +23,9 @@ public final class ShooterHoodLuts {
             HoodAngleLut.sample(79.91, 1250.0, 0.000),
             HoodAngleLut.sample(79.91, 1200.0, 0.188),
             HoodAngleLut.sample(33.53, 970.0, 0.500),
-            HoodAngleLut.sample(118.60, 1500.0, 0.100),
-            HoodAngleLut.sample(108.52, 1420.0, 0.100)
+            HoodAngleLut.sample(118.60, 1400.0, 0.356),
+            HoodAngleLut.sample(108.52, 1420.0, 0.356),
+            HoodAngleLut.sample(129.25, 1500, 0.356)
             );
 
     private ShooterHoodLuts() {}

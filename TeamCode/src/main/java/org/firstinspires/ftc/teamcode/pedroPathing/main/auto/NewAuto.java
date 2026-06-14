@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.auto.old.SoloShortAuto;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.RobotPoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
@@ -41,17 +42,17 @@ public class NewAuto {
     private SoloShortAuto auto;
     private  Pose startPose = new Pose(23, 136, Math.toRadians(233)); // Start Pose of our robot.
     private  Pose scorePose = new Pose(48, 85, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private  Pose gatePose = new Pose(18.5, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private  Pose gatePose = new Pose(17.4, 80, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private  Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private  Pose pickupIntake2Pose = new Pose(12, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake2Pose = new Pose(10, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private Pose pickup2ControlPose = new Pose(52, 58);
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private Pose pickup3ControlPose = new Pose(52, 30.005820765609734);
-    private  Pose pickupIntake3Pose = new Pose(14, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private  Pose pickup3Pose = new Pose(40, 40, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private Pose pickup3ControlPose = new Pose(52, 45);
+    private  Pose pickupIntake3Pose = new Pose(11, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private  Pose parkingPose = new Pose(50, 70, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
 
@@ -183,7 +184,7 @@ public class NewAuto {
                 }
                 break;
             case 2:
-                if (pathTimer.getElapsedTimeSeconds() > 0.1) {
+                if (pathTimer.getElapsedTimeSeconds() > 0) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(3);
@@ -196,7 +197,7 @@ public class NewAuto {
                 setPathState(4);
                 break;
             case 4:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.4){
+                if(!follower.isBusy() || pathTimer.getElapsedTimeSeconds()>2){
                     transfer.stop();
                     setPathState(5);
                 }
@@ -212,7 +213,7 @@ public class NewAuto {
                 }
                 break;
             case 7:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.3) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(8);
@@ -223,11 +224,11 @@ public class NewAuto {
                 transfer.collect();
                 follower.followPath(grabPickup2);
                 Shooter.targetVelocity = 1350;
-                shooter.setHoodAngle(0);
+                shooter.setHoodAngle(0.1);
                 setPathState(9);
                 break;
             case 9:
-                if (!follower.isBusy()/* && pathTimer.getElapsedTimeSeconds() > .05*/) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds()>4) {
                     transfer.stop();
                     turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
                     follower.followPath(scorePickup2);
@@ -235,7 +236,7 @@ public class NewAuto {
                 }
                 break;
             case 10:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.3) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 3) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(11);
@@ -248,7 +249,7 @@ public class NewAuto {
                 setPathState(12);
                 break;
             case 12:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .1) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 4 || transfer.isFull()) {
 
                     follower.followPath(scorePickup3);
 //                        turret.setAngleRadians(Math.toRadians(isBlue ? -38:38));
@@ -262,7 +263,7 @@ public class NewAuto {
                 }
                 break;
             case 14:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.4) {
+                if (!follower.isBusy()/* || pathTimer.getElapsedTimeSeconds() > 0.4*/) {
                     shootArtifacts();
                     if (!flickersBusy) {
                         setPathState(15);
@@ -321,6 +322,8 @@ public class NewAuto {
         telemetryM.addData("path timer", pathTimer.getElapsedTime());
         telemetryM.addData("flicker timer", flickerTimer.getElapsedTime());
         telemetryM.update(telemetry);
+
+        RobotPoseStorage.setPose(follower.getPose());
     }
 
     /** This method is called once at the init of the OpMode. **/
@@ -354,6 +357,7 @@ public class NewAuto {
     }
 
     public void stop(HashMap blackboard) {
+        RobotPoseStorage.setPose(follower.getPose());
         blackboard.put(RobotConstants.ALLIANCE_KEY, isBlue);
         blackboard.put(RobotConstants.FOLLOWER_KEY, follower);
     }
