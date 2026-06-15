@@ -66,7 +66,7 @@ public final class RobotConstants {
             DcMotor.ZeroPowerBehavior.FLOAT;
     public static final double TURRET_POWER_WRITE_EPSILON = 0.001;
     public static final double TURRET_EXTERNAL_GEAR_RATIO = 2.8;
-    public static final double TURRET_HARD_STOP_START_TICKS = -367.0;
+    public static final double TURRET_HARD_STOP_START_TICKS = -360.0;
     public static final double TURRET_ZERO_OFFSET_TICKS = -TURRET_HARD_STOP_START_TICKS;
     public static final double TURRET_ZERO_OFFSET_MOTOR_RADIANS =
             TURRET_ZERO_OFFSET_TICKS / TURRET_MOTOR_TYPE.getTicksPerRadian();

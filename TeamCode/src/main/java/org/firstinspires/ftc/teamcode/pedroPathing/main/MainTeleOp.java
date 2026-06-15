@@ -4,7 +4,11 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.HeadingInterpolator;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -38,6 +42,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryProvi
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue;
 
 import java.util.HashMap;
+import java.util.function.Supplier;
 @Configurable
 public class MainTeleOp implements TelemetryProvider {
     private static final int DRIVER_STATION_TELEMETRY_INTERVAL_MS = 200;
@@ -50,6 +55,7 @@ public class MainTeleOp implements TelemetryProvider {
     public static double hoodLutTrim = 0.0;
     public static int hoodLutNeighborCount = HoodAngleLut.DEFAULT_NEIGHBOR_COUNT;
     public static boolean defaultUseLimelight = false;
+    public static boolean useLimelightRelocalization = true;
     public static boolean logTelemetry = false;
 
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -64,6 +70,10 @@ public class MainTeleOp implements TelemetryProvider {
     private OpMode opMode;
     private boolean isBlue;
     static boolean useTurret = true;
+    private static final double VELOCITY_THRESHOLD = 0.1; // inches/sec
+    private boolean isRobotNearlyStationary() {
+        return follower.getVelocity().getMagnitude() < VELOCITY_THRESHOLD;
+    }
 
     private HardwareManager hardwareManager;
     private Transfer transfer;
@@ -77,6 +87,10 @@ public class MainTeleOp implements TelemetryProvider {
     private Pose3D llPose;
     private boolean automatedDrive = false;
     private boolean isFar = false;
+    // Pedro Pathing lazy path generation for automated driving
+    private Supplier<PathChain> autoPathChain;
+    private static final Pose BLUE_TARGET_POSE = new Pose(108, 33, Math.toRadians(180));
+    private Pose autoTargetPose;
     static boolean slowMode = false;
     private boolean useLimelight = defaultUseLimelight;
     static boolean turretFaceForwardOverride = false;
@@ -107,6 +121,14 @@ public class MainTeleOp implements TelemetryProvider {
         }
         follower.setStartingPose(teleOpStartPose);
         follower.update();
+
+        // Lazy path: generates a fresh BezierLine from the robot's current pose to the target each time
+        autoTargetPose = isBlue ? BLUE_TARGET_POSE : BLUE_TARGET_POSE.mirror();
+        autoPathChain = () -> follower.pathBuilder()
+                .addPath(new Path(new BezierLine(follower::getPose, autoTargetPose)))
+                .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(
+                        follower::getHeading, autoTargetPose.getHeading(), 0.8))
+                .build();
 
         hardwareManager = new HardwareManager(hardwareMap);
 
@@ -181,6 +203,7 @@ public class MainTeleOp implements TelemetryProvider {
         turret.setResetting(true);
         lastLoopTime = opMode.getRuntime();
         loopTimeStats.reset();
+        automatedDrive = false;
     }
 
     public void loop() {
@@ -309,8 +332,33 @@ public class MainTeleOp implements TelemetryProvider {
             }
         }
 
+        // Limelight pose update using Megatag2 (filtered)
+        if (useLimelightRelocalization && isRobotNearlyStationary()) {
+            llResult = limelight.getLatestResult();
+            if (llResult != null && llResult.isValid()) {
+                Pose3D mt2Pose = llResult.getBotpose_MT2();
+                double poseX = (mt2Pose.getPosition().x * 39.3701) + 72;
+                double poseY = (mt2Pose.getPosition().y * 39.3701) + 72;
+//                double heading = Math.toRadians(mt2Pose.getOrientation().getYaw());
+                follower.setPose(new Pose(poseX, poseY, follower.getPose().getHeading()));
+                telemetryM.addLine("Limelight MT2 relocalized");
+            }
+        }
+
+        // D‑pad down: update heading with Megatag1
+        if (useLimelightRelocalization && opMode.gamepad1.dpadDownWasPressed() && isRobotNearlyStationary()) {
+            llResult = limelight.getLatestResult();
+            if (llResult != null && llResult.isValid()) {
+                Pose3D mt1Pose = llResult.getBotpose();
+                double headingDeg = mt1Pose.getOrientation().getYaw();
+                Pose currentPose = follower.getPose();
+                follower.setPose(new Pose(currentPose.getX(), currentPose.getY(), Math.toRadians(headingDeg)));
+                telemetryM.addLine("Limelight MT1 heading updated");
+            }
+        }
+
         if (opMode.gamepad2.x) {
-            follower.activateAllPIDFs();
+            follower.holdPoint(follower.getPose());
         } else if (opMode.gamepad2.a) {
             follower.deactivateAllPIDFs();
         }
@@ -342,9 +390,22 @@ public class MainTeleOp implements TelemetryProvider {
         double heading = follower.getPose().getHeading();
         lastHeadingRadians = heading;
 
+        // gamepad2 dpad up: start automated path to target position
+        if (opMode.gamepad2.dpadUpWasPressed()) {
+            follower.followPath(autoPathChain.get(), true);
+            automatedDrive = true;
+        }
+
+        // Cancel automated drive when path finishes
+        if (automatedDrive && !follower.isBusy()) {
+            automatedDrive = false;
+        }
+
         if (!automatedDrive) {
+            // Manual control via Drivetrain subsystem
             drivetrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, mult, dt);
         }
+        // follower.update() always runs so pose estimation stays current
         follower.update();
         telemetryHub.publish(telemetryM, telemetry, newTime);
     }

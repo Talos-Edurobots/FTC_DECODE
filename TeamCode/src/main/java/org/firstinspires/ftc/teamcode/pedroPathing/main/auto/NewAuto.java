@@ -42,17 +42,17 @@ public class NewAuto {
     private SoloShortAuto auto;
     private  Pose startPose = new Pose(23, 136, Math.toRadians(233)); // Start Pose of our robot.
     private  Pose scorePose = new Pose(48, 85, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private  Pose gatePose = new Pose(17.4, 80, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
+    private  Pose gatePose = new Pose(16.8, 80, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private  Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private  Pose pickup1IntakePose = new Pose(17.3, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
-    private  Pose pickupIntake2Pose = new Pose(10, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake2Pose = new Pose(9.7, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private Pose pickup2ControlPose = new Pose(52, 58);
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickup3Pose = new Pose(40, 40, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private Pose pickup3ControlPose = new Pose(52, 45);
-    private  Pose pickupIntake3Pose = new Pose(11, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake3Pose = new Pose(10.7, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private  Pose parkingPose = new Pose(50, 70, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
 
@@ -163,7 +163,7 @@ public class NewAuto {
             case 0:
                 follower.followPath(scorePreload);
                 shooter.run(true);
-                shooter.setHoodAngle(.1);
+                shooter.setHoodAngle(.21);
                 turret.setAngleRadians(Math.toRadians(isBlue ? -49: 49));
                 setPathState(1);
                 break;
@@ -207,7 +207,7 @@ public class NewAuto {
                 setPathState(6);
                 break;
             case 6:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 3) {
                     follower.followPath(scorePickup1);
                     setPathState(7);
                 }
@@ -215,6 +215,7 @@ public class NewAuto {
             case 7:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2) {
                     shootArtifacts();
+                    shooter.setHoodAngle(.1);
                     if (!flickersBusy) {
                         setPathState(8);
                     }
@@ -224,7 +225,7 @@ public class NewAuto {
                 transfer.collect();
                 follower.followPath(grabPickup2);
                 Shooter.targetVelocity = 1350;
-                shooter.setHoodAngle(0.1);
+                shooter.setHoodAngle(0.13);
                 setPathState(9);
                 break;
             case 9:

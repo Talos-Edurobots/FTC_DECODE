@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 //@Disabled
 public class ExampleTeleOp extends OpMode {
     private Follower follower;
-    public static Pose startingPose = new Pose(45, 98); //See ExampleAuto to understand how to use this
+    public static Pose startingPose = new Pose(72, 72, Math.toRadians(180)); //See ExampleAuto to understand how to use this
     private boolean automatedDrive;
     private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
@@ -36,7 +36,7 @@ public class ExampleTeleOp extends OpMode {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
-                .addPath(new Path(new BezierLine(follower::getPose, new Pose(45, 98))))
+                .addPath(new Path(new BezierLine(follower::getPose, new Pose(72, 72))))
                 .setHeadingInterpolation(HeadingInterpolator.linearFromPoint(follower::getHeading, Math.toRadians(0), 0.8))
                 .build();
     }
