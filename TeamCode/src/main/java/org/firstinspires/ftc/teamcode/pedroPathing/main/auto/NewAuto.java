@@ -21,6 +21,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ShooterHoodLuts;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
@@ -193,6 +194,7 @@ public class NewAuto {
                 break;
             case 3:
                 follower.followPath(grabPickup1);
+                shooter.setIdle(true);
                 transfer.collect();
                 setPathState(4);
                 break;
@@ -209,13 +211,13 @@ public class NewAuto {
             case 6:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 3) {
                     follower.followPath(scorePickup1);
+                    prepareForShot(scorePose);
                     setPathState(7);
                 }
                 break;
             case 7:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2) {
                     shootArtifacts();
-                    shooter.setHoodAngle(.1);
                     if (!flickersBusy) {
                         setPathState(8);
                     }
@@ -224,14 +226,13 @@ public class NewAuto {
             case 8:
                 transfer.collect();
                 follower.followPath(grabPickup2);
-                Shooter.targetVelocity = 1350;
-                shooter.setHoodAngle(0.13);
+                shooter.setIdle(true);
                 setPathState(9);
                 break;
             case 9:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds()>4) {
                     transfer.stop();
-                    turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
+//                    turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
                     follower.followPath(scorePickup2);
                     setPathState(10);
                 }
@@ -246,19 +247,20 @@ public class NewAuto {
                 break;
             case 11:
                 follower.followPath(grabPickup3);
+                shooter.setIdle(true);
                 transfer.collect();
                 setPathState(12);
                 break;
             case 12:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 4 || transfer.isFull()) {
-
+                    prepareForShot(scorePose);
                     follower.followPath(scorePickup3);
 //                        turret.setAngleRadians(Math.toRadians(isBlue ? -38:38));
                     setPathState(13);
                 }
                 break;
             case 13:
-                if (pathTimer.getElapsedTimeSeconds() > 0) {
+                if (pathTimer.getElapsedTimeSeconds() > .5) {
                     transfer.stop();
                     setPathState(14);
                 }
@@ -357,10 +359,16 @@ public class NewAuto {
         follower.setStartingPose(startPose);
     }
 
-    public void stop(HashMap blackboard) {
+    public void stop() {
         RobotPoseStorage.setPose(follower.getPose());
-        blackboard.put(RobotConstants.ALLIANCE_KEY, isBlue);
-        blackboard.put(RobotConstants.FOLLOWER_KEY, follower);
+    }
+
+    public void prepareForShot(Pose scorePose) {
+        shooter.setIdle(false);
+        double distance = ShooterHoodLuts.distanceToGoal(scorePose, !isBlue);
+        Shooter.targetVelocity = ShooterHoodLuts.SHOOTER_VELOCITY_LUT.getTargetVelocity(distance);
+        shooter.setHoodAngle(ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(distance, Shooter.targetVelocity));
+        turret.lookToGoal(scorePose, !isBlue);
     }
 
 }

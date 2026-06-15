@@ -89,7 +89,7 @@ public class MainTeleOp implements TelemetryProvider {
     private boolean isFar = false;
     // Pedro Pathing lazy path generation for automated driving
     private Supplier<PathChain> autoPathChain;
-    private static final Pose BLUE_TARGET_POSE = new Pose(108, 33, Math.toRadians(180));
+    private static Pose BLUE_TARGET_POSE = new Pose(108, 35, Math.toRadians(0));
     private Pose autoTargetPose;
     static boolean slowMode = false;
     private boolean useLimelight = defaultUseLimelight;
@@ -389,6 +389,7 @@ public class MainTeleOp implements TelemetryProvider {
         double rotate = opMode.gamepad1.right_stick_x * mult;
         double heading = follower.getPose().getHeading();
         lastHeadingRadians = heading;
+        if (Math.abs(forward) + Math.abs(strafe) + Math.abs(rotate) > 0) automatedDrive = false;
 
         // gamepad2 dpad up: start automated path to target position
         if (opMode.gamepad2.dpadUpWasPressed()) {

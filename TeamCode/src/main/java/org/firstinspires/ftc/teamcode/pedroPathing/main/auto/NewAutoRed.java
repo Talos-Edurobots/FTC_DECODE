@@ -3,13 +3,12 @@ package org.firstinspires.ftc.teamcode.pedroPathing.main.auto;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name = "AutoV2Blue")
-public class AutoV2Blue extends OpMode {
-    AutoV2 auto = new AutoV2();
-
+@Autonomous(name = "New Red")
+public class NewAutoRed extends OpMode {
+    NewAuto auto = new NewAuto();
     @Override
     public void init() {
-        auto.init(hardwareMap, telemetry, true);
+        auto.init(hardwareMap, telemetry, false);
     }
 
     @Override

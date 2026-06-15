@@ -324,10 +324,8 @@ public class AutoV2 {
         follower.setStartingPose(startPose);
     }
 
-    public void stop(HashMap blackboard) {
+    public void stop() {
         RobotPoseStorage.setPose(follower.getPose());
-        blackboard.put(RobotConstants.ALLIANCE_KEY, isBlue);
-        blackboard.put(RobotConstants.FOLLOWER_KEY, follower);
     }
 
     public void prepareForShot(Pose scorePose) {
