@@ -216,7 +216,56 @@ class RobotMechanismDemo extends OpMode {
         telemetryM.update(telemetry);
     }
 }
+@Configurable
+class TurretLUTTest extends OpMode {
+    String TAG = "TurretLUTTest";
+    Turret turret;
+    Shooter shooter;
+    TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    Follower follower;
+    Pose startPose = new Pose(72, 72, Math.toRadians(180));
+    static double targetX = 144, targetY = 144;
+    @Override
+    public void init() {
+        turret = new Turret(hardwareMap);
+        turret.init();
+        follower =  PPConstants.createFollower(hardwareMap);
+        follower.setStartingPose(startPose);
+        shooter.init();
+    }
 
+    @Override
+    public void init_loop() {
+        telemetryM.addLine("init complete");
+        telemetryM.update();
+    }
+
+    @Override
+    public void start() {
+        turret.start();
+        turret.setResetting(true);
+    }
+
+    @Override
+    public void loop() {
+        Pose aimPose = new Pose(targetX, targetY, 0);
+        follower.update();
+        turret.lookToGoal(follower.getPose(), false);
+        turret.loop();
+        double distanceFromGoal = ShooterHoodLuts.distanceToGoal(follower.getPose(), false);
+        double targetVelocity = ShooterHoodLuts.SHOOTER_VELOCITY_LUT.getTargetVelocity(
+                distanceFromGoal
+        );
+        double hoodPosition = ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(
+                distanceFromGoal,
+                shooter.getVelocity()
+        );
+        shooter.setIdle(false);
+        Shooter.setTargetVelocity(targetVelocity);
+        shooter.setHoodAngle(hoodPosition);
+        shooter.update();
+    }
+}
 @Configurable
 class ShooterHoodLutDebug extends OpMode {
     private static final String TAG = "ShooterHoodLutDebug";

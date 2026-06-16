@@ -250,82 +250,42 @@ public class NewBackAuto {
                 }
                 break;
             case 3:
-                cycleShots();
-                if (!cycle) setPathState(4);
-                break;
+                transfer.setState(Transfer.TransferState.COLLECT);
+                follower.followPath(grabPickup3);
+                shooter.setIdle(true);
+                setPathState(4);
             case 4:
-                if(!cycle){
-                    transfer.stop();
-                    setPathState(-1);
+                if (!follower.isBusy() || transfer.isFull()) {
+                    follower.followPath(scorePickup3);
+                    prepareForShot(scorePose);
+                    setPathState(5);
                 }
-                break;
             case 5:
-//                follower.followPath(scoreHuman);
-                setPathState(6);
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 3) {
+                    shootArtifacts();
+                    if (!transferBusy) {
+                        setPathState(6);
+                    }
+                }
                 break;
             case 6:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 3) {
-                    follower.followPath(scoreHuman);
-                    prepareForShot(scorePose);
-                    setPathState(7);
+                setPathState(7);
+            case 7:
+                cycleShots();
+                if(!cycle){
+                    setPathState(8);
                 }
                 break;
-            case 7:
+            case 8:
+//                follower.followPath(scoreHuman);
+                cycleShots();
+                if (!cycle) setPathState(-1);
+                break;
+            case 9:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2) {
                     shootArtifacts();
                     if (!transferBusy) {
                         setPathState(-1);
-                    }
-                }
-                break;
-            case 8:
-                transfer.collect();
-                follower.followPath(grabPickup2);
-                shooter.setIdle(true);
-                setPathState(9);
-                break;
-            case 9:
-                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds()>4) {
-                    transfer.stop();
-//                    turret.setAngleRadians(Math.toRadians(isBlue?-49:49));
-//                    prepareForShot(score2ndPose);
-                    follower.followPath(scorePickup2);
-                    setPathState(10);
-                }
-                break;
-            case 10:
-                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 3) {
-                    shootArtifacts();
-                    if (!transferBusy) {
-                        setPathState(11);
-                    }
-                }
-                break;
-            case 11:
-                follower.followPath(grabPickup3);
-                shooter.setIdle(true);
-                transfer.collect();
-                setPathState(12);
-                break;
-            case 12:
-                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 4 || transfer.isFull()) {
-//                    prepareForShot(score2ndPose);
-                    follower.followPath(scorePickup3);
-//                        turret.setAngleRadians(Math.toRadians(isBlue ? -38:38));
-                    setPathState(13);
-                }
-                break;
-            case 13:
-                if (pathTimer.getElapsedTimeSeconds() > .5) {
-                    transfer.stop();
-                    setPathState(14);
-                }
-                break;
-            case 14:
-                if (!follower.isBusy()/* || pathTimer.getElapsedTimeSeconds() > 0.4*/) {
-                    shootArtifacts();
-                    if (!transferBusy) {
-                        setPathState(15);
                     }
                 }
                 break;
@@ -369,6 +329,8 @@ public class NewBackAuto {
         telemetryM.addData("is alliance blue", isBlue);
         telemetryM.addData("path state", pathState);
         telemetryM.addData("cycle state", cycleState);
+        telemetry.addData("shooter current", shooter.getCurrent1()+shooter.getCurrent2());
+        telemetryM.addData("intake current", transfer.getCurrent());
         telemetryM.addData("follower busy", follower.isBusy());
         telemetryM.addData("flicker state", transferState);
         telemetryM.addData("flicker busy", transferBusy);
