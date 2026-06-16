@@ -27,10 +27,10 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Turret;
 
 import java.util.HashMap;
 
-public class NewAuto {
+public class NewAutoPlus {
     boolean flickersBusy = false, isBlue;
     int flickerState, pathState;
-//    Hang hang;
+    //    Hang hang;
     static Follower follower;
     HardwareMap hwMap;
     Telemetry telemetry;
@@ -137,7 +137,7 @@ public class NewAuto {
                     transfer.stop();
                     flickersBusy = false;
                     setFlickerState(0);
-            }
+                }
         }
     }
     private void setAlliance(boolean isBlue) {

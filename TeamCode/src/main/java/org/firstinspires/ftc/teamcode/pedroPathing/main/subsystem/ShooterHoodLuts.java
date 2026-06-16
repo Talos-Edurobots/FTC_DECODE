@@ -10,6 +10,7 @@ public final class ShooterHoodLuts {
 
     public static final ShooterVelocityLut SHOOTER_VELOCITY_LUT = new ShooterVelocityLut(
         ShooterVelocityLut.sample(80.70, 1200.0),
+        ShooterVelocityLut.sample(71.84, 1250.0),
         ShooterVelocityLut.sample(46.69, 1050.0),
         ShooterVelocityLut.sample(118.60, 1400.0),
         ShooterVelocityLut.sample(108.52, 1370.0),
@@ -20,6 +21,8 @@ public final class ShooterHoodLuts {
     public static final HoodAngleLut HOOD_ANGLE_LUT = new HoodAngleLut(
             HoodAngleLut.sample(46.69, 1100.0, 0.291),
             HoodAngleLut.sample(46.69, 1050.0, 0.437),
+            HoodAngleLut.sample(71.84, 1260.0, 0.159),
+            HoodAngleLut.sample(71.84, 1200.0, 0.138),
             HoodAngleLut.sample(79.91, 1250.0, 0.000),
             HoodAngleLut.sample(79.91, 1200.0, 0.188),
             HoodAngleLut.sample(33.53, 970.0, 0.500),

@@ -55,7 +55,7 @@ public class MainTeleOp implements TelemetryProvider {
     public static double hoodLutTrim = 0.0;
     public static int hoodLutNeighborCount = HoodAngleLut.DEFAULT_NEIGHBOR_COUNT;
     public static boolean defaultUseLimelight = false;
-    public static boolean useLimelightRelocalization = true;
+    public static boolean useLimelightRelocalization = false;
     public static boolean logTelemetry = false;
 
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
@@ -106,6 +106,7 @@ public class MainTeleOp implements TelemetryProvider {
     private double lastHoodTargetPosition = 0.0;
     double botPoseX, botPoseY, botHeading, rawPoseX, rawPoseY, rawHeading;
     Hang hang;
+    Pose teleOpStartPose;
 
     public void init(OpMode opMode, boolean isBlue) {
         this.opMode = opMode;
@@ -113,7 +114,7 @@ public class MainTeleOp implements TelemetryProvider {
         this.telemetry = opMode.telemetry;
         this.isBlue = isBlue;
 
-        Pose teleOpStartPose = RobotPoseStorage.hasPose() ? RobotPoseStorage.getPose() : startingPose;
+        teleOpStartPose = RobotPoseStorage.hasPose() ? RobotPoseStorage.getPose() : startingPose;
 
         follower = (Follower) opMode.blackboard.get(RobotConstants.FOLLOWER_KEY);
         if (follower == null) {
@@ -184,13 +185,9 @@ public class MainTeleOp implements TelemetryProvider {
     }
 
     public void init_loop() {
-        int pipeline = limelight.getStatus().getPipelineIndex();
-        telemetryM.addLine("running alliance " + (pipeline == 2 ? "blue" : "red"));
-        telemetryM.addLine("press back to change");
-        telemetryM.addData("pipeline", pipeline);
-        if (opMode.gamepad1.backWasPressed()) {
-            limelight.pipelineSwitch(pipeline == 2 ? 3 : 2);
-        }
+        telemetryM.addData("start pose", teleOpStartPose);
+        telemetryM.addLine("press a to reset");
+        if (opMode.gamepad1.aWasPressed()) teleOpStartPose = startingPose;
         telemetryM.update(telemetry);
     }
 
