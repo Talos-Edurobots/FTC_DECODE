@@ -31,6 +31,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.motor.MotorUse;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ColorSensors;
+import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Flickers;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
@@ -107,29 +108,41 @@ public class Debugger extends SelectableOpMode {
 
 @Configurable
 class RobotMechanismDemo extends OpMode {
+    private Follower follower;
+    private Pose startPose = new Pose(72, 72, Math.toRadians(180));
     private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
-    private static final double HOOD_STEP = 0.02;
-    private static final double TURRET_STEP_DEGREES = 2;
+    private static final double HOOD_STEP = 0.3;
+    private static final double TURRET_STEP_DEGREES = 60;
     private Intake intake;
     private Shooter shooter;
     private Turret turret;
+    Gate gate;
+    Leds leds;
 
     public static boolean intakeEnabled = false;
     public static boolean intakeReverse = false;
     public static boolean shooterEnabled = false;
     public static double shooterTargetVelocity = 2400;
     public static double turretTargetDegrees = 0;
-    public static double hoodAngle = 0.5;
+    public static double hoodAngle = 1;
+    public double lastTime;
 
     @Override
     public void init() {
+        leds = new Leds();
+        leds.init(hardwareMap);
+        leds.setBoth(.5);
+        follower = PPConstants.createFollower(hardwareMap);
+        follower.setStartingPose(startPose);
         intakeEnabled = false;
         intakeReverse = false;
         shooterEnabled = false;
-        shooterTargetVelocity = 2400;
+        shooterTargetVelocity = 1300;
         turretTargetDegrees = 0;
         hoodAngle = 0.5;
 
+        gate = new Gate();
+        gate.init(hardwareMap);
         intake = new Intake(hardwareMap);
         intake.init();
 
@@ -149,14 +162,28 @@ class RobotMechanismDemo extends OpMode {
     }
 
     @Override
+    public void start() {
+        follower.startTeleopDrive(true);
+    }
+
+    @Override
     public void loop() {
+        double dt = getRuntime() - lastTime;
+        lastTime += dt;
+        follower.setTeleOpDrive(-gamepad1.right_stick_y, -gamepad1.right_stick_x, -gamepad1.left_stick_x);
+        follower.update();
+
+        if (gamepad1.yWasPressed()) {
+            gate.changeState();
+        }
+
         if (gamepad1.aWasPressed()) {
+            intakeReverse = false;
             intakeEnabled = !intakeEnabled;
-            if (intakeEnabled && intakeReverse) intakeReverse = false;
         }
         if (gamepad1.bWasPressed()) {
-            intakeEnabled = true;
-            intakeReverse = !intakeReverse;
+            intakeReverse = true;
+            intakeEnabled = !intakeEnabled;
         }
         if (gamepad1.xWasPressed()) {
             shooterEnabled = !shooterEnabled;
@@ -167,17 +194,17 @@ class RobotMechanismDemo extends OpMode {
         if (gamepad1.dpadDownWasPressed()) {
             shooterTargetVelocity = Math.max(0, shooterTargetVelocity - 100);
         }
-        if (gamepad1.dpadLeftWasPressed()) {
-            turretTargetDegrees -= TURRET_STEP_DEGREES;
+        if (gamepad1.dpad_left) {
+            turretTargetDegrees -= TURRET_STEP_DEGREES * dt;
         }
-        if (gamepad1.dpadRightWasPressed()) {
-            turretTargetDegrees += TURRET_STEP_DEGREES;
+        if (gamepad1.dpad_right) {
+            turretTargetDegrees += TURRET_STEP_DEGREES * dt;
         }
-        if (gamepad1.leftBumperWasPressed()) {
-            hoodAngle -= HOOD_STEP;
+        if (gamepad1.left_bumper) {
+            hoodAngle -= HOOD_STEP * dt;
         }
-        if (gamepad1.rightBumperWasPressed()) {
-            hoodAngle += HOOD_STEP;
+        if (gamepad1.right_bumper) {
+            hoodAngle += HOOD_STEP * dt;
         }
         hoodAngle = Math.max(0, Math.min(0.5, hoodAngle));
 
@@ -191,6 +218,7 @@ class RobotMechanismDemo extends OpMode {
         Shooter.setTargetVelocity(shooterTargetVelocity);
         shooter.run(shooterEnabled);
         shooter.setHoodAngle(hoodAngle);
+
         shooter.update();
 
         turret.setAngleRadians(Math.toRadians(turretTargetDegrees));

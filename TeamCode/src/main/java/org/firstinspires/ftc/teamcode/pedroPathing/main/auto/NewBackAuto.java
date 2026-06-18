@@ -57,7 +57,7 @@ public class NewBackAuto {
     private Pose backPose = new Pose(20, 12, Math.toRadians(180));
     private Path scorePreload, openGate, park;
 
-    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, stepBack, grabAgain, scoreFromGrabAgain, grabStepBackToPickupHuman;
+    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, stepBack, grabAgain, scoreFromGrabAgain, grabStepBackToPickupHuman, scoreToStepBack;
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePose));
@@ -157,6 +157,10 @@ public class NewBackAuto {
                 .setTangentHeadingInterpolation()
 //                .setReversed()
                 .build();
+        scoreToStepBack = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, backPose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), backPose.getHeading())
+                .build();
         grabStepBackToPickupHuman = follower.pathBuilder()
                 .addPath(new BezierLine(backPose, pickupHuman))
                 .setLinearHeadingInterpolation(backPose.getHeading(), pickupHuman.getHeading())
@@ -234,7 +238,7 @@ public class NewBackAuto {
         */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy() && !shooter.isBusy()) {
+                if((!follower.isBusy() || pathTimer.getElapsedTimeSeconds()>2) && !shooter.isBusy()) {
                     /* Score Preload */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
@@ -261,7 +265,7 @@ public class NewBackAuto {
                     setPathState(5);
                 }
             case 5:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 3) {
+                if (!follower.isBusy()) {
                     shootArtifacts();
                     if (!transferBusy) {
                         setPathState(6);
@@ -271,14 +275,14 @@ public class NewBackAuto {
             case 6:
                 setPathState(7);
             case 7:
-                cycleShots();
+                longCycleShots();
                 if(!cycle){
                     setPathState(8);
                 }
                 break;
             case 8:
 //                follower.followPath(scoreHuman);
-                cycleShots();
+                shortCycleShots();
                 if (!cycle) setPathState(-1);
                 break;
             case 9:
@@ -393,7 +397,7 @@ public class NewBackAuto {
         shooter.setHoodAngle(ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(distance, Shooter.targetVelocity));
         turret.lookToGoal(scorePose, !isBlue);
     }
-    public void cycleShots() {
+    public void longCycleShots() {
         cycle = true;
         switch (cycleState) {
             case 0:
@@ -419,6 +423,48 @@ public class NewBackAuto {
             case 3:
                 if (!follower.isBusy() || cycleTimer.getElapsedTimeSeconds() > 2) {
                     follower.followPath(stepBack);
+                    setCycleState(4);
+                }
+                transfer.setState(Transfer.TransferState.COLLECT);
+                break;
+            case 4:
+                if (!follower.isBusy() || transfer.isFull()) {
+                    follower.followPath(grabAgain);
+                    transfer.setState(Transfer.TransferState.COLLECT);
+                    setCycleState(5);
+                }
+                break;
+            case 5:
+                if (!follower.isBusy()) {
+                    follower.followPath(scoreFromGrabAgain);
+                    prepareForShot(scorePose);
+                    transfer.setState(Transfer.TransferState.STOP);
+                    setCycleState(6);
+                }
+                break;
+            case 6:
+                if (!follower.isBusy() && cycleTimer.getElapsedTimeSeconds() > 3) {
+                    shootArtifacts();
+                    if (!transferBusy) {
+                        setCycleState(0);
+                        cycle = false;
+                    }
+                }
+                break;
+        }
+    }
+    public void shortCycleShots() {
+        cycle = true;
+        switch (cycleState) {
+            case 0:
+                transfer.setState(Transfer.TransferState.COLLECT);
+                follower.followPath(scoreToStepBack);
+                shooter.setIdle(true);
+                setCycleState(1);
+                break;
+            case 1:
+                if (!follower.isBusy() || cycleTimer.getElapsedTimeSeconds() > 2) {
+//                    follower.followPath(stepBack);
                     setCycleState(4);
                 }
                 transfer.setState(Transfer.TransferState.COLLECT);
