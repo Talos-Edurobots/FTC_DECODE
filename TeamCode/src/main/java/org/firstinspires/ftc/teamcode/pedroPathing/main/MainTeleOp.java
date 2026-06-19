@@ -235,7 +235,7 @@ public class MainTeleOp implements TelemetryProvider {
         }
 
         if (transfer.getState() == Transfer.TransferState.SHOOT && transfer.isEmpty()) {
-            transfer.collect();
+//            transfer.collect();
             leds.blink(Leds.Side.BOTH, 0.28, 3);
         } else if (transfer.getState() == Transfer.TransferState.SHOOT) {
             leds.setBoth(0.5);

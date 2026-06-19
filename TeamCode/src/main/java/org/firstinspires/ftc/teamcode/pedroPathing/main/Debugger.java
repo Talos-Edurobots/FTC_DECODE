@@ -170,7 +170,7 @@ class RobotMechanismDemo extends OpMode {
     public void loop() {
         double dt = getRuntime() - lastTime;
         lastTime += dt;
-        follower.setTeleOpDrive(-gamepad1.right_stick_y, -gamepad1.right_stick_x, -gamepad1.left_stick_x);
+        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.right_stick_x, -gamepad1.left_stick_x);
         follower.update();
 
         if (gamepad1.yWasPressed()) {

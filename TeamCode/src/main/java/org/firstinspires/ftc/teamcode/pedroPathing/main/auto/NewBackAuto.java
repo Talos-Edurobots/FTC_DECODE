@@ -50,7 +50,7 @@ public class NewBackAuto {
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     //    private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private Pose pickupHuman = new Pose(9, 11, Math.toRadians(180)); // Position to pick up the human player drop.
+    private Pose pickupHuman = new Pose(10, 12, Math.toRadians(190)); // Position to pick up the human player drop.
     private Pose grabAgainPose = new Pose(9.725665454967787, 36.13024942746019, Math.toRadians(90));
     private Pose pickUpHumanBack = new Pose(30, 10, Math.toRadians(180));
     private  Pose parkingPose = new Pose(60, 30, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
@@ -277,7 +277,7 @@ public class NewBackAuto {
             case 7:
                 longCycleShots();
                 if(!cycle){
-                    setPathState(8);
+                    setPathState(-1);
                 }
                 break;
             case 8:

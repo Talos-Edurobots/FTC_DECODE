@@ -52,7 +52,7 @@ public class Transfer {
         colorSensors.update();
 
         if (currentState == TransferState.COLLECT
-                && (colorSensors.isFull() || intake.isOverCurrentForInterval(2))) {
+                && (colorSensors.isFull()/* || intake.isOverCurrentForInterval(2)*/)) {
             currentState = TransferState.STOP;
         }
 
