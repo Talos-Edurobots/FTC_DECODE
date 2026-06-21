@@ -16,18 +16,13 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Drawing;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HoodAngleLut;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Leds;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.ShooterHoodLuts;
@@ -42,6 +37,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryProvi
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue;
 
 import java.util.HashMap;
+import java.util.Timer;
 import java.util.function.Supplier;
 @Configurable
 public class MainTeleOp implements TelemetryProvider {
@@ -81,6 +77,7 @@ public class MainTeleOp implements TelemetryProvider {
     private IMU imu;
     private Turret turret;
     private Follower follower;
+    private Timer pedroTimer;
     private Limelight3A limelight;
     private Leds leds;
     private DriveTrain drivetrain;
@@ -89,7 +86,7 @@ public class MainTeleOp implements TelemetryProvider {
     private boolean isFar = false;
     // Pedro Pathing lazy path generation for automated driving
     private Supplier<PathChain> autoPathChain;
-    private static Pose BLUE_TARGET_POSE = new Pose(108, 35, Math.toRadians(0));
+    private static Pose BLUE_TARGET_POSE = new Pose(100, 37, Math.toRadians(-90));
     private Pose autoTargetPose;
     static boolean slowMode = false;
     private boolean useLimelight = defaultUseLimelight;
@@ -113,7 +110,6 @@ public class MainTeleOp implements TelemetryProvider {
         this.hardwareMap = opMode.hardwareMap;
         this.telemetry = opMode.telemetry;
         this.isBlue = isBlue;
-
         teleOpStartPose = RobotPoseStorage.hasPose() ? RobotPoseStorage.getPose() : startingPose;
 
         follower = (Follower) opMode.blackboard.get(RobotConstants.FOLLOWER_KEY);
@@ -257,7 +253,7 @@ public class MainTeleOp implements TelemetryProvider {
 
         } else {
 //            turret.lookToGoalWhileMoving(follower.getPose(), follower.getVelocity(), !isBlue);
-            turret.lookToGoal(follower.getPose(), !isBlue);
+            turret.lookToGoal(new Pose(follower.getPose().getX(), follower.getPose().getY(), follower.getPose().getHeading() - Math.toRadians(3)), !isBlue);
 
         }
         if (opMode.gamepad1.yWasPressed()) {
@@ -381,17 +377,22 @@ public class MainTeleOp implements TelemetryProvider {
             slowMode ^= true;
         }
         double mult = slowMode ? 0.25 : 1;
-        double forward = opMode.gamepad1.left_stick_y * mult;
-        double strafe = -opMode.gamepad1.left_stick_x * mult;
+        double forward = opMode.gamepad1.left_stick_y * mult * (isBlue?1:-1);
+        double strafe = -opMode.gamepad1.left_stick_x * mult * (isBlue?1:-1);
         double rotate = opMode.gamepad1.right_stick_x * mult;
         double heading = follower.getPose().getHeading();
         lastHeadingRadians = heading;
         if (Math.abs(forward) + Math.abs(strafe) + Math.abs(rotate) > 0) automatedDrive = false;
 
         // gamepad2 dpad up: start automated path to target position
-        if (opMode.gamepad2.dpadUpWasPressed()) {
-            follower.followPath(autoPathChain.get(), true);
+        boolean dpadUp = opMode.gamepad2.dpadUpWasPressed();
+        if (dpadUp && !automatedDrive) {
+            follower.followPath(autoPathChain.get(), false);
             automatedDrive = true;
+        }
+        else if (dpadUp) {
+            follower.breakFollowing();
+            follower.startTeleopDrive();
         }
 
         // Cancel automated drive when path finishes
@@ -402,6 +403,8 @@ public class MainTeleOp implements TelemetryProvider {
         if (!automatedDrive) {
             // Manual control via Drivetrain subsystem
             drivetrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, mult, dt);
+//            follower.setTeleOpDrive(forward, strafe, rotate, false, heading);
+
         }
         // follower.update() always runs so pose estimation stays current
         follower.update();

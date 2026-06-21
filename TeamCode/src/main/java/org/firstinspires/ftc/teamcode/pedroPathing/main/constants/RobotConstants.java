@@ -74,7 +74,7 @@ public final class RobotConstants {
             TURRET_ZERO_OFFSET_MOTOR_RADIANS / TURRET_EXTERNAL_GEAR_RATIO;
     public static final MotionProfilingCoefficients TURRET_PROFILE_COEFFICIENTS =
             new MotionProfilingCoefficients(
-                    new PIDFFCoefficients(0.068, 0, 0.002, 1.2, 0.005603855012349794, 0.0004),
+                    new PIDFFCoefficients(0.068, 0, 0.002, 1.6, 0.005603855012349794, 0.0004),
                     1800,
                     4500,
                     4500

@@ -98,6 +98,7 @@ public class Debugger extends SelectableOpMode {
                 hlt.add("throughput test", TestThroughput::new);
                 hlt.add("collect data", CollectData::new);
                 hlt.add("vision relocalization", VisionRelocalizationDebugOpMode::new);
+                hlt.add("color sensor stats", ColorSensorStatsOpMode::new);
             });
         });
     }
@@ -1498,6 +1499,84 @@ class ColorReadoutOpMode extends OpMode {
         telemetryM.addData("color2 detected", colors.is2Detected());
         telemetryM.addData("color3 distance (cm)", colors.getColor3());
         telemetryM.addData("color3 detected", colors.is3Detected());
+        telemetryM.update(telemetry);
+    }
+}
+
+@Configurable
+class ColorSensorStatsOpMode extends OpMode {
+    private final TelemetryManager telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
+    private final ColorSensors colors = new ColorSensors();
+
+    // Rolling history for percentile / 1% low computation
+    private static final int MAX_SAMPLES = 10_000;
+    private final double[] minHistory = new double[MAX_SAMPLES];
+    private int sampleCount = 0;
+
+    @Override
+    public void init() {
+        colors.init(hardwareMap);
+        sampleCount = 0;
+        telemetryM.addLine("Color Sensor Stats ready — reading all sensors every loop");
+        telemetryM.update(telemetry);
+    }
+
+    @Override
+    public void loop() {
+        // Force-read all sensors every loop (bypasses the Hz limiter)
+        colors.forceUpdate();
+
+        double d1 = colors.getColor1();
+        double d2 = colors.getColor2();
+        double d3 = colors.getColor3();
+        double currentMin = Math.min(d1, Math.min(d2, d3));
+
+        // Accumulate history (circular when full)
+        int idx = sampleCount < MAX_SAMPLES ? sampleCount : MAX_SAMPLES - 1;
+        if (sampleCount < MAX_SAMPLES) {
+            minHistory[sampleCount] = currentMin;
+            sampleCount++;
+        } else {
+            // Shift-left by one and append (simple sliding window)
+            System.arraycopy(minHistory, 1, minHistory, 0, MAX_SAMPLES - 1);
+            minHistory[MAX_SAMPLES - 1] = currentMin;
+        }
+
+        // Compute statistics over collected samples
+        int n = Math.min(sampleCount, MAX_SAMPLES);
+        double runningMin = currentMin;
+        double runningMax = currentMin;
+        double sum = 0.0;
+        for (int i = 0; i < n; i++) {
+            double v = minHistory[i];
+            if (v < runningMin) runningMin = v;
+            if (v > runningMax) runningMax = v;
+            sum += v;
+        }
+        double mean = sum / n;
+
+        // 1% low: average of the bottom 1% of samples (at least 1 sample)
+        double[] sorted = java.util.Arrays.copyOf(minHistory, n);
+        java.util.Arrays.sort(sorted);
+        int onePctCount = Math.max(1, (int) Math.ceil(n * 0.01));
+        double onePctLowSum = 0.0;
+        for (int i = 0; i < onePctCount; i++) {
+            onePctLowSum += sorted[i];
+        }
+        double onePctLow = onePctLowSum / onePctCount;
+
+        // Telemetry output
+        telemetryM.addLine("=== Smallest Distance (cm) ===");
+        telemetryM.addData("current min", currentMin);
+        telemetryM.addData("all-time min", runningMin);
+        telemetryM.addData("all-time max", runningMax);
+        telemetryM.addData("mean", mean);
+        telemetryM.addData("1%% low", onePctLow);
+        telemetryM.addData("samples",       n);
+        telemetryM.addLine("--- Per-Sensor ---");
+        telemetryM.addData("color1 (cm)", d1);
+        telemetryM.addData("color2 (cm)", d2);
+        telemetryM.addData("color3 (cm)", d3);
         telemetryM.update(telemetry);
     }
 }

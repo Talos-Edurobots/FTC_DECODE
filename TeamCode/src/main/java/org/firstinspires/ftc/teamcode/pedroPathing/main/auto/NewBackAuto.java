@@ -43,21 +43,24 @@ public class NewBackAuto {
     //    private  Pose gatePose = new Pose(17, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
 //    private  Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private  Pose pickup1IntakePose = new Pose(18.5, 86, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickupIntake2Pose = new Pose(18, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private  Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private  Pose pickupIntake3Pose = new Pose(11, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     //    private  Pose score2ndPose = new Pose(60, 74, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private Pose pickupHuman = new Pose(10, 12, Math.toRadians(190)); // Position to pick up the human player drop.
-    private Pose grabAgainPose = new Pose(9.725665454967787, 36.13024942746019, Math.toRadians(90));
+    private Pose pickupHuman = new Pose(9, 11, Math.toRadians(-90)); // Position to pick up the human player drop.
+    private Pose pickupHumanPrePose = new Pose(9,  25, Math.toRadians(-90)); // Position to pick up the human player drop.
+    private Pose pickupHumanPreControlPose = new Pose(30,  30); // Position to pick up the human player drop.
+    private Pose grabAgainPose = new Pose(12, 11, Math.toRadians(180));
+    private Pose grabAgainControlPose = new Pose(26, 10);
     private Pose pickUpHumanBack = new Pose(30, 10, Math.toRadians(180));
-    private  Pose parkingPose = new Pose(60, 30, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
+    private  Pose parkingPose = new Pose(30, 30, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
     private Pose backPose = new Pose(20, 12, Math.toRadians(180));
     private Path scorePreload, openGate, park;
 
-    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, stepBack, grabAgain, scoreFromGrabAgain, grabStepBackToPickupHuman, scoreToStepBack;
+    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, stepBack, grabAgain, scoreFromGrabAgain, grabStepBackToPickupHuman, scoreToStepBack, scoreFromPickupHuman, grabHumanAgain;
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePose));
@@ -65,6 +68,13 @@ public class NewBackAuto {
 
     /* Here is an example for Constant Interpolation
     scorePreload.setConstantInterpolation(startPose.getHeading()); */
+        scoreFromPickupHuman = follower.pathBuilder()
+                .addPath(new BezierLine(pickupHuman, scorePose))
+                .setLinearHeadingInterpolation(pickupHuman.getHeading(), scorePose.getHeading())
+                .setGlobalDeceleration()
+                .build();
+
+
 
         /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         grabPickup2 = follower.pathBuilder()
@@ -138,8 +148,18 @@ public class NewBackAuto {
 //                .setGlobalDeceleration()
 //                .build();
         grabHuman = follower.pathBuilder()
-                .addPath(new BezierLine(scorePose, pickupHuman))
-                .setLinearHeadingInterpolation(scorePose.getHeading(), pickupHuman.getHeading())
+                .addPath(new BezierCurve(scorePose, pickupHumanPreControlPose, pickupHumanPrePose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), pickupHumanPrePose.getHeading())
+                .addPath(new BezierLine(pickupHumanPrePose, pickupHuman))
+                .setLinearHeadingInterpolation(pickupHumanPrePose.getHeading(), pickupHuman.getHeading())
+                .build();
+
+        grabHumanAgain = follower.pathBuilder()
+                .addPath(new BezierLine(pickupHuman, pickupHumanPrePose))
+                .setLinearHeadingInterpolation(pickupHuman.getHeading(), pickupHumanPrePose.getHeading())
+                .addPath(new BezierLine(pickupHumanPrePose, pickupHuman))
+                .setLinearHeadingInterpolation(pickupHumanPrePose.getHeading(), pickupHuman.getHeading())
+                .setGlobalDeceleration()
                 .build();
 
         stepBack = follower.pathBuilder()
@@ -150,11 +170,11 @@ public class NewBackAuto {
         grabAgain = follower.pathBuilder()
                 .addPath(new BezierCurve(
                         backPose,
-                        new Pose(9, backPose.getY()),
+                        grabAgainControlPose,
                         grabAgainPose
                     )
                 )
-                .setTangentHeadingInterpolation()
+                .setLinearHeadingInterpolation(backPose.getHeading(), grabAgainPose.getHeading())
 //                .setReversed()
                 .build();
         scoreToStepBack = follower.pathBuilder()
@@ -166,8 +186,8 @@ public class NewBackAuto {
                 .setLinearHeadingInterpolation(backPose.getHeading(), pickupHuman.getHeading())
                 .build();
         scoreFromGrabAgain = follower.pathBuilder()
-                .addPath(new BezierLine(grabAgainPose, scorePose))
-                .setLinearHeadingInterpolation(grabAgainPose.getHeading(), scorePose.getHeading())
+                .addPath(new BezierCurve(grabAgainPose, new Pose(33, 20) , scorePose))
+                .setLinearHeadingInterpolation(grabAgain.getFinalHeadingGoal(), scorePose.getHeading())
                 .build();
 
 
@@ -216,6 +236,11 @@ public class NewBackAuto {
         pickupIntake3Pose = pickupIntake3Pose.mirror();
         parkingPose = parkingPose.mirror();
         pickupHuman = pickupHuman.mirror();
+        pickupHumanPrePose = pickupHumanPrePose.mirror();
+        pickupHumanPreControlPose = pickupHumanPreControlPose.mirror();
+        grabAgainPose = grabAgainPose.mirror();
+        grabAgainControlPose = grabAgainControlPose.mirror();
+        pickUpHumanBack = pickUpHumanBack.mirror();
         backPose = backPose.mirror();
     }
 
@@ -259,13 +284,13 @@ public class NewBackAuto {
                 shooter.setIdle(true);
                 setPathState(4);
             case 4:
-                if (!follower.isBusy() || transfer.isFull()) {
+                if (!follower.isBusy() || transfer.isFull() || pathTimer.getElapsedTimeSeconds() > 3) {
                     follower.followPath(scorePickup3);
                     prepareForShot(scorePose);
                     setPathState(5);
                 }
             case 5:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy()||pathTimer.getElapsedTimeSeconds()>3) {
                     shootArtifacts();
                     if (!transferBusy) {
                         setPathState(6);
@@ -275,24 +300,19 @@ public class NewBackAuto {
             case 6:
                 setPathState(7);
             case 7:
-                longCycleShots();
+                humanCycleShots();
                 if(!cycle){
-                    setPathState(-1);
+                    setPathState(8);
                 }
                 break;
             case 8:
 //                follower.followPath(scoreHuman);
                 shortCycleShots();
-                if (!cycle) setPathState(-1);
+                if (!cycle) setPathState(9);
                 break;
             case 9:
-                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2) {
-                    shootArtifacts();
-                    if (!transferBusy) {
-                        setPathState(-1);
-                    }
-                }
-                break;
+                shortCycleShots();
+                if (!cycle) setPathState(-1);
             case 15:
                 follower.followPath(park);
                 setPathState(-1);
@@ -397,7 +417,7 @@ public class NewBackAuto {
         shooter.setHoodAngle(ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(distance, Shooter.targetVelocity));
         turret.lookToGoal(scorePose, !isBlue);
     }
-    public void longCycleShots() {
+    public void humanCycleShots() {
         cycle = true;
         switch (cycleState) {
             case 0:
@@ -407,36 +427,38 @@ public class NewBackAuto {
                 setCycleState(1);
                 break;
             case 1:
-                if (!follower.isBusy() || cycleTimer.getElapsedTimeSeconds() > 2) {
-                    follower.followPath(stepBack);
+                if (cycleTimer.getElapsedTimeSeconds() > 3 || !follower.isBusy()) {
+                    follower.breakFollowing();
+                    transfer.setState(Transfer.TransferState.COLLECT);
                     setCycleState(2);
                 }
                 transfer.setState(Transfer.TransferState.COLLECT);
                 break;
             case 2:
-                if (!follower.isBusy() || cycleTimer.getElapsedTimeSeconds() > 2) {
-                    follower.followPath(grabStepBackToPickupHuman);
+                if (cycleTimer.getElapsedTimeSeconds() > 1) {
+//                    follower.followPath(grabHuman);
                     setCycleState(3);
                 }
                 transfer.setState(Transfer.TransferState.COLLECT);
                 break;
             case 3:
                 if (!follower.isBusy() || cycleTimer.getElapsedTimeSeconds() > 2) {
-                    follower.followPath(stepBack);
+                    follower.followPath(grabHumanAgain);
+                    transfer.setState(Transfer.TransferState.COLLECT);
                     setCycleState(4);
                 }
                 transfer.setState(Transfer.TransferState.COLLECT);
                 break;
             case 4:
-                if (!follower.isBusy() || transfer.isFull()) {
-                    follower.followPath(grabAgain);
+                if (!follower.isBusy() || transfer.isFull() || cycleTimer.getElapsedTimeSeconds() > 3) {
+//                    follower.followPath(grabAgain);
                     transfer.setState(Transfer.TransferState.COLLECT);
                     setCycleState(5);
                 }
                 break;
             case 5:
-                if (!follower.isBusy()) {
-                    follower.followPath(scoreFromGrabAgain);
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 3) {
+                    follower.followPath(scoreFromPickupHuman);
                     prepareForShot(scorePose);
                     transfer.setState(Transfer.TransferState.STOP);
                     setCycleState(6);

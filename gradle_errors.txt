@@ -1,0 +1,26 @@
+﻿Starting a Gradle Daemon, 2 incompatible and 1 stopped Daemons could not be reused, use --status for details
+Calculating task graph as no cached configuration is available for tasks: :TeamCode:compileDebugJavaSources
+.\gradlew : 
+At line:1 char:1
++ .\gradlew :TeamCode:compileDebugJavaSources 2>&1 | Out-File -FilePath ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Cannot locate tasks that match ':TeamCode:compileDebugJavaSources' as task 'compileDebugJavaSources' not found in 
+project ':TeamCode'.
+
+* Try:
+> Run gradlew tasks to get a list of available tasks.
+> For more on name expansion, please refer to 
+https://docs.gradle.org/8.9/userguide/command_line_interface.html#sec:name_abbreviation in the Gradle documentation.
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 19s
+Configuration cache entry stored.

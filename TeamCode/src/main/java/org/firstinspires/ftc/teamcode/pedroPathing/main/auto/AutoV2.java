@@ -52,12 +52,14 @@ public class AutoV2 {
     private Pose grabFromGate2ndPhaseControlPose = new Pose(24, 48);
     private Pose grabFromGate2ndPhasePose = new Pose(12, 53, Math.toRadians(180));
     private Pose openGateWithGrabControlPose = new Pose( 41, 67);
+    private Pose openGateImmediatelyControlPose = new Pose(40, 60);
     private Pose gateIntermediatePose = new Pose(40, 60, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediateControlPose = new Pose(54, 67, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private  Pose pickup1IntakePose = new Pose(18.5, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private  Pose pickup1IntakePose = new Pose(18.5, 83, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickupIntake2Pose = new Pose(15, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private Pose scorePickup2ControlPose = new Pose(50, 65);
     private  Pose score2ControlPos = new Pose(57, 72, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickup3Pose = new Pose(40, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private  Pose pickupIntake3Pose = new Pose(12, 35, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
@@ -70,7 +72,7 @@ public class AutoV2 {
     private Timer cycleTimer;
 
     private Path scorePreload, openGate, park, grabFromGate, grabFromGate2ndPhase;
-    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, openGateFromScore, scoreFromGate;
+    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, openGateFromScore, scoreFromGate, grabFromGateInstant;
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePreloadPose));
@@ -81,6 +83,23 @@ public class AutoV2 {
 
         grabFromGate2ndPhase = new Path(new BezierCurve(gateGrabPose, grabFromGate2ndPhaseControlPose, grabFromGate2ndPhasePose));
         grabFromGate2ndPhase.setLinearHeadingInterpolation(gateGrabPose.getHeading(), grabFromGate2ndPhasePose.getHeading());
+
+        grabFromGateInstant = follower.pathBuilder()
+                .addPath(new BezierCurve(scorePose, gateIntermediateControlPose, gateGrabPose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), gateGrabPose.getHeading())
+                .build();
+
+        scorePickup1 = follower.pathBuilder()
+                .addPath(new BezierLine(pickup1IntakePose, scorePose))
+                .setLinearHeadingInterpolation(pickup1IntakePose.getHeading(), scorePose.getHeading())
+                .build();
+
+        grabPickup1 = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, pickup1Pose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1IntakePose.getHeading())
+                .addPath(new BezierLine(pickup1Pose, pickup1IntakePose))
+                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1IntakePose.getHeading())
+                .build();
 
 
     /* Here is an example for Constant Interpolation
@@ -94,7 +113,7 @@ public class AutoV2 {
                 .build();
 
         scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(gateWithoutGrabPose, scorePose))
+                .addPath(new BezierCurve(gateWithoutGrabPose, scorePickup2ControlPose, scorePose))
                 .setLinearHeadingInterpolation(gateWithoutGrabPose.getHeading(), scorePose.getHeading())
                 .build();
 
@@ -105,15 +124,15 @@ public class AutoV2 {
 //                .setLinearHeadingInterpolation(scorePose.getHeading(), gateIntermediatePose.getHeading())
 //                .addPath(new BezierLine(gateIntermediatePose, gateOpenWithGrabPose))
 //                .setLinearHeadingInterpolation(gateIntermediatePose.getHeading(), gateOpenWithGrabPose.getHeading())
-
                 .build();
 
 
         scoreFromGate = follower.pathBuilder()
-                .addPath(new BezierCurve(gateGrabPose, scoreFromGrabGateControlPose, scorePose))
+                .addPath(new BezierLine(gateGrabPose, scorePose))
                 .setLinearHeadingInterpolation(gateGrabPose.getHeading(), scorePose.getHeading())
                 .build();
         park = new Path(new BezierLine(scorePose, parkingPose));
+        park.setLinearHeadingInterpolation(scorePose.getHeading(), parkingPose.getHeading());
     }
     private void shootArtifacts() {
         transferBusy = true;
@@ -129,6 +148,7 @@ public class AutoV2 {
                     transferBusy = false;
                     setTransferState(0);
                 }
+                break;
         }
     }
     private void setAlliance(boolean isBlue) {
@@ -193,7 +213,7 @@ public class AutoV2 {
                 setPathState(4);
                 break;
             case 4:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds()>0.4){
+                if(!follower.isBusy() || pathTimer.getElapsedTimeSeconds()>3){
                     setPathState(5);
                 }
                 break;
@@ -203,14 +223,14 @@ public class AutoV2 {
                 }
                 break;
             case 6:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds()>0.5) {
                     follower.followPath(scorePickup2);
-                    prepareForShot(score2ndPose);
+                    prepareForShot(scorePose);
                     setPathState(7);
                 }
                 break;
             case 7:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2) {
                     shootArtifacts();
                     if (!transferBusy) {
                         setPathState(8);
@@ -218,12 +238,38 @@ public class AutoV2 {
                 }
                 break;
             case 8:
-                scoreGateCycle();
-                if (!isFromScoreToGrabBusy) {
+                if (!transferBusy) {
+                    follower.followPath(grabPickup1);
+                    transfer.setState(Transfer.TransferState.COLLECT);
+                    shooter.setIdle(true);
+                    setPathState(9);
+                }
+                break;
+            case 9:
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2) {
+                    follower.followPath(scorePickup1);
+                    prepareForShot(scorePose);
+                    setPathState(10);
+                }
+                break;
+            case 10:
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 3) {
                     setPathState(11);
                 }
                 break;
             case 11:
+                shootArtifacts();
+                if (pathTimer.getElapsedTimeSeconds() > 1.5 || !transferBusy) {
+                    setPathState(12);
+                }
+                break;
+            case 12:
+                scoreGateCycle();
+                if (!isFromScoreToGrabBusy) {
+                    setPathState(13);
+                }
+                break;
+            case 13:
                 scoreGateCycle();
                 if (!isFromScoreToGrabBusy) {
                     setPathState(15);
@@ -253,11 +299,11 @@ public class AutoV2 {
     /** This is the main loop of the OpMode, it will run repeatedly after clicking "Play". **/
 
     public void loop() {
-        // These loop the movements of the robot, these must be called continuously in order to work
+        double dt = opmodeTimer.getElapsedTimeSeconds();
         opmodeTimer.resetTimer();
         hwManager.update();
         follower.update();
-        MotorConfig.setDt(opmodeTimer.getElapsedTimeSeconds());
+        MotorConfig.setDt(dt);
         transfer.update();
         shooter.update();
         turret.loop();
@@ -330,10 +376,10 @@ public class AutoV2 {
 
     public void prepareForShot(Pose scorePose) {
         shooter.setIdle(false);
-        double distance = ShooterHoodLuts.distanceToGoal(scorePose, !isBlue);
+        distance = ShooterHoodLuts.distanceToGoal(scorePose, !isBlue);
         Shooter.targetVelocity = ShooterHoodLuts.SHOOTER_VELOCITY_LUT.getTargetVelocity(distance);
         shooter.setHoodAngle(ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(distance, Shooter.targetVelocity));
-        turret.lookToGoal(scorePose, !isBlue);
+        turret.lookToGoal(new Pose(scorePose.getX(), scorePose.getY(), scorePose.getHeading()-Math.toRadians(3)), !isBlue);
     }
 
     public void scoreGateCycle() {
@@ -341,24 +387,22 @@ public class AutoV2 {
         switch (fromScoreToGrabState) {
             case 0:
                 transfer.setState(Transfer.TransferState.COLLECT);
-                follower.followPath(openGateFromScore);
+//                follower.followPath(openGateFromScore);
+                follower.followPath(grabFromGateInstant);
                 shooter.setIdle(true);
                 setFromScoreToGrabState(1);
                 break;
             case 1:
-                if (!follower.isBusy()) {
-                    follower.followPath(grabFromGate);
+                if (!follower.isBusy()||cycleTimer.getElapsedTimeSeconds()>3) {
+//                    follower.followPath(grabFromGate);
                     setFromScoreToGrabState(2);
                 }
                 break;
             case 2:
-                if (!follower.isBusy() && cycleTimer.getElapsedTimeSeconds() > 2) {
-                    follower.followPath(grabFromGate2ndPhase);
-                    setFromScoreToGrabState(3);
-                }
+                setFromScoreToGrabState(3);
                 break;
             case 3:
-                if (!follower.isBusy() || transfer.isFull()) {
+                if (transfer.isFull() ||cycleTimer.getElapsedTimeSeconds()>3) {
                     follower.followPath(scoreFromGate);
                     prepareForShot(scorePose);
                     transfer.setState(Transfer.TransferState.STOP);
@@ -366,7 +410,7 @@ public class AutoV2 {
                 }
                 break;
             case 4:
-                if (!follower.isBusy() && cycleTimer.getElapsedTimeSeconds() > 3) {
+                if (!follower.isBusy() || cycleTimer.getElapsedTimeSeconds() > 3) {
                     shootArtifacts();
                     if (!transferBusy) {
                         setFromScoreToGrabState(0);

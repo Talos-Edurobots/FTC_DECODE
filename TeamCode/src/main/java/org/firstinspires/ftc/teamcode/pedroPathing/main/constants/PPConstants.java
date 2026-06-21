@@ -27,6 +27,7 @@ public class PPConstants {
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
+            .useBrakeModeInTeleOp(true)
             .rightFrontMotorName(RobotConstants.RIGHT_FRONT_MOTOR_NAME)
             .rightRearMotorName(RobotConstants.RIGHT_BACK_MOTOR_NAME)
             .leftRearMotorName(RobotConstants.LEFT_BACK_MOTOR_NAME)

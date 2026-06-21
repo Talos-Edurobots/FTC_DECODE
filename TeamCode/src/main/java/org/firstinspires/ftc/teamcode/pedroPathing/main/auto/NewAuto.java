@@ -210,7 +210,7 @@ public class NewAuto {
                 setPathState(6);
                 break;
             case 6:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 3) {
+                if ((!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 3) || pathTimer.getElapsedTimeSeconds()>4) {
                     follower.followPath(scorePickup1);
                     prepareForShot(scorePose);
                     setPathState(7);
