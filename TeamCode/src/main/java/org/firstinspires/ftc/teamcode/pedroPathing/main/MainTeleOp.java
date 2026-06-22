@@ -45,6 +45,7 @@ public class MainTeleOp implements TelemetryProvider {
 
     public static int backVel = 1500;
     public static int frontVel = 1250;
+    public static int turretOffset = 3;
     public static double hoodFarAngle = 0.1;
     public static double hoodCloseAngle = .1;
     public static boolean useShooterHoodLuts = true;
@@ -253,7 +254,7 @@ public class MainTeleOp implements TelemetryProvider {
 
         } else {
 //            turret.lookToGoalWhileMoving(follower.getPose(), follower.getVelocity(), !isBlue);
-            turret.lookToGoal(new Pose(follower.getPose().getX(), follower.getPose().getY(), follower.getPose().getHeading() - Math.toRadians(3)), !isBlue);
+            turret.lookToGoal(new Pose(follower.getPose().getX(), follower.getPose().getY(), follower.getPose().getHeading() - Math.toRadians(turretOffset)), !isBlue);
 
         }
         if (opMode.gamepad1.yWasPressed()) {
@@ -278,20 +279,22 @@ public class MainTeleOp implements TelemetryProvider {
             shooter.changeState();
         }
 
-        if (opMode.gamepad1.dpad_left) {
-            if (useShooterHoodLuts) {
-                hoodLutTrim -= dt * .8;
-            } else {
-                shooter.setHoodAngle(shooter.getHoodAngle() - dt * .8);
-            }
-        }
-        if (opMode.gamepad1.dpad_right) {
-            if (useShooterHoodLuts) {
-                hoodLutTrim += dt * .8;
-            } else {
-                shooter.setHoodAngle(shooter.getHoodAngle() + dt * .8);
-            }
-        }
+//        if (opMode.gamepad1.dpad_left) {
+//            if (useShooterHoodLuts) {
+//                hoodLutTrim -= dt * .8;
+//            } else {
+//                shooter.setHoodAngle(shooter.getHoodAngle() - dt * .8);
+//            }
+//        }
+//        if (opMode.gamepad1.dpad_right) {
+//            if (useShooterHoodLuts) {
+//                hoodLutTrim += dt * .8;
+//            } else {
+//                shooter.setHoodAngle(shooter.getHoodAngle() + dt * .8);
+//            }
+//        }
+        if (opMode.gamepad1.dpadRightWasPressed()) turretOffset++;
+        if (opMode.gamepad1.dpadLeftWasPressed()) turretOffset--;
         if (transfer.getState() != Transfer.TransferState.COLLECT) {
             updateShooterAndHoodTargets(follower.getPose());
         } else {

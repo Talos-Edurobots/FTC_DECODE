@@ -400,7 +400,7 @@ public class AutoV2 {
         distance = ShooterHoodLuts.distanceToGoal(scorePose, !isBlue);
         Shooter.targetVelocity = ShooterHoodLuts.SHOOTER_VELOCITY_LUT.getTargetVelocity(distance);
         shooter.setHoodAngle(ShooterHoodLuts.HOOD_ANGLE_LUT.getHoodPosition(distance, Shooter.targetVelocity));
-        turret.lookToGoal(new Pose(scorePose.getX(), scorePose.getY(), scorePose.getHeading()-Math.toRadians(3)), !isBlue);
+        turret.lookToGoal(new Pose(scorePose.getX(), scorePose.getY(), scorePose.getHeading()-(Math.toRadians(3) * (isBlue?1:-1))), !isBlue);
     }
 
     public void scoreGateCycle(boolean isLast) {
