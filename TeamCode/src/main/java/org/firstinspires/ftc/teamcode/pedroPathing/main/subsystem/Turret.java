@@ -311,6 +311,10 @@ public class Turret implements TelemetryProvider {
         loopTimer.reset();
     }
 
+    public boolean isBusy() {
+        return !profiledController.isAtTarget();
+    }
+
     public void limelightAim(LLResult result) {
         updateLoopState();
         if (controlMode != ControlMode.MANUAL_PID) {

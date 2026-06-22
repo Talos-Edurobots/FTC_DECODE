@@ -55,8 +55,8 @@ public class AutoV2 {
     private Pose openGateImmediatelyControlPose = new Pose(40, 60);
     private Pose gateIntermediatePose = new Pose(40, 60, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediateControlPose = new Pose(54, 67, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
-    private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private  Pose pickup1IntakePose = new Pose(18.5, 83, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private  Pose pickup1Pose = new Pose(38, 83, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private  Pose pickup1IntakePose = new Pose(18.5, 81, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private  Pose pickup2Pose = new Pose(45, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private  Pose pickupIntake2Pose = new Pose(15, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private Pose scorePickup2ControlPose = new Pose(50, 65);
@@ -72,7 +72,7 @@ public class AutoV2 {
     private Timer cycleTimer;
 
     private Path scorePreload, openGate, park, grabFromGate, grabFromGate2ndPhase;
-    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, openGateFromScore, scoreFromGate, grabFromGateInstant;
+    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, openGateFromScore, scoreFromGate, grabFromGateInstant, scoreLastFromGate;
     public void buildPaths() {
         /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
         scorePreload = new Path(new BezierLine(startPose, scorePreloadPose));
@@ -129,7 +129,15 @@ public class AutoV2 {
 
         scoreFromGate = follower.pathBuilder()
                 .addPath(new BezierLine(gateGrabPose, scorePose))
-                .setLinearHeadingInterpolation(gateGrabPose.getHeading(), scorePose.getHeading())
+                .setTangentHeadingInterpolation()
+                .setReversed()
+//                .setLinearHeadingInterpolation(gateGrabPose.getHeading(), scorePose.getHeading())
+                .build();
+
+        scoreLastFromGate = follower.pathBuilder()
+                .addPath(new BezierLine(gateGrabPose, parkingPose))
+                .setTangentHeadingInterpolation()
+                .setReversed()
                 .build();
         park = new Path(new BezierLine(scorePose, parkingPose));
         park.setLinearHeadingInterpolation(scorePose.getHeading(), parkingPose.getHeading());
@@ -171,6 +179,13 @@ public class AutoV2 {
         pickupIntake3Pose = pickupIntake3Pose.mirror();
         score2ndPose = score2ndPose.mirror();
         parkingPose = parkingPose.mirror();
+        gateGrabPose = gateGrabPose.mirror();
+        scoreFromGrabGateControlPose = scoreFromGrabGateControlPose.mirror();
+        grabFromGate2ndPhaseControlPose = grabFromGate2ndPhaseControlPose.mirror();
+        grabFromGate2ndPhasePose = grabFromGate2ndPhasePose.mirror();
+        openGateWithGrabControlPose = openGateWithGrabControlPose.mirror();
+        openGateImmediatelyControlPose = openGateImmediatelyControlPose.mirror();
+        scorePickup2ControlPose = scorePickup2ControlPose.mirror();
     }
 
     public void autonomousPathUpdate() {
@@ -191,7 +206,7 @@ public class AutoV2 {
         */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy() && !shooter.isBusy()) {
+                if(!follower.isBusy() && !shooter.isBusy() && !turret.isBusy()) {
                     /* Score Preload */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
@@ -264,18 +279,24 @@ public class AutoV2 {
                 }
                 break;
             case 12:
-                scoreGateCycle();
+                scoreGateCycle(false);
                 if (!isFromScoreToGrabBusy) {
                     setPathState(13);
                 }
                 break;
             case 13:
-                scoreGateCycle();
+                scoreGateCycle(false);
                 if (!isFromScoreToGrabBusy) {
-                    setPathState(15);
+                    setPathState(16);
                 }
                 break;
             case 15:
+//                scoreGateCycle(true);
+                if (!isFromScoreToGrabBusy) {
+                    setPathState(16);
+                }
+                break;
+            case 16:
                 follower.followPath(park);
                 setPathState(-1);
                 break;
@@ -382,7 +403,7 @@ public class AutoV2 {
         turret.lookToGoal(new Pose(scorePose.getX(), scorePose.getY(), scorePose.getHeading()-Math.toRadians(3)), !isBlue);
     }
 
-    public void scoreGateCycle() {
+    public void scoreGateCycle(boolean isLast) {
         isFromScoreToGrabBusy = true;
         switch (fromScoreToGrabState) {
             case 0:
@@ -402,9 +423,16 @@ public class AutoV2 {
                 setFromScoreToGrabState(3);
                 break;
             case 3:
-                if (transfer.isFull() ||cycleTimer.getElapsedTimeSeconds()>3) {
-                    follower.followPath(scoreFromGate);
-                    prepareForShot(scorePose);
+                if (transfer.isFull() || cycleTimer.getElapsedTimeSeconds() > 2) {
+                    if (isLast) {
+//                        follower.followPath(scoreLastFromGate);
+//                        prepareForShot(new Pose(scorePose.getX(), scorePose.getY(), scoreLastFromGate.getFinalHeadingGoal()));
+                        isFromScoreToGrabBusy = true;
+                        return;
+                    } else {
+                        follower.followPath(scoreFromGate);
+                        prepareForShot(new Pose(scorePose.getX(), scorePose.getY(), scoreFromGate.getFinalHeadingGoal()));
+                    }
                     transfer.setState(Transfer.TransferState.STOP);
                     setFromScoreToGrabState(4);
                 }
