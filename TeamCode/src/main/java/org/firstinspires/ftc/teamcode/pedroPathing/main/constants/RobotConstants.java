@@ -34,7 +34,7 @@ public final class RobotConstants {
     public static final DcMotor.ZeroPowerBehavior DRIVETRAIN_ZERO_POWER_BEHAVIOR =
             DcMotor.ZeroPowerBehavior.BRAKE;
     public static final MotorLimits DRIVETRAIN_LIMITS = MotorLimits.defaults();
-    public static final double DRIVETRAIN_POWER_WRITE_EPSILON = 0.1;
+    public static final double DRIVETRAIN_POWER_WRITE_EPSILON = 0.05;
 
     public static final String INTAKE_MOTOR_NAME = "intake";
     public static final GoBILDAMotorTypes INTAKE_MOTOR_TYPE = GoBILDAMotorTypes.MOTOR_1150_RPM;

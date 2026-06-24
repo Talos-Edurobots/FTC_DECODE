@@ -34,7 +34,7 @@ public final class ShooterHoodLuts {
     private ShooterHoodLuts() {}
 
     public static double distanceToGoal(Pose robotPose, boolean isRed) {
-        return ShooterVelocityLut.distanceToGoal(robotPose, BLUE_GOAL_POSE);
+        return ShooterVelocityLut.distanceToGoal(robotPose, isRed ? BLUE_GOAL_POSE:BLUE_GOAL_POSE.mirror());
     }
 
     public static double distanceToGoal(Pose robotPose, Pose goalPose) {

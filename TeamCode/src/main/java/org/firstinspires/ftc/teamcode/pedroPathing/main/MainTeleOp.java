@@ -393,19 +393,21 @@ public class MainTeleOp implements TelemetryProvider {
             follower.followPath(autoPathChain.get(), false);
             automatedDrive = true;
         }
-        else if (dpadUp) {
+        else if (dpadUp || forward != 0 || strafe != 0 || rotate != 0) {
             follower.breakFollowing();
-            follower.startTeleopDrive();
+            follower.deactivateAllPIDFs();
+//            follower.startTeleopDrive();
         }
 
         // Cancel automated drive when path finishes
         if (automatedDrive && !follower.isBusy()) {
+            follower.deactivateAllPIDFs();
             automatedDrive = false;
         }
 
         if (!automatedDrive) {
             // Manual control via Drivetrain subsystem
-            drivetrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, mult, dt);
+            drivetrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, 1, dt);
 //            follower.setTeleOpDrive(forward, strafe, rotate, false, heading);
 
         }
