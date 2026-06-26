@@ -58,6 +58,7 @@ public class NewBackAuto {
     private Pose pickUpHumanBack = new Pose(30, 10, Math.toRadians(180));
     private  Pose parkingPose = new Pose(30, 30, Math.toRadians(180)); // Parking Pose of our robot. It is in the warehouse facing forward.
     private Pose backPose = new Pose(20, 12, Math.toRadians(180));
+    private Pose scoreFromGrabAgainCOntrolPose = new Pose(33, 20);
     private Path scorePreload, openGate, park;
 
     private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3, grabHuman, scoreHuman, stepBack, grabAgain, scoreFromGrabAgain, grabStepBackToPickupHuman, scoreToStepBack, scoreFromPickupHuman, grabHumanAgain;
@@ -186,7 +187,7 @@ public class NewBackAuto {
                 .setLinearHeadingInterpolation(backPose.getHeading(), pickupHuman.getHeading())
                 .build();
         scoreFromGrabAgain = follower.pathBuilder()
-                .addPath(new BezierCurve(grabAgainPose, new Pose(33, 20) , scorePose))
+                .addPath(new BezierCurve(grabAgainPose, scoreFromGrabAgainCOntrolPose , scorePose))
                 .setLinearHeadingInterpolation(grabAgain.getFinalHeadingGoal(), scorePose.getHeading())
                 .build();
 
@@ -225,6 +226,7 @@ public class NewBackAuto {
     }
     private void setAlliance(boolean isBlue) {
         if (isBlue) return;
+        scoreFromGrabAgainCOntrolPose = scoreFromGrabAgainCOntrolPose.mirror();
         startPose = startPose.mirror();
         scorePose = scorePose.mirror();
         pickup1Pose = pickup1Pose.mirror();
