@@ -19,7 +19,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.DriveTrain;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HardwareManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.HoodAngleLut;
@@ -45,7 +44,7 @@ public class MainTeleOp implements TelemetryProvider {
 
     public static int backVel = 1500;
     public static int frontVel = 1250;
-    public static int turretOffset = 3;
+    public static int turretOffset = 0;
     public static double hoodFarAngle = 0.1;
     public static double hoodCloseAngle = .1;
     public static boolean useShooterHoodLuts = true;
@@ -81,7 +80,6 @@ public class MainTeleOp implements TelemetryProvider {
     private Timer pedroTimer;
     private Limelight3A limelight;
     private Leds leds;
-    private DriveTrain drivetrain;
     private Pose3D llPose;
     private boolean automatedDrive = false;
     private boolean isFar = false;
@@ -98,7 +96,7 @@ public class MainTeleOp implements TelemetryProvider {
     private double lastLoopDt = 0.0;
     private double lastHeadingRadians = 0.0;
     private double lastVisionTx = 0.0;
-    private boolean lastTurretTargetLock = false;
+    private boolean lastTurretTargetLock = false, wasAtAutomated = false;
     private double lastShooterDistanceFromGoal = 0.0;
     private double lastShooterTargetVelocity = 0.0;
     private double lastHoodTargetPosition = 0.0;
@@ -154,9 +152,6 @@ public class MainTeleOp implements TelemetryProvider {
         turret = new Turret(hardwareMap);
         turret.init();
 
-        drivetrain = new DriveTrain(hardwareMap);
-        drivetrain.init();
-
         useLimelight = defaultUseLimelight;
         automatedDrive = false;
         isFar = false;
@@ -198,6 +193,7 @@ public class MainTeleOp implements TelemetryProvider {
         lastLoopTime = opMode.getRuntime();
         loopTimeStats.reset();
         automatedDrive = false;
+        follower.startTeleopDrive(true);
     }
 
     public void loop() {
@@ -254,7 +250,7 @@ public class MainTeleOp implements TelemetryProvider {
 
         } else {
 //            turret.lookToGoalWhileMoving(follower.getPose(), follower.getVelocity(), !isBlue);
-            turret.lookToGoal(new Pose(follower.getPose().getX(), follower.getPose().getY(), follower.getPose().getHeading() - Math.toRadians(turretOffset)), !isBlue);
+            turret.lookToGoal(new Pose(follower.getPose().getX(), follower.getPose().getY(), follower.getPose().getHeading() - Math.toRadians(turretOffset) * (isBlue?1:-1)), !isBlue);
 
         }
         if (opMode.gamepad1.yWasPressed()) {
@@ -353,10 +349,12 @@ public class MainTeleOp implements TelemetryProvider {
             }
         }
 
-        if (opMode.gamepad2.x) {
-            follower.holdPoint(follower.getPose());
+        boolean holdingPoint = opMode.gamepad2.x;
+        if (holdingPoint) {
+//            follower.holdPoint(follower.getPose());
         } else if (opMode.gamepad2.a) {
-            follower.deactivateAllPIDFs();
+            follower.startTeleopDrive(true);
+            automatedDrive = false;
         }
 
         shooting = opMode.gamepad1.left_bumper;
@@ -381,36 +379,49 @@ public class MainTeleOp implements TelemetryProvider {
         }
         double mult = slowMode ? 0.25 : 1;
         double forward = opMode.gamepad1.left_stick_y * mult * (isBlue?1:-1);
-        double strafe = -opMode.gamepad1.left_stick_x * mult * (isBlue?1:-1);
-        double rotate = opMode.gamepad1.right_stick_x * mult;
+        double strafe = opMode.gamepad1.left_stick_x * mult * (isBlue?1:-1);
+        double rotate = -opMode.gamepad1.right_stick_x * mult;
         double heading = follower.getPose().getHeading();
         lastHeadingRadians = heading;
-        if (Math.abs(forward) + Math.abs(strafe) + Math.abs(rotate) > 0) automatedDrive = false;
 
         // gamepad2 dpad up: start automated path to target position
         boolean dpadUp = opMode.gamepad2.dpadUpWasPressed();
-        if (dpadUp && !automatedDrive) {
-            follower.followPath(autoPathChain.get(), false);
-            automatedDrive = true;
-        }
-        else if (dpadUp || forward != 0 || strafe != 0 || rotate != 0) {
-            follower.breakFollowing();
-            follower.deactivateAllPIDFs();
-//            follower.startTeleopDrive();
-        }
 
-        // Cancel automated drive when path finishes
-        if (automatedDrive && !follower.isBusy()) {
-            follower.deactivateAllPIDFs();
-            automatedDrive = false;
+//        if (dpadUp && !automatedDrive) {
+//            follower.followPath(autoPathChain.get(), false);
+//            automatedDrive = true;
+//        }
+//        // prectice 23, 4:48pm
+//        else if (dpadUp ) {
+//            follower.breakFollowing();
+//            follower.deactivateAllPIDFs();
+//            follower.startTeleopDrive(true);
+//            automatedDrive = false;
+//        }
+//
+//        // Cancel automated drive when path finishes
+//        if (automatedDrive && !follower.isBusy()) {
+//            follower.deactivateAllPIDFs();
+//            follower.startTeleopDrive(true);
+//            automatedDrive = false;
+//        }
+//
+//        if (!automatedDrive) {
+//            follower.setTeleOpDrive(forward, strafe, rotate, false);
+//            automatedDrive = false;
+//        }
+        if (dpadUp) {
+            automatedDrive = !wasAtAutomated;
+            if (automatedDrive) {
+                follower.followPath(autoPathChain.get(), false);
+            }
+            else {
+                follower.startTeleopDrive(true);
+            }
         }
-
-        if (!automatedDrive) {
-            // Manual control via Drivetrain subsystem
-            drivetrain.FieldCentricAccelerationDrive(strafe, forward, rotate, heading, 1, dt);
-//            follower.setTeleOpDrive(forward, strafe, rotate, false, heading);
-
-        }
+//        if (Math.abs(forward) + Math.abs(strafe) + Math.abs(rotate) > 0) automatedDrive = false;
+        if (!automatedDrive) follower.setTeleOpDrive(forward, strafe, rotate, false);
+        wasAtAutomated = automatedDrive;
         // follower.update() always runs so pose estimation stays current
         follower.update();
         telemetryHub.publish(telemetryM, telemetry, newTime);
@@ -469,6 +480,7 @@ public class MainTeleOp implements TelemetryProvider {
 //        collector.add("system", "min fps", loopStats.worstMillis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", "1% lows", loopStats.p99Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", ".1% lows", loopStats.p999Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("system", "auto", automatedDrive, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "raw_limelight x", rawPoseX, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "raw_limelight y", rawPoseY, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "raw_limelight heading", rawHeading, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);

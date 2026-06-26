@@ -39,7 +39,7 @@ public class NewBackAuto {
     private Timer pathTimer, actionTimer, opmodeTimer, transferTimer, cycleTimer;
     private SoloShortAuto auto;
     private  Pose startPose = new Pose(48, 9, Math.toRadians(180)); // Start Pose of our robot.
-    private  Pose scorePose = new Pose(48, 18, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private  Pose scorePose = new Pose(50, 18, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     //    private  Pose gatePose = new Pose(17, 75, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
 //    private  Pose gateControlPose1 = new Pose(25, 80, Math.toRadians(180)); // Control point for the Bezier curve to open the gate.
     private  Pose pickup1Pose = new Pose(38, 85, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
@@ -263,7 +263,7 @@ public class NewBackAuto {
         */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if((!follower.isBusy() || pathTimer.getElapsedTimeSeconds()>2) && !shooter.isBusy()) {
+                if((!follower.isBusy() || pathTimer.getElapsedTimeSeconds()>2) && !shooter.isBusy() && !turret.isBusy()) {
                     /* Score Preload */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */

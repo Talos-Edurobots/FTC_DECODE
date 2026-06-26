@@ -7,14 +7,15 @@ import com.pedropathing.geometry.Pose;
  */
 public final class ShooterHoodLuts {
     public static Pose BLUE_GOAL_POSE = new Pose(15.0, 128.0);
+    public static Pose RED_GOAL_POSE = new Pose(126.0, 128.0);
 
     public static final ShooterVelocityLut SHOOTER_VELOCITY_LUT = new ShooterVelocityLut(
-        ShooterVelocityLut.sample(80.70, 1200.0),
-        ShooterVelocityLut.sample(71.84, 1250.0),
-        ShooterVelocityLut.sample(46.69, 1050.0),
-        ShooterVelocityLut.sample(118.60, 1400.0),
-        ShooterVelocityLut.sample(108.52, 1370.0),
-        ShooterVelocityLut.sample(140, 1480)
+        ShooterVelocityLut.sample(80.70,  1200.0),
+        ShooterVelocityLut.sample(71.84,  1250.0),
+        ShooterVelocityLut.sample(46.69,  1050.0),
+        ShooterVelocityLut.sample(118.60, 1500.0),
+        ShooterVelocityLut.sample(108.52, 1400.0),
+        ShooterVelocityLut.sample(140,    1500.0)
     );
 
     public static final HoodAngleLut HOOD_ANGLE_LUT = new HoodAngleLut(
@@ -33,7 +34,7 @@ public final class ShooterHoodLuts {
     private ShooterHoodLuts() {}
 
     public static double distanceToGoal(Pose robotPose, boolean isRed) {
-        return ShooterVelocityLut.distanceToGoal(robotPose, isRed ? BLUE_GOAL_POSE:BLUE_GOAL_POSE.mirror());
+        return ShooterVelocityLut.distanceToGoal(robotPose, isRed?RED_GOAL_POSE:BLUE_GOAL_POSE);
     }
 
     public static double distanceToGoal(Pose robotPose, Pose goalPose) {

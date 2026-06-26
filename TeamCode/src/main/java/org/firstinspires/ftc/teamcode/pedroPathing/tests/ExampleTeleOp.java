@@ -104,7 +104,7 @@ public class ExampleTeleOp extends OpMode {
             slowModeMultiplier -= 0.25;
         }
         if (gamepad1.yWasPressed()) {
-
+            automatedDrive ^= true;
         }
 
         telemetryM.debug("position", follower.getPose());
