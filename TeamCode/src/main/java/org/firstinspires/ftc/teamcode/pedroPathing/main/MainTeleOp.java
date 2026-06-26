@@ -480,6 +480,7 @@ public class MainTeleOp implements TelemetryProvider {
 //        collector.add("system", "min fps", loopStats.worstMillis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", "1% lows", loopStats.p99Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
 //        collector.add("system", ".1% lows", loopStats.p999Millis, TelemetryMode.DEBUG, TelemetryCostClass.CHEAP);
+        collector.add("system", "isBlue", isBlue, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "auto", automatedDrive, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "raw_limelight x", rawPoseX, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
         collector.add("system", "raw_limelight y", rawPoseY, TelemetryMode.COMPETITION, TelemetryCostClass.CHEAP);
