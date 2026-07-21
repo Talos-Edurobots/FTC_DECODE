@@ -15,7 +15,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # --- Configuration ---
-WINDOW_SIZE = 1000
+WINDOW_SIZE = 900
 FIELD_PIXELS = 500
 MARGIN = (WINDOW_SIZE - FIELD_PIXELS) // 2
 

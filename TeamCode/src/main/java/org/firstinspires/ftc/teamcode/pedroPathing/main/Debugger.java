@@ -919,6 +919,7 @@ class ServoControl extends OpMode{
         servo.setPosition(servoTargetPos);
         telemetryM.addData("servo direction", servo.getDirection());
         telemetryM.addData("servo pos", servo.getPosition());
+        telemetryM.addData("commanded pos", analogInput);
         telemetryM.update(telemetry);
     }
 }

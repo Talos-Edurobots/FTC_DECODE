@@ -14,6 +14,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
@@ -40,6 +41,7 @@ import java.util.Timer;
 import java.util.function.Supplier;
 @Configurable
 public class MainTeleOp implements TelemetryProvider {
+    static double transferPower = 1.0;
     private static final int DRIVER_STATION_TELEMETRY_INTERVAL_MS = 200;
 
     public static int backVel = 1500;
@@ -101,6 +103,7 @@ public class MainTeleOp implements TelemetryProvider {
     private double lastShooterTargetVelocity = 0.0;
     private double lastHoodTargetPosition = 0.0;
     double botPoseX, botPoseY, botHeading, rawPoseX, rawPoseY, rawHeading;
+    ElapsedTime shootTimer;
     Hang hang;
     Pose teleOpStartPose;
 
@@ -110,6 +113,8 @@ public class MainTeleOp implements TelemetryProvider {
         this.telemetry = opMode.telemetry;
         this.isBlue = isBlue;
         teleOpStartPose = RobotPoseStorage.hasPose() ? RobotPoseStorage.getPose() : startingPose;
+        shootTimer = new ElapsedTime();
+
 
         follower = (Follower) opMode.blackboard.get(RobotConstants.FOLLOWER_KEY);
         if (follower == null) {
@@ -184,6 +189,7 @@ public class MainTeleOp implements TelemetryProvider {
     }
 
     public void start() {
+        shootTimer.reset();
         limelight.pipelineSwitch(1);
         limelight.start();
         transfer.collect();
@@ -299,6 +305,7 @@ public class MainTeleOp implements TelemetryProvider {
         shooter.update();
 
 
+
         LLResult llResult;
 //        double pinpointHeading = Math.toDegrees(follower.getHeading());
 //        limelight.updateRobotOrientation(pinpointHeading);
@@ -358,9 +365,15 @@ public class MainTeleOp implements TelemetryProvider {
         }
 
         shooting = opMode.gamepad1.left_bumper;
-        if (shooting) {
+        if (shooting && shootTimer.seconds()>.3) {
             transfer.shoot();
-        } else if (opMode.gamepad1.leftBumperWasPressed()) {
+        } else if(shooting) {
+            if (follower.getPose().getY()>72) {
+//                transfer.
+            }
+            transfer.setState(Transfer.TransferState.GATE_OPEN);
+        }
+        else if (opMode.gamepad1.leftBumperWasPressed()) {
             transfer.collect();
         } else if (opMode.gamepad1.rightBumperWasPressed()) {
             if (transfer.getState() == Transfer.TransferState.COLLECT) {
@@ -369,10 +382,11 @@ public class MainTeleOp implements TelemetryProvider {
                 transfer.collect();
             }
         }
+        if (!shooting) shootTimer.reset();
         if (!shooting && transfer.getState() == Transfer.TransferState.SHOOT) {
             transfer.stop();
         }
-        transfer.update();
+        transfer.update(follower.getPose().getY()<72?transferPower:1);
 
         if (opMode.gamepad1.leftStickButtonWasPressed() || opMode.gamepad1.rightStickButtonWasPressed()) {
             slowMode ^= true;

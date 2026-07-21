@@ -11,9 +11,16 @@ public class Intake {
         INTAKE,
         OUTTAKE,
         STOP,
-        KEEP
+        KEEP,
+        SHOOT
     }
     private IntakeState currentState = IntakeState.STOP;
+
+    public void setShootPower(double shootPower) {
+        this.shootPower = shootPower;
+    }
+
+    private double shootPower = 1;
 
     public IntakeState getCurrentState() {
         return currentState;
@@ -55,6 +62,9 @@ public class Intake {
                 break;
             case KEEP:
                 motor.setPower(.3);
+                break;
+            case SHOOT:
+                motor.setPower(shootPower);
                 break;
         }
         if (!isOverCurrent()) {

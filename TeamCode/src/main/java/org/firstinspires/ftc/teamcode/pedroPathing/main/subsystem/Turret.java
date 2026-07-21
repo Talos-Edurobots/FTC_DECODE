@@ -33,7 +33,7 @@ public class Turret implements TelemetryProvider {
     private static final PositionAimLut RED_POSITION_AIM_LUT = new PositionAimLut(
             PositionAimLut.sample(72.0, 72.0, 144.0, 144.0),
             PositionAimLut.sample(36.5, 131.5, 144.0, 133.9),
-            PositionAimLut.sample(104.14, 9.0, 138.82, 144.0),
+            PositionAimLut.sample(104.14, 9.0, 144.0, 144.0),
             PositionAimLut.sample(50.4, 108.0, 144.0, 135.8),
             PositionAimLut.sample(85.4, 97.9, 139.2, 144.0),
             PositionAimLut.sample(104.26,131.33,144.0,135.07)
@@ -41,7 +41,7 @@ public class Turret implements TelemetryProvider {
     private static final PositionAimLut BLUE_POSITION_AIM_LUT = new PositionAimLut(
             mirrorRedSampleForBlue(72.0, 72.0, 144.0, 144.0),
             mirrorRedSampleForBlue(36.5, 131.5, 144.0, 133.9),
-            mirrorRedSampleForBlue(104.14, 9.0, 138.82, 144.0),
+            mirrorRedSampleForBlue(104.14, 9.0, 130, 144.0),
             mirrorRedSampleForBlue(50.4, 108.0, 144.0, 135.8),
             mirrorRedSampleForBlue(85.4, 97.9, 139.2, 144.0),
             mirrorRedSampleForBlue(104.26, 131.33, 144.0, 135.07)

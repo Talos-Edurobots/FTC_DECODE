@@ -6,7 +6,8 @@ public class Transfer {
     public enum TransferState {
         STOP,
         SHOOT,
-        COLLECT
+        COLLECT,
+        GATE_OPEN
     }
 
     private final Intake intake;
@@ -47,6 +48,9 @@ public class Transfer {
     public void shoot() {
         setState(TransferState.SHOOT);
     }
+    public void openGate() {
+        setState(TransferState.GATE_OPEN);
+    }
 
     public void update() {
         colorSensors.update();
@@ -55,8 +59,11 @@ public class Transfer {
                 && (colorSensors.isFull()/* || intake.isOverCurrentForInterval(2)*/)) {
             currentState = TransferState.STOP;
         }
-
         applyState();
+    }
+    public void update(double transferShootingPower) {
+        intake.setShootPower(transferShootingPower);
+        update();
     }
 
     private void applyState() {
@@ -67,12 +74,15 @@ public class Transfer {
                 break;
             case SHOOT:
                 gate.deactivate();
-                intake.setCurrentState(Intake.IntakeState.INTAKE);
+                intake.setCurrentState(Intake.IntakeState.SHOOT);
                 break;
             case COLLECT:
                 gate.activate();
                 intake.setCurrentState(Intake.IntakeState.INTAKE);
                 break;
+            case GATE_OPEN:
+                gate.deactivate();
+                intake.setCurrentState(Intake.IntakeState.STOP);
         }
 
         intake.update();

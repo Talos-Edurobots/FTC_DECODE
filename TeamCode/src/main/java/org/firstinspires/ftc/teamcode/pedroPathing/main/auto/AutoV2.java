@@ -47,11 +47,11 @@ public class AutoV2 {
     private Pose gateWithoutGrabPoseControl2 = new Pose(42, 60); // Position of the gate that we need to open to access the artifacts.
     private  Pose scorePose = new Pose(60, 78, Math.toRadians(180)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private Pose gateOpenWithGrabPose = new Pose(19, 61.5, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
-    private Pose gateGrabPose = new Pose( 14, 56, Math.toRadians(150));
+    private Pose gateGrabPose = new Pose( 14, 57, Math.toRadians(150));
     private Pose scoreFromGrabGateControlPose = new Pose(48, 50);
     private Pose grabFromGate2ndPhaseControlPose = new Pose(24, 48);
     private Pose grabFromGate2ndPhasePose = new Pose(12, 53, Math.toRadians(180));
-    private Pose openGateWithGrabControlPose = new Pose( 41, 67);
+    private Pose openGateWithGrabControlPose = new Pose( 40, 67);
     private Pose openGateImmediatelyControlPose = new Pose(40, 60);
     private Pose gateIntermediatePose = new Pose(40, 60, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
     private Pose gateIntermediateControlPose = new Pose(54, 67, Math.toRadians(180)); // Position of the gate that we need to open to access the artifacts.
