@@ -11,14 +11,12 @@
             "id": "8289bf912dcb2428",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "image",
               "state": {
-                "file": "Main structure.md",
-                "mode": "source",
-                "source": false
+                "file": "controllers/velocity vs vref.png"
               },
-              "icon": "lucide-file",
-              "title": "Main structure"
+              "icon": "lucide-image",
+              "title": "velocity vs vref"
             }
           }
         ]
@@ -183,16 +181,24 @@
       "bases:Create new base": false
     }
   },
-  "active": "403eae66048fa8fe",
+  "active": "8289bf912dcb2428",
   "lastOpenFiles": [
+    "Istanbul Portfolio.pdf",
+    "AI Control Award Definition.md",
+    "_Instabul Portfolio.pdf",
+    "subsystem/Turret.md",
+    "subsystem/Intake and Transfer.md",
+    "LUTS/Turret LUT.md",
+    "controllers/velocity vs vref.png",
+    "controllers/Trapezoidal Motion Profiling.md",
+    "controllers/pos vs xref.png",
+    "controllers/PID + FF.md",
+    "Main structure.md",
     "subsystem/Shooter.md",
     "Untitled.canvas",
-    "Main structure.md",
     "Untitled 1.canvas",
-    "subsystem/Intake and Transfer.md",
     "Driver Automations.md",
     "AI Control Award Review.md",
-    "AI Control Award Definition.md",
     "Simulator.md",
     "TurretLUT_img.png",
     "motor package.md",
@@ -208,19 +214,12 @@
     "graphs/shooter acceleration/comparison_keHighSpeedWithController_vs_keHighSpeedWithoutController.png",
     "graphs/shooter acceleration",
     "graphs/individual_keStartWithoutController.png",
-    "graphs/individual_keStartWithcontroller.png",
-    "graphs/individual_keHighSpeedWithoutController.png",
     "graphs",
     "scripts/shooter_acceleration.py",
-    "subsystem/Turret.md",
-    "LUTS/Turret LUT.md",
     "data",
     "scripts/turret_position_lut_samples.json",
     "scripts/simulator.py",
     "scripts/throughput.py",
-    "scripts/ke_kv_calculator.py",
-    "controllers/Trapezoidal Motion Profiling.md",
-    "controllers/PID + FF.md",
     "LUTS/Interpolated Look Up Table.md",
     "πρωταθλήτρια.md",
     "AEK.md",
