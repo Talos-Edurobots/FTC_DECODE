@@ -16,25 +16,29 @@ public class LasAuto extends LinearOpMode {
     private Timer pathTimer, opmodeTimer;
     private int pathState;
     private Follower follower;
-    private final Pose startPose = new Pose(72, 72, Math.toRadians(180)); // Start Pose of our robot. This is against the goal facing AWAY
+    private final Pose startPose = new Pose(72, 8, Math.toRadians(90));
+    private final Pose getStartPose1 = new Pose(72, 72, Math.toRadians(180));// Start Pose of our robot. This is against the goal facing AWAY
     private final Pose gatePose = new Pose(16   , 72, Math.toRadians(180)); // Start Pose of our robot. This is against the goal facing AWAY
     private final Pose scorePose = new Pose(60, 84, Math.toRadians(135)); // Scoring Pose of our robot.
-    private final Pose pickup1Pose = new Pose(17, 84, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup1Pose = new Pose(72, 72, Math.toRadians(90)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pickup2Pose = new Pose(12, 60, Math.toRadians(180)); // Middle (Second Set) of Artifacts from the Spike Mark.
     private final Pose pickup3Pose = new Pose(12, 36, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
     private final Pose endPose = new Pose (60, 105); // Final Pose of our robot, off the starting line
     //defining our PathChains
-    private PathChain scorePreload, grabPickup1, scorePickup1, grabPickup2, scorePickup2, opengate, grabPickup3, scorePickup3, leave;
+    private PathChain scorePreload, grabPickup1, scorePickup1, grabPickup2, scorePickup2, opengate,  pathline1, grabPickup3, scorePickup3, leave;
 
     public void buildPaths() {
         scorePreload = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, scorePose))
                 .setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading())
                 .build();
-
+        pathline1 = follower.pathBuilder()
+                .addPath(new BezierLine(startPose, pickup1Pose))
+                .setTangentHeadingInterpolation()
+                .build();
         opengate = follower.pathBuilder()
-                .addPath(new BezierLine(startPose, gatePose))
-                .setLinearHeadingInterpolation(startPose.getHeading(), gatePose.getHeading())
+                .addPath(new BezierLine(getStartPose1, gatePose))
+                .setTangentHeadingInterpolation()
                 .build();
 
 
@@ -84,9 +88,12 @@ public class LasAuto extends LinearOpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0 :
+                follower.followPath(pathline1);
+                setPathState(1);
+                break;
+            case 1 :
                 follower.followPath(opengate);
                 setPathState(1);
-            case 1 :
                 break;
         }
     }
