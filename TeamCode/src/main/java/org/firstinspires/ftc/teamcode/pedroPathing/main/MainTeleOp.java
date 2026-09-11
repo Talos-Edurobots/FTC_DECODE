@@ -9,15 +9,21 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.data.StructuredRobotDataClient;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.PPConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.constants.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.main.subsystem.Hang;
@@ -37,6 +43,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.TelemetryProvi
 import org.firstinspires.ftc.teamcode.pedroPathing.main.telemetry.ThrottledValue;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.function.Supplier;
 @Configurable
@@ -62,6 +69,7 @@ public class MainTeleOp implements TelemetryProvider {
     private final ThrottledValue<Double> intakeCurrentSampler = new ThrottledValue<>(0.1);
     private final ThrottledValue<Double> totalCurrentSampler = new ThrottledValue<>(0.2);
     private final Pose startingPose = new Pose(72, 72, Math.toRadians(180));
+    private final ElapsedTime dataRuntime = new ElapsedTime();
 
     private HardwareMap hardwareMap;
     private Telemetry telemetry;
@@ -82,6 +90,13 @@ public class MainTeleOp implements TelemetryProvider {
     private Timer pedroTimer;
     private Limelight3A limelight;
     private Leds leds;
+    private StructuredRobotDataClient dataClient;
+    private Servo leftLedServo;
+    private Servo rightLedServo;
+    private Servo hoodServo;
+    private Servo gateServo;
+    private Servo leftHangServo;
+    private Servo rightHangServo;
     private Pose3D llPose;
     private boolean automatedDrive = false;
     private boolean isFar = false;
@@ -157,6 +172,8 @@ public class MainTeleOp implements TelemetryProvider {
         turret = new Turret(hardwareMap);
         turret.init();
 
+        startDataStreaming();
+
         useLimelight = defaultUseLimelight;
         automatedDrive = false;
         isFar = false;
@@ -190,6 +207,7 @@ public class MainTeleOp implements TelemetryProvider {
 
     public void start() {
         shootTimer.reset();
+        dataRuntime.reset();
         limelight.pipelineSwitch(1);
         limelight.start();
         transfer.collect();
@@ -438,7 +456,89 @@ public class MainTeleOp implements TelemetryProvider {
         wasAtAutomated = automatedDrive;
         // follower.update() always runs so pose estimation stays current
         follower.update();
+        publishDataSnapshot();
         telemetryHub.publish(telemetryM, telemetry, newTime);
+    }
+
+    /**
+     * Starts the laptop-facing TCP telemetry stream. The stream only reads the
+     * already-configured hardware; it never changes motor or servo outputs.
+     */
+    private void startDataStreaming() {
+        dataRuntime.reset();
+        dataClient = new StructuredRobotDataClient("Main TeleOp")
+                .addRuntime(dataRuntime)
+                .addPose("localization", "Pedro Pose", follower)
+                // The codebase does not retain the follower's requested wheel powers,
+                // so getPower() is recorded for both requested and applied power.
+                .addMotor("drive.leftFront", "Left Front Drive", motor(RobotConstants.LEFT_FRONT_MOTOR_NAME))
+                .addMotor("drive.leftBack", "Left Back Drive", motor(RobotConstants.LEFT_BACK_MOTOR_NAME))
+                .addMotor("drive.rightBack", "Right Back Drive", motor(RobotConstants.RIGHT_BACK_MOTOR_NAME))
+                .addMotor("drive.rightFront", "Right Front Drive", motor(RobotConstants.RIGHT_FRONT_MOTOR_NAME))
+                .addMotor("intake", "Intake", motor(RobotConstants.INTAKE_MOTOR_NAME))
+                .addMotor("shooter.primary", "Shooter Primary", motor(RobotConstants.SHOOTER_MOTOR_NAME))
+                .addMotor("shooter.follower", "Shooter Follower", motor(RobotConstants.SHOOTER_FOLLOWER_MOTOR_NAME))
+                .addMotor("turret", "Turret", motor(RobotConstants.TURRET_MOTOR_NAME))
+                .addGamepads(opMode.gamepad1, opMode.gamepad2);
+
+        dataClient.addDevice("robot.power", "Robot Electrical", "power", "REV hub current")
+                .addSignal("robot.currentAmps", "Robot Current", "robot.power",
+                        "current", "A", "float64", "measured", 50);
+
+        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            dataClient.addVoltageSensor(sensor);
+            break;
+        }
+
+        leftLedServo = hardwareMap.get(Servo.class, RobotConstants.LED_LEFT);
+        rightLedServo = hardwareMap.get(Servo.class, RobotConstants.LED_RIGHT);
+        hoodServo = hardwareMap.get(Servo.class, RobotConstants.LEFT_SERVO_NAME);
+        gateServo = hardwareMap.get(Servo.class, RobotConstants.RIGHT_FLICKER_NAME);
+        leftHangServo = hardwareMap.get(Servo.class, "leftHang");
+        rightHangServo = hardwareMap.get(Servo.class, "rightHang");
+
+        addServoSignal("indicator.left", "Left RGB Indicator", "indicators", leftLedServo);
+        addServoSignal("indicator.right", "Right RGB Indicator", "indicators", rightLedServo);
+        addServoSignal("shooter.hood", "Shooter Hood", "shooter", hoodServo);
+        addServoSignal("transfer.gate", "Transfer Gate", "transfer", gateServo);
+        addServoSignal("hang.left", "Left Hang Servo", "hang", leftHangServo);
+        addServoSignal("hang.right", "Right Hang Servo", "hang", rightHangServo);
+        dataClient.start();
+    }
+
+    private DcMotorEx motor(String hardwareName) {
+        return hardwareMap.get(DcMotorEx.class, hardwareName);
+    }
+
+    private void addServoSignal(String deviceId, String label, String subsystem, Servo servo) {
+        dataClient.addDevice(deviceId, label, subsystem, "servo PWM")
+                .addSignal(deviceId + ".position", label + " Position", deviceId,
+                        "position", "normalized", "float64", "command", 50);
+    }
+
+    /** Publishes one complete snapshot after all subsystem updates for this FTC loop. */
+    private void publishDataSnapshot() {
+        if (dataClient == null) {
+            return;
+        }
+        Map<String, Object> values = dataClient.createDataSnapshot();
+        values.put("robot.currentAmps", robotCurrentAmps());
+        values.put("indicator.left.position", leftLedServo.getPosition());
+        values.put("indicator.right.position", rightLedServo.getPosition());
+        values.put("shooter.hood.position", hoodServo.getPosition());
+        values.put("transfer.gate.position", gateServo.getPosition());
+        values.put("hang.left.position", leftHangServo.getPosition());
+        values.put("hang.right.position", rightHangServo.getPosition());
+        dataClient.publishLoop(values, opMode.gamepad1, opMode.gamepad2);
+    }
+
+    /** Returns the combined current reported by every REV Control/Expansion Hub. */
+    private double robotCurrentAmps() {
+        double robotCurrent = 0.0;
+        for (LynxModule hub : hardwareMap.getAll(LynxModule.class)) {
+            robotCurrent += hub.getCurrent(CurrentUnit.AMPS);
+        }
+        return robotCurrent;
     }
 
     private void updateShooterAndHoodTargets(Pose robotPose) {
@@ -480,6 +580,10 @@ public class MainTeleOp implements TelemetryProvider {
     }
 
     public void stop(HashMap blackboard) {
+        if (dataClient != null) {
+            dataClient.close();
+            dataClient = null;
+        }
         blackboard.put(RobotConstants.FOLLOWER_KEY, null);
         blackboard.put(RobotConstants.ALLIANCE_KEY, null);
     }
